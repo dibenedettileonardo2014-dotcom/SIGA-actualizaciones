@@ -1,8 +1,8 @@
 {
-  "version": "1.2.8",
+  "version": "1.2.9",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "F1DF9806447A435CB6507C2E795CC7B1CE2A9822069DE62A16737250631175E9",
+  "sha256": "AFB603631B670EB955F517D348A1E013090B08BE4C45E27C3562FBB37061BFD8",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "0A027E4541219BBEBC8A823167BCBFE5471CDD93407DB0B36103087CCCDD603C",
-  "notes": "Corrige la impresión dentro de SIGA, sin ventanas externas ni vínculos about."
+  "packageSha256": "AAA94F7450B3E80A376FAAF019A655BEECD01451C6D98225E9E7E857595B165B",
+  "notes": "Credencial impresa a color y en tamaño estándar de tarjeta."
 }
