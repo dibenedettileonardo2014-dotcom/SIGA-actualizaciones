@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "D95F3D09F119A1C29D793B97667E0D8D8E2B60AF1CB29E01B4B1351305E32EFD",
-  "notes": "Incorpora buscador dentro del Convenio Colectivo 77/89."
+  "sha256": "B13CBACDF7E328FC360FE0973525944422FDB91F0D7DDDF687DB27056BB8563B",
+  "notes": "Corrige el instalador automático de futuras actualizaciones."
 }
