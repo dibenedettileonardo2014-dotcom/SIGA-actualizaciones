@@ -1,6 +1,6 @@
 {
-  "version": "1.1.5",
+  "version": "1.1.6",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "A342B462DC36B3FD19E54DA68A03B92B070D5AB54BD3F87266C4BA6AC1D4CC50",
-  "notes": "Acceso seguro mediante Firebase Authentication e icono institucional."
+  "sha256": "CAC101E0BF547D31C12CFC4688125706DDDB2040866CD796F616220ED5EBE778",
+  "notes": "Convenio 77/89, impresión de fichas y comprobantes, y adjuntos en afiliados y pagos."
 }
