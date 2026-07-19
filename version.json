@@ -1,8 +1,8 @@
 {
-  "version": "1.2.6",
+  "version": "1.2.7",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "F2CD7642B87333DC6388647AFCF27D99EFF5C94D92BDEE2397A1617EE0BA9CE1",
+  "sha256": "FC3ACFD2580BB1D3BB8B367775AE216652430E44BCE48FB7523AD34C6848BB17",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "F04ADA0754ECCED3CFFA29640275923FCA928046D89446E4B58D5EDD85A9056B",
-  "notes": "Actualización completa de la interfaz y corrección de distintivos de representación sindical."
+  "packageSha256": "62961E46C8556F4BFE3E420C9F1B92BF6FDF1E73B636F1B682F35C61C79AE0AF",
+  "notes": "Respaldo local prioritario y sincronización del servidor en segundo plano."
 }
