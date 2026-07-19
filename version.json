@@ -1,8 +1,8 @@
 {
-  "version": "1.2.7",
+  "version": "1.2.8",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "FC3ACFD2580BB1D3BB8B367775AE216652430E44BCE48FB7523AD34C6848BB17",
+  "sha256": "F1DF9806447A435CB6507C2E795CC7B1CE2A9822069DE62A16737250631175E9",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "62961E46C8556F4BFE3E420C9F1B92BF6FDF1E73B636F1B682F35C61C79AE0AF",
-  "notes": "Respaldo local prioritario y sincronización del servidor en segundo plano."
+  "packageSha256": "0A027E4541219BBEBC8A823167BCBFE5471CDD93407DB0B36103087CCCDD603C",
+  "notes": "Corrige la impresión dentro de SIGA, sin ventanas externas ni vínculos about."
 }
