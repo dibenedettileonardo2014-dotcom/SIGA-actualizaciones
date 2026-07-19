@@ -1,6 +1,6 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.4",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "86F83882FFF4FA7DA01F0A4AF0D3A3CC7C8DD3E8177D6557A83D64E606158AD0",
-  "notes": "Agrega confirmaciones de delegado/a y comisión interna en la ficha de afiliado."
+  "sha256": "8BB04EB710E3FC285F4CE6C74E3CF3B353B0F3B7601791973102F40F420055F8",
+  "notes": "Muestra delegado/a y comisión interna en el padrón y en la credencial sindical."
 }
