@@ -1,6 +1,6 @@
 {
-  "version": "1.1.8",
+  "version": "1.1.9",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "FAB398EB137D575C1A4D7051D9C064DE11D0CF2F607D402036955FC626645F70",
-  "notes": "Corrige la instalación automática de actualizaciones y el ícono de SIGA."
+  "sha256": "685992B6CD75EDBB2188A0DD0FA511C54F07647AA6854BCC06BAA6FE0DC7ED43",
+  "notes": "Corrige el ícono del ejecutable y de los accesos directos de SIGA."
 }
