@@ -1,6 +1,6 @@
 {
-  "version": "1.1.3",
+  "version": "1.1.5",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "0600B654B53DB5D6EDB1B415A15708D9BD90129A4B2E2CC17E58E8D086CDAB60",
-  "notes": "Las nuevas instalaciones inician en modo solo consulta."
+  "sha256": "A342B462DC36B3FD19E54DA68A03B92B070D5AB54BD3F87266C4BA6AC1D4CC50",
+  "notes": "Acceso seguro mediante Firebase Authentication e icono institucional."
 }
