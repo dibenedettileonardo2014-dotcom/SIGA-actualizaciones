@@ -1,8 +1,8 @@
 {
-  "version": "1.2.11",
+  "version": "1.2.12",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "83AB5886C18E329B97064E71681D8CBA213981FF30DB2D185FD203D1FE33F087",
+  "sha256": "3A04A9FE6635DC15B8CC3544C0BFD6F47D5BE548F8240B524BAE3A9AFD3BC225",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "A58C91B754C3453CB9541FB648F862FE902525D40859B2B90B30E588D5534341",
-  "notes": "Elimina el rol lector e inicia SIGA directamente como operador."
+  "packageSha256": "C93ED527A8679B1EC9ADB166F86A4E90B5EB431C0D143D1356C089402B24B279",
+  "notes": "Oculta Permisos y Configuración de Red para el perfil Operador."
 }
