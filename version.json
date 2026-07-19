@@ -1,6 +1,6 @@
 {
-  "version": "1.2.4",
+  "version": "1.2.5",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "8BB04EB710E3FC285F4CE6C74E3CF3B353B0F3B7601791973102F40F420055F8",
-  "notes": "Muestra delegado/a y comisión interna en el padrón y en la credencial sindical."
+  "sha256": "C181A3127857C08A0F923E8443396FB69BADDE58C4A1D594E97FA835947EFDE3",
+  "notes": "Actualiza la credencial al instante al guardar delegado/a o comisión interna."
 }
