@@ -1,6 +1,8 @@
 {
-  "version": "1.2.5",
+  "version": "1.2.6",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "C181A3127857C08A0F923E8443396FB69BADDE58C4A1D594E97FA835947EFDE3",
-  "notes": "Actualiza la credencial al instante al guardar delegado/a o comisión interna."
+  "sha256": "F2CD7642B87333DC6388647AFCF27D99EFF5C94D92BDEE2397A1617EE0BA9CE1",
+  "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
+  "packageSha256": "F04ADA0754ECCED3CFFA29640275923FCA928046D89446E4B58D5EDD85A9056B",
+  "notes": "Actualización completa de la interfaz y corrección de distintivos de representación sindical."
 }
