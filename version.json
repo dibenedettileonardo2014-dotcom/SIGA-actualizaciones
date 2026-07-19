@@ -1,6 +1,6 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.2",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "B13CBACDF7E328FC360FE0973525944422FDB91F0D7DDDF687DB27056BB8563B",
-  "notes": "Corrige el instalador automático de futuras actualizaciones."
+  "sha256": "86F83882FFF4FA7DA01F0A4AF0D3A3CC7C8DD3E8177D6557A83D64E606158AD0",
+  "notes": "Agrega confirmaciones de delegado/a y comisión interna en la ficha de afiliado."
 }
