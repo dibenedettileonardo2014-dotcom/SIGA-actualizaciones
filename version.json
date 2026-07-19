@@ -1,8 +1,8 @@
 {
-  "version": "1.2.9",
+  "version": "1.2.10",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "AFB603631B670EB955F517D348A1E013090B08BE4C45E27C3562FBB37061BFD8",
+  "sha256": "2D2EFD859E1D17D9159CFBF51C471784ED18786B7C71E3A350F3BBDADE8FDA31",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "AAA94F7450B3E80A376FAAF019A655BEECD01451C6D98225E9E7E857595B165B",
-  "notes": "Credencial impresa a color y en tamaño estándar de tarjeta."
+  "packageSha256": "1D683E47DBA3BA571B45F4D95657E7D2785B86DDF14EC5E7383378478990C8F4",
+  "notes": "SIGA se abre maximizada al iniciar."
 }
