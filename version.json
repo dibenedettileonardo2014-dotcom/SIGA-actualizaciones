@@ -1,8 +1,8 @@
 {
   "version": "1.2.11",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "25ED2237B087DBF21A11C8D69A5432B9458421E010F44ABCC546986C41722FB4",
+  "sha256": "83AB5886C18E329B97064E71681D8CBA213981FF30DB2D185FD203D1FE33F087",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "745D37D165861B470468626D6C92B28E3D3CB8A3D228AE929B6D4FC0485CCFFB",
+  "packageSha256": "A58C91B754C3453CB9541FB648F862FE902525D40859B2B90B30E588D5534341",
   "notes": "Elimina el rol lector e inicia SIGA directamente como operador."
 }
