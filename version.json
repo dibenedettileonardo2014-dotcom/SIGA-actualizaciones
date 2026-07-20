@@ -1,8 +1,8 @@
 {
-  "version": "1.2.13",
+  "version": "1.2.14",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "B0F4AA03D139A98B8206914D55E4AF1894C52042ABA266C6EA78208AFF9BD247",
+  "sha256": "957A04289ED91094C2AB36795FB1AFC56D3A0871396B515E0D34FEFF4B36F613",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "50DEAD7A3F119AF237D5B6B1D184DBF2ABD3DF17884172B7943F52C15F35ECCF",
+  "packageSha256": "4CDDF5E6C6CC43376BF5070CB9C60E9DB63B3DCFD53ECA42B6ABE37CC93E8645",
   "notes": "Oculta Permisos y Configuración de Red para el perfil Operador."
 }
