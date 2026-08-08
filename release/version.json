@@ -1,0 +1,8 @@
+{
+  "version": "1.2.18",
+  "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
+  "sha256": "127C0220D06FE282A456032968892AD6E1628E8136871719B55FB67EE313755E",
+  "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
+  "packageSha256": "15B538E832E7ED086DAACD3BD8F350A5A5A2DBE2F3285FF6C1A676728033B5EF",
+  "notes": "Las actualizaciones se administran únicamente desde la solapa Actualizaciones, sin ventanas automáticas al iniciar."
+}

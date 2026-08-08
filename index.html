@@ -1,0 +1,2834 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGA - Sistema Integral de Gestión de Afiliados</title>
+    <!-- Tailwind CSS para el diseño responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para Estadísticas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="theme-color" content="#10b981">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        body[data-role="operador"] #admin-nav-section,
+        body[data-role="operador"] #btn-tab-usuarios,
+        body[data-role="operador"] #btn-tab-configuracion {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="h-full overflow-hidden flex flex-col">
+
+    <!-- Elemento para notificaciones flotantes -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- Layout Principal -->
+    <div class="flex h-screen w-screen overflow-hidden">
+        
+        <!-- Sidebar (Sidebar lateral izquierdo) -->
+        <aside id="sidebar" class="bg-slate-900 text-white w-64 flex-shrink-0 flex flex-col transition-all duration-300 z-30 fixed inset-y-0 left-0 md:relative md:translate-x-0 -translate-x-full">
+            <!-- Header de Sidebar -->
+            <div class="p-5 flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-white rounded-xl overflow-hidden relative shadow-lg shadow-emerald-500/20" title="Sindicato Químico y Petroquímico Rosario">
+                        <img src="assets/logo-sindicato.png" alt="Sindicato Químico y Petroquímico Rosario" class="absolute w-32 max-w-none -left-1 -top-9">
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-xl leading-none tracking-wider">SIGA</h1>
+                        <span class="text-[10px] text-emerald-400 font-medium uppercase">Gestión en Red</span>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Navegación -->
+            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
+                <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all bg-emerald-600 text-white">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
+                    Panel General
+                </button>
+                <button onclick="switchTab('afiliados')" id="btn-tab-afiliados" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-address-book text-lg"></i>
+                    Padrón de Afiliados
+                </button>
+                <button onclick="switchTab('pagos')" id="btn-tab-pagos" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-hand-holding-dollar text-lg"></i>
+                    Control de Cuotas
+                </button>
+                <button onclick="switchTab('convenio')" id="btn-tab-convenio" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-scale-balanced text-lg"></i>
+                    Convenio 77/89
+                </button>
+                <button onclick="switchTab('credenciales')" id="btn-tab-credenciales" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-id-card text-lg"></i>
+                    Credencial Digital
+                </button>
+                <button onclick="switchTab('actualizaciones')" id="btn-tab-actualizaciones" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-circle-down text-lg"></i>
+                    <span>Actualizaciones</span>
+                    <span id="update-badge" class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 hidden"></span>
+                </button>
+                <div id="admin-nav-section" class="pt-6 mt-6 border-t border-slate-800">
+                    <span class="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Administración</span>
+                </div>
+                <button onclick="switchTab('usuarios')" id="btn-tab-usuarios" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-user-shield text-lg"></i>
+                    Control de Permisos
+                </button>
+                <button onclick="switchTab('configuracion')" id="btn-tab-configuracion" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-network-wired text-lg"></i>
+                    Configurar Red / Datos
+                </button>
+            </nav>
+
+            <!-- Botón de instalación PWA -->
+            <div class="px-4 pb-2" id="pwa-install-container" style="display: none;">
+                <button onclick="installPWAApp()" class="w-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-down"></i> Instalar en esta PC / Celular
+                </button>
+            </div>
+
+            <!-- Footer de Sidebar / Info de Usuario & Rol -->
+            <div class="p-4 border-t border-slate-800 bg-slate-950/50">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs" id="role-avatar">
+                            AD
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-xs font-semibold truncate" id="auth-user-name">Administrador</p>
+                            <p class="text-[10px] text-slate-400 truncate font-semibold" id="auth-user-role">Control Total</p>
+                        </div>
+                    </div>
+                    <button onclick="openChangeRoleModal()" title="Cambiar de Rol / Usuario" class="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-all">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+                <!-- Indicador de Sincronización en la Nube -->
+                <div class="mt-2 pt-2 border-t border-slate-800/50 flex items-center justify-between text-[9px]">
+                    <span class="text-slate-500">Servidor Red:</span>
+                    <span id="cloud-sync-status" class="flex items-center gap-1 text-amber-500 font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Cargando Red...
+                    </span>
+                </div>
+                <p class="mt-3 text-center text-[9px] text-slate-500">Desarrollado por <span class="font-semibold text-slate-400">Leonardo Di Benedetti</span></p>
+            </div>
+        </aside>
+
+        <!-- Fondo del Sidebar para Móviles -->
+        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 hidden md:hidden"></div>
+
+        <!-- Contenido de la Aplicación -->
+        <main class="flex-1 flex flex-col overflow-hidden w-full">
+            
+            <!-- Navbar de la parte superior -->
+            <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 z-10">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="md:hidden text-slate-600 p-1.5 rounded-lg hover:bg-slate-100">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <h2 id="current-section-title" class="text-xl font-bold text-slate-800">Panel General</h2>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <!-- Buscador rápido universal -->
+                    <div class="relative hidden sm:block w-72">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                        </span>
+                        <input type="text" id="quick-search" oninput="handleQuickSearch(this.value)" placeholder="Buscar por Nombre, DNI, Empresa..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block pl-9 p-2 transition-all">
+                    </div>
+                    
+                    <button id="nav-btn-new-affiliate" onclick="openAffiliateModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm px-4 py-2 rounded-xl shadow-lg shadow-emerald-600/15 flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-plus"></i>
+                        <span class="hidden sm:inline">Nuevo Afiliado</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Contenedor Principal con Scroll -->
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50 custom-scrollbar" id="content-container">
+
+
+                <!-- SECCIÓN: PANEL GENERAL (DASHBOARD) -->
+                <div id="tab-dashboard" class="tab-content space-y-6">
+                    <!-- Tarjetas de Estadísticas -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Card 1 -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Afiliados</p>
+                                <h3 id="stat-total" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+                                <p class="text-xs text-slate-500 mt-1"><span class="text-emerald-500 font-bold"><i class="fa-solid fa-arrow-up"></i> Compartidos</span> en red</p>
+                            </div>
+                            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cuota al Día</p>
+                                <h3 id="stat-paid" class="text-3xl font-extrabold text-emerald-600 mt-1">0</h3>
+                                <p class="text-xs text-slate-500 mt-1" id="stat-paid-pct">0% del padrón total</p>
+                            </div>
+                            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cuotas Impagas</p>
+                                <h3 id="stat-unpaid" class="text-3xl font-extrabold text-rose-500 mt-1">0</h3>
+                                <p class="text-xs text-slate-500 mt-1" id="stat-unpaid-pct">0% requiere atención</p>
+                            </div>
+                            <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                        </div>
+                        <!-- Card 4 -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nuevos (Mes)</p>
+                                <h3 id="stat-new" class="text-3xl font-extrabold text-indigo-600 mt-1">0</h3>
+                                <p class="text-xs text-slate-500 mt-1">Ingresos de este mes</p>
+                            </div>
+                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+                                <i class="fa-solid fa-user-plus"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráficos y Distribución -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Distribución por Sectores -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm lg:col-span-2">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="font-bold text-slate-800">Afiliados por Sector de Trabajo</h4>
+                                <span class="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full font-bold">Datos en vivo</span>
+                            </div>
+                            <div class="h-64 flex items-center justify-center">
+                                <canvas id="chartSectors"></canvas>
+                            </div>
+                        </div>
+                        <!-- Resumen Rápido por Estados -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h4 class="font-bold text-slate-800 mb-4">Estado del Padrón</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>Activos</span>
+                                            <span id="label-active-count">0 (0%)</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div id="bar-active" class="bg-emerald-500 h-full rounded-full" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>Jubilados</span>
+                                            <span id="label-retired-count">0 (0%)</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div id="bar-retired" class="bg-indigo-400 h-full rounded-full" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>Inactivos / Licencias</span>
+                                            <span id="label-inactive-count">0 (0%)</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div id="bar-inactive" class="bg-slate-400 h-full rounded-full" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pt-6 mt-6 border-t border-slate-100 text-center">
+                                <button onclick="switchTab('afiliados')" class="text-sm font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1.5 transition-all">
+                                    Ver todos los afiliados <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Afiliados Recientes -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                            <h4 class="font-bold text-slate-800">Últimos Afiliados Registrados</h4>
+                            <span class="text-xs text-slate-500">Últimos 5 ingresos</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-xs font-semibold text-slate-500 border-b border-slate-100 uppercase">
+                                        <th class="py-3 px-6">Afiliado</th>
+                                        <th class="py-3 px-6">DNI</th>
+                                        <th class="py-3 px-6">Empresa / Consultora</th>
+                                        <th class="py-3 px-6">Sector</th>
+                                        <th class="py-3 px-6">Cuota</th>
+                                        <th class="py-3 px-6 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-affiliates-list" class="divide-y divide-slate-100 text-sm text-slate-600">
+                                    <!-- Dinámico por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: PADRÓN DE AFILIADOS -->
+                <div id="tab-afiliados" class="tab-content hidden space-y-6">
+                    <!-- Barra de Búsqueda y Filtros -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+                        <div class="flex-1 relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                            </span>
+                            <input type="text" id="filter-search" oninput="applyFilters()" placeholder="Buscar por Nombre, DNI, Legajo, Empresa o Consultora..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-10 p-3 transition-all">
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <!-- Filtro de Sector -->
+                            <select id="filter-sector" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                                <option value="">Todos los sectores</option>
+                            </select>
+                            <!-- Filtro de Cuota -->
+                            <select id="filter-payment" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                                <option value="">Todas las cuotas</option>
+                                <option value="true">Al día</option>
+                                <option value="false">Con deuda</option>
+                            </select>
+                            <!-- Filtro de Estado -->
+                            <select id="filter-status" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl p-3 col-span-2 sm:col-span-1 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                                <option value="">Todos los estados</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Jubilado">Jubilado</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Afiliados -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-xs font-semibold text-slate-500 border-b border-slate-100 uppercase">
+                                        <th class="py-3.5 px-6">N° Afiliado / Nombre</th>
+                                        <th class="py-3.5 px-6">Identidad / DNI</th>
+                                        <th class="py-3.5 px-6">Fecha de Afiliación</th>
+                                        <th class="py-3.5 px-6">Empresa / Consultora</th>
+                                        <th class="py-3.5 px-6">Contacto</th>
+                                        <th class="py-3.5 px-6">Cuota</th>
+                                        <th class="py-3.5 px-6">Estado</th>
+                                        <th class="py-3.5 px-6">Representación</th>
+                                        <th class="py-3.5 px-6 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="affiliates-table-body" class="divide-y divide-slate-100 text-sm text-slate-600">
+                                    <!-- Dinámico por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Mensaje de no resultados -->
+                        <div id="no-results" class="hidden flex flex-col items-center justify-center p-12 text-slate-400 text-center">
+                            <i class="fa-solid fa-user-slash text-5xl mb-3 text-slate-300"></i>
+                            <p class="font-semibold text-slate-600">No se encontraron afiliados</p>
+                            <p class="text-xs">Prueba ajustando los filtros de búsqueda</p>
+                        </div>
+                        <!-- Paginación / Footer de Tabla -->
+                        <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="text-xs text-slate-500" id="table-pagination-info">
+                                Mostrando 0 de 0 afiliados
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="changePage(-1)" id="btn-page-prev" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Anterior</button>
+                                <span id="table-page-num" class="text-xs font-semibold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">1</span>
+                                <button onclick="changePage(1)" id="btn-page-next" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Siguiente</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: CONTROL DE CUOTAS Y PAGOS -->
+                <div id="tab-pagos" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Panel de Acción Rápida de Pago -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-4">
+                            <h4 class="font-bold text-slate-800 border-b border-slate-100 pb-3">Registrar Cobro de Cuota</h4>
+                            <div id="pay-role-notice" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-medium flex items-start gap-2">
+                                <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                                <span>Tu rol de <b>Lector</b> no permite registrar pagos. Solicita permisos a un administrador.</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Seleccionar Afiliado</label>
+                                <select id="payment-affiliate-select" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                                    <!-- Dinámico por JS -->
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Mes de Pago</label>
+                                    <select id="payment-month" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                                        <option value="Enero">Enero</option>
+                                        <option value="Febrero">Febrero</option>
+                                        <option value="Marzo">Marzo</option>
+                                        <option value="Abril">Abril</option>
+                                        <option value="Mayo">Mayo</option>
+                                        <option value="Junio">Junio</option>
+                                        <option value="Julio">Julio</option>
+                                        <option value="Agosto">Agosto</option>
+                                        <option value="Septiembre">Septiembre</option>
+                                        <option value="Octubre">Octubre</option>
+                                        <option value="Noviembre">Noviembre</option>
+                                        <option value="Diciembre">Diciembre</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Año</label>
+                                    <input type="number" id="payment-year" value="2026" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Monto Cobrado ($)</label>
+                                <input type="number" id="payment-amount" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Comprobantes / Archivos</label>
+                                <input type="file" id="payment-attachments" multiple accept=".pdf,image/*,.doc,.docx" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700 file:font-semibold hover:file:bg-emerald-100">
+                            </div>
+                            <button id="btn-submit-payment" onclick="registerPayment()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/15 transition-all text-sm mt-2">
+                                <i class="fa-solid fa-receipt mr-2"></i> Registrar Pago
+                            </button>
+                        </div>
+
+                        <!-- Lista de Cobros Recientes / Historial -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm md:col-span-2 flex flex-col">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                                <h4 class="font-bold text-slate-800">Historial Reciente de Cobros (Red Compartida)</h4>
+                                <button id="btn-clear-payments" onclick="triggerClearPaymentHistory()" class="text-xs text-rose-500 hover:text-rose-600 font-semibold"><i class="fa-solid fa-trash mr-1"></i> Borrar Todo</button>
+                            </div>
+                            <div class="flex-1 overflow-y-auto max-h-96 custom-scrollbar">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b border-slate-100 uppercase">
+                                            <th class="py-2 px-4">Fecha</th>
+                                            <th class="py-2 px-4">Afiliado</th>
+                                            <th class="py-2 px-4">Período</th>
+                                            <th class="py-2 px-4 text-right">Monto</th>
+                                            <th class="py-2 px-4 text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="payment-history-body" class="divide-y divide-slate-100 text-sm text-slate-600">
+                                        <!-- Dinámico por JS -->
+                                    </tbody>
+                                </table>
+                                <div id="no-payments" class="hidden text-center py-12 text-slate-400">
+                                    <i class="fa-solid fa-receipt text-4xl mb-2 text-slate-300"></i>
+                                    <p class="text-xs">No hay cobros registrados aún.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: CONVENIO COLECTIVO -->
+                <div id="tab-convenio" class="tab-content hidden space-y-6">
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100">
+                            <div>
+                                <h4 class="font-bold text-slate-800"><i class="fa-solid fa-scale-balanced mr-2 text-emerald-600"></i>Convenio Colectivo 77/89</h4>
+                                <p class="text-xs text-slate-500 mt-1">Consulta el documento de Industrias Químicas y Petroquímicas.</p>
+                            </div>
+                            <button onclick="printConvention()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-print"></i> Imprimir convenio
+                            </button>
+                        </div>
+                        <div class="p-5 bg-slate-50 border-b border-slate-100">
+                            <label for="convention-search" class="block text-xs font-bold text-slate-600 mb-2">Buscar dentro del convenio</label>
+                            <div class="flex gap-2">
+                                <input id="convention-search" type="search" onkeydown="if(event.key === 'Enter') searchConvention()" placeholder="Ej.: jornada, salario, vacaciones..." class="flex-1 min-w-0 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <button onclick="searchConvention()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-all"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar</button>
+                            </div>
+                            <p id="convention-search-status" class="text-[11px] text-slate-400 mt-2">Escribí una palabra o frase para encontrarla en el texto del Convenio 77/89.</p>
+                            <div id="convention-search-results" class="hidden mt-3 space-y-2"></div>
+                        </div>
+                        <iframe id="convention-pdf" src="assets/convenio-77-89.pdf" title="Convenio 77/89" class="w-full h-[70vh] min-h-[520px] bg-slate-50"></iframe>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: CREDENCIAL SINDICAL DIGITAL -->
+                <div id="tab-credenciales" class="tab-content hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-4xl mx-auto">
+                        <div class="border-b border-slate-100 pb-4 mb-6">
+                            <h4 class="font-bold text-slate-800">Generar Credencial Digital del Afiliado</h4>
+                            <p class="text-xs text-slate-500">Selecciona un afiliado para visualizar, descargar o imprimir su credencial de membresía oficial.</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            <!-- Selector y Opciones -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Seleccionar para Credencial</label>
+                                    <select id="card-affiliate-select" onchange="generateCredential(this.value)" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                                        <!-- Dinámico por JS -->
+                                    </select>
+                                </div>
+                                <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs text-amber-800 space-y-1">
+                                    <p class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Consejo de impresión:</p>
+                                    <p>Para imprimir la credencial de forma individual, haz clic en "Imprimir Credencial". Se abrirá en formato optimizado tamaño tarjeta estándar.</p>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button onclick="printCard()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-print"></i> Imprimir Credencial
+                                    </button>
+                                </div>
+                                <div class="border-t border-slate-100 pt-4 space-y-3">
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-700">Acceso a la app del afiliado</p>
+                                        <p id="mobile-access-status" class="text-[11px] text-slate-500 mt-1">Seleccioná un afiliado para administrar su acceso.</p>
+                                    </div>
+                                    <input id="mobile-initial-password" type="password" minlength="8" autocomplete="new-password" placeholder="Contraseña inicial (mínimo 8 caracteres)" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500">
+                                    <div class="flex gap-2">
+                                        <button onclick="createMobileAccess()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-all">
+                                            <i class="fa-solid fa-mobile-screen-button mr-1"></i> Crear acceso
+                                        </button>
+                                        <button id="mobile-access-toggle" onclick="toggleMobileAccess()" class="hidden px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl text-xs transition-all">Bloquear</button>
+                                    </div>
+                                    <a href="https://siga-85bdd.web.app/" target="_blank" rel="noopener" class="block text-center text-xs font-semibold text-emerald-700 hover:text-emerald-800">Abrir app de afiliados <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>
+                                </div>
+                            </div>
+
+                            <!-- Previsualizador de Credencial -->
+                            <div class="flex justify-center">
+                                <div id="credential-card-box" class="w-80 h-48 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 rounded-2xl p-4 shadow-xl text-white relative overflow-hidden border border-slate-700/50 flex flex-col justify-between">
+                                    <div class="absolute -right-10 -bottom-10 text-white/5 text-9xl pointer-events-none">
+                                        <i class="fa-solid fa-users-gear"></i>
+                                    </div>
+                                    <div class="flex justify-between items-start z-10">
+                                        <div>
+                                            <p class="text-[9px] font-bold tracking-widest text-emerald-400 uppercase">SINDICATO DE TRABAJADORES</p>
+                                            <p class="text-xs font-semibold text-slate-200">Asociación Gremial (SIGA)</p>
+                                        </div>
+                                        <div class="bg-emerald-500 text-slate-900 px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wide">
+                                            AFILIADO
+                                        </div>
+                                    </div>
+                                    <div class="z-10 my-1">
+                                        <p id="card-name" class="text-sm font-bold tracking-wide uppercase truncate">SELECCIONAR AFILIADO</p>
+                                        <p id="card-id-num" class="text-[10px] font-medium text-slate-400 mt-0.5">Nº AFILIADO: ----</p>
+                                        <p id="card-representation" class="text-[8px] font-bold text-amber-300 uppercase mt-1 truncate"></p>
+                                    </div>
+                                    <div class="z-10 flex justify-between items-end border-t border-slate-800/80 pt-2">
+                                        <div class="text-[9px] space-y-0.5 max-w-[180px]">
+                                            <p class="text-slate-400 truncate">DNI: <span id="card-dni" class="text-slate-200 font-semibold">--------</span></p>
+                                            <p class="text-slate-400 truncate">Empresa: <span id="card-company" class="text-slate-200 font-semibold">--------</span></p>
+                                            <p class="text-slate-400 truncate">Consultora: <span id="card-consultant" class="text-slate-200 font-semibold">--------</span></p>
+                                        </div>
+                                        <div class="flex flex-col items-center">
+                                            <div class="flex items-end gap-0.5 h-6">
+                                                <div class="w-0.5 bg-white h-5"></div>
+                                                <div class="w-1 bg-white h-6"></div>
+                                                <div class="w-0.5 bg-white h-4"></div>
+                                                <div class="w-1 bg-white h-6"></div>
+                                                <div class="w-0.5 bg-white h-5"></div>
+                                                <div class="w-0.5 bg-white h-6"></div>
+                                                <div class="w-1.5 bg-white h-4"></div>
+                                                <div class="w-0.5 bg-white h-6"></div>
+                                            </div>
+                                            <span class="text-[7px] text-slate-400 tracking-widest mt-0.5">SIGA-RED</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: ACTUALIZACIONES -->
+                <div id="tab-actualizaciones" class="tab-content hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-2xl mx-auto">
+                        <div class="border-b border-slate-100 pb-4 mb-6">
+                            <h4 class="font-bold text-slate-800">Verificar Actualizaciones</h4>
+                            <p class="text-xs text-slate-500">Descarga la última versión de SIGA con nuevas funciones y mejoras de seguridad.</p>
+                        </div>
+
+                        <div id="update-status-container" class="space-y-4">
+                            <!-- Búsqueda de actualizaciones -->
+                            <div id="update-checking" class="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center">
+                                <div class="flex items-center justify-center gap-2 mb-2">
+                                    <i class="fa-solid fa-spinner animate-spin text-emerald-600"></i>
+                                    <span class="text-sm font-semibold text-slate-700">Verificando actualizaciones...</span>
+                                </div>
+                                <p class="text-xs text-slate-500">Conectando con el servidor de actualizaciones...</p>
+                            </div>
+
+                            <!-- Versión actual (mostrado siempre) -->
+                            <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+                                <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
+                        <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.18</p>
+                            </div>
+
+                            <!-- Sin actualizaciones disponibles -->
+                            <div id="update-unavailable" class="hidden bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-check-circle text-emerald-600 text-xl mt-0.5"></i>
+                                    <div>
+                                        <p class="font-semibold text-emerald-900">Estás actualizado</p>
+                                        <p class="text-xs text-emerald-700 mt-1">Tienes la última versión de SIGA disponible.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actualización disponible -->
+                            <div id="update-available" class="hidden bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                                <div class="space-y-3">
+                                    <div>
+                                        <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
+                                        <div class="flex items-baseline gap-2 mb-2">
+                                            <span class="text-sm text-amber-700">Versión Actual:</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.18</span>
+                                        </div>
+                                        <div class="flex items-baseline gap-2 mb-3">
+                                            <span class="text-sm text-amber-700">Nueva Versión:</span>
+                                            <span id="new-version-text" class="font-bold text-amber-800">v1.2.15</span>
+                                        </div>
+                                        <p id="update-notes" class="text-xs text-amber-700 bg-white/50 p-2 rounded mb-3 border border-amber-100">Cargando descripción...</p>
+                                    </div>
+                                    <button onclick="downloadAndInstallUpdate()" id="download-update-btn" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-circle-down"></i> Descargar e Instalar Actualización
+                                    </button>
+                                    <div id="update-progress" class="hidden space-y-2">
+                                        <div class="bg-white border border-amber-200 rounded-lg p-2">
+                                            <div class="w-full bg-amber-200 rounded-full h-2">
+                                                <div id="progress-bar" class="bg-amber-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <p id="progress-text" class="text-xs text-amber-700 text-center">Descargando...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Error en la actualización -->
+                            <div id="update-error" class="hidden bg-rose-50 border border-rose-200 p-4 rounded-xl">
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-circle-exclamation text-rose-600 text-xl mt-0.5"></i>
+                                    <div>
+                                        <p class="font-semibold text-rose-900">Error al verificar actualizaciones</p>
+                                        <p id="error-message" class="text-xs text-rose-700 mt-1">No se pudo conectar con el servidor. Intenta más tarde.</p>
+                                        <button onclick="checkForUpdatesManual()" class="mt-2 text-xs font-semibold text-rose-700 hover:text-rose-900 underline">Reintentar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información adicional -->
+                        <div class="mt-6 pt-4 border-t border-slate-100">
+                            <p class="text-[10px] text-slate-500 flex items-center gap-1">
+                                <i class="fa-solid fa-shield-halved"></i> Las actualizaciones se verifican únicamente al abrir esta solapa. SIGA no mostrará avisos automáticos al iniciar.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: CONTROL DE PERMISOS -->
+                <div id="tab-usuarios" class="tab-content hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-4xl mx-auto space-y-6">
+                        <div class="border-b border-slate-100 pb-3">
+                            <h4 class="font-bold text-slate-800">Control de Accesos y Permisos (RBAC)</h4>
+                            <p class="text-xs text-slate-500">Asigna permisos y roles en esta terminal. Protegido por contraseñas predefinidas.</p>
+                        </div>
+
+                        <!-- Tarjetas de Roles Informativas -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border border-slate-100 bg-emerald-50/20 p-4 rounded-xl flex flex-col justify-between">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">Administrador</span>
+                                    <h5 class="font-bold text-slate-800 text-sm mt-2">Control Total</h5>
+                                    <p class="text-xs text-slate-500 mt-1">Acceso a todas las funciones, altas, modificaciones, eliminaciones y copias de seguridad de red.</p>
+                                </div>
+                                <p class="text-[10px] font-semibold text-emerald-700 mt-4"><i class="fa-solid fa-lock mr-1"></i> Acceso protegido</p>
+                            </div>
+                            <div class="border border-slate-100 bg-blue-50/20 p-4 rounded-xl flex flex-col justify-between">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded">Operador</span>
+                                    <h5 class="font-bold text-slate-800 text-sm mt-2">Carga y Búsqueda</h5>
+                                    <p class="text-xs text-slate-500 mt-1">Permitido agregar afiliados y buscar. Bloqueada la eliminación de registros y el borrado de historial.</p>
+                                </div>
+                                <p class="text-[10px] font-semibold text-blue-700 mt-4"><i class="fa-solid fa-unlock mr-1"></i> Acceso predeterminado</p>
+                            </div>
+                        </div>
+
+                        <!-- Selector activo -->
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div>
+                                <p class="text-xs font-bold text-slate-700">Rol activo actualmente en esta máquina:</p>
+                                <p class="text-xs text-slate-500" id="role-status-text">Cargando rol actual...</p>
+                            </div>
+                            <button onclick="openChangeRoleModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition-all">
+                                <i class="fa-solid fa-user-lock mr-2"></i> Cambiar Rol / Validar Clave
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: CONFIGURACIÓN / RESPALDO DE DATOS & CONFIGURACION EN RED -->
+                <div id="tab-configuracion" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                        <!-- Configuración de Red Compartida -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                            <h4 class="font-bold text-slate-800 border-b border-slate-100 pb-3"><i class="fa-solid fa-network-wired mr-2 text-emerald-500"></i> Servidor de Red Compartida</h4>
+                            <p class="text-xs text-slate-500">Para sincronizar múltiples computadoras en la misma red sindical, ingresa el mismo <b>Código de Red</b> en cada una de ellas.</p>
+                            
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Código de Red Activo</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="config-network-id" class="flex-1 bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="Ej: sucursal-rosario-1">
+                                    <button onclick="applyNewNetworkID()" class="px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition-all">Sincronizar</button>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-semibold"><i class="fa-solid fa-circle-info mr-1"></i> Por defecto la red está en 'siga-gremio-general'. Al cambiarlo, te conectarás a un nodo de red diferente.</p>
+                        </div>
+
+                        <!-- Importar / Exportar localmente -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                            <h4 class="font-bold text-slate-800 border-b border-slate-100 pb-3"><i class="fa-solid fa-file-export mr-2 text-indigo-500"></i> Copias de Seguridad Local</h4>
+                            <p class="text-xs text-slate-500">Puedes exportar toda la base de datos de afiliados de la red activa a un archivo local (JSON o CSV) para resguardar la información.</p>
+                            <div class="flex flex-wrap gap-3" id="config-backup-actions">
+                                <button onclick="exportDataToJSON()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-download"></i> Guardar Respaldo (JSON)
+                                </button>
+                                <button onclick="exportDataToCSV()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-file-csv"></i> Planilla Excel (CSV)
+                                </button>
+                            </div>
+                            <div class="pt-4 border-t border-slate-100" id="config-import-container">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Restaurar desde archivo de respaldo</label>
+                                <input type="file" id="import-file" onchange="importDataFromJSON(event)" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                            </div>
+                        </div>
+
+                        <!-- Administración de datos -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4 md:col-span-2" id="config-admin-panel">
+                            <h4 class="font-bold text-slate-800 border-b border-slate-100 pb-3"><i class="fa-solid fa-gears mr-2 text-rose-500"></i> Acciones del Sistema (Solo Administrador)</h4>
+                            <p class="text-xs text-slate-500">Los cambios se sincronizan en la red y cada equipo conserva un respaldo local.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="triggerClearAllData()" class="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-xl text-xs transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-trash-can"></i> Vaciar Padrón de Red Completo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+
+    <!-- MODAL DE FORMULARIO: REGISTRO / EDICIÓN DE AFILIADO -->
+    <div id="affiliate-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div onclick="closeAffiliateModal()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <!-- Encabezado -->
+                <div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
+                    <h3 class="text-lg font-bold" id="modal-title">Agregar Nuevo Afiliado</h3>
+                    <button onclick="closeAffiliateModal()" class="text-slate-400 hover:text-white transition-all">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Formulario -->
+                <form id="affiliate-form" onsubmit="saveAffiliate(event)" class="p-6 space-y-4">
+                    <input type="hidden" id="form-id">
+
+                    <div class="flex gap-2 border-b border-slate-200">
+                        <button type="button" id="affiliate-tab-personal" onclick="switchAffiliateFormTab('personal')" class="px-3 py-2 text-sm font-semibold text-emerald-600 border-b-2 border-emerald-500">Datos del afiliado</button>
+                        <button type="button" id="affiliate-tab-family" onclick="switchAffiliateFormTab('family')" class="px-3 py-2 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-emerald-600"><i class="fa-solid fa-people-roof mr-1"></i> Grupo familiar</button>
+                    </div>
+
+                    <div id="affiliate-panel-personal" class="space-y-4">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Nombre Completo -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nombre y Apellido *</label>
+                            <input type="text" id="form-name" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: Juan Pérez">
+                        </div>
+                        <!-- N° de Afiliado -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nº Afiliado / Legajo *</label>
+                            <input type="text" id="form-number" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: AF-1023">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- DNI / Documento -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">DNI / Documento *</label>
+                            <input type="text" id="form-dni" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: 38291823">
+                        </div>
+                        <!-- Fecha de Nacimiento -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Fecha de Nacimiento</label>
+                            <input type="date" id="form-birthdate" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Fecha de Afiliación</label>
+                            <input type="date" id="form-affiliation-date" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- Empresa -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Empresa de Trabajo</label>
+                            <input type="text" id="form-company" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: Metalúrgica Norte">
+                        </div>
+                        <!-- Consultora -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Consultora / Agencia</label>
+                            <input type="text" id="form-consultant" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: Adecco, Randstad">
+                        </div>
+                        <!-- Sector -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Sector o Categoría *</label>
+                            <input type="text" id="form-sector" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: Administración, Logística">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Teléfono -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Teléfono de Contacto</label>
+                            <input type="text" id="form-phone" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: 3416558833">
+                        </div>
+                        <!-- Email -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Correo Electrónico</label>
+                            <input type="email" id="form-email" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: correo@ejemplo.com">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Dirección Particular</label>
+                            <input type="text" id="form-address" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: Av. San Martín 1500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Estado del Afiliado</label>
+                            <select id="form-status" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
+                                <option value="Activo">Activo</option>
+                                <option value="Jubilado">Jubilado</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Estado de Pago -->
+                    <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 flex items-center justify-between">
+                        <div class="space-y-0.5">
+                            <p class="text-xs font-bold text-slate-700">Estado de Cobro / Cuota Gremial</p>
+                            <p class="text-[11px] text-slate-500">Marca si el afiliado se encuentra al día con la cuota actual.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="form-hasPaid" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="bg-indigo-50/60 p-4 rounded-xl border border-indigo-100 space-y-3">
+                        <div>
+                            <p class="text-xs font-bold text-slate-700">Representación sindical</p>
+                            <p class="text-[11px] text-slate-500">Confirmá si el afiliado tiene una función de representación vigente.</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="flex items-center justify-between gap-3 bg-white rounded-lg border border-indigo-100 px-3 py-2.5 cursor-pointer">
+                                <span class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-user-tie text-indigo-600 mr-1"></i> Es delegado/a</span>
+                                <input type="checkbox" id="form-is-delegate" class="w-4 h-4 accent-indigo-600">
+                            </label>
+                            <label class="flex items-center justify-between gap-3 bg-white rounded-lg border border-indigo-100 px-3 py-2.5 cursor-pointer">
+                                <span class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-people-group text-indigo-600 mr-1"></i> Comisión interna</span>
+                                <input type="checkbox" id="form-is-internal-commission" class="w-4 h-4 accent-indigo-600">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 p-4 space-y-2">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Archivos de la ficha</label>
+                        <p class="text-[11px] text-slate-500">Adjunta documentos, constancias o imágenes. Se guardan localmente en esta PC.</p>
+                        <input type="file" id="form-affiliate-attachments" multiple accept=".pdf,image/*,.doc,.docx" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700 file:font-semibold hover:file:bg-emerald-100">
+                        <div id="affiliate-existing-attachments" class="flex flex-wrap gap-2 pt-1"></div>
+                    </div>
+
+                    </div>
+
+                    <div id="affiliate-panel-family" class="hidden space-y-5">
+                        <div class="rounded-xl border border-slate-200 p-4 space-y-4">
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Pareja</h4>
+                                <p class="text-xs text-slate-500 mt-1">Completa los datos solo si corresponde.</p>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Nombre</label><input type="text" id="form-partner-first-name" class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl p-3" placeholder="Nombre"></div>
+                                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Apellido</label><input type="text" id="form-partner-last-name" class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl p-3" placeholder="Apellido"></div>
+                                <div><label class="block text-xs font-semibold text-slate-500 mb-1">DNI</label><input type="text" id="form-partner-dni" inputmode="numeric" class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl p-3" placeholder="DNI"></div>
+                                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Edad</label><input type="number" id="form-partner-age" min="0" max="130" class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl p-3" placeholder="Edad"></div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-slate-200 p-4 space-y-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <div><h4 class="text-sm font-bold text-slate-800">Hijos</h4><p class="text-xs text-slate-500 mt-1">Agrega un registro por cada hijo.</p></div>
+                                <button type="button" onclick="addFamilyChild()" class="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100"><i class="fa-solid fa-plus mr-1"></i> Agregar hijo</button>
+                            </div>
+                            <div id="family-children-list" class="space-y-3"></div>
+                            <p id="family-children-empty" class="text-xs text-slate-400 text-center py-3">No hay hijos cargados.</p>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" onclick="closeAffiliateModal()" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-all">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-lg shadow-emerald-600/15 transition-all">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PERSONALIZADO: CAMBIO DE ROL / LOGIN -->
+    <div id="role-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div onclick="closeRoleModal()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md w-full z-10 p-6 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-user-shield text-emerald-500 mr-2"></i> Cambiar Rol / Autorización</h3>
+                    <button onclick="closeRoleModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Seleccionar Rol Destino</label>
+                        <select id="role-select" onchange="toggleRolePasswordInput(this.value)" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                            <option value="operador">Operador (Carga y Búsqueda)</option>
+                            <option value="admin">Administrador (Control Total)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="role-password-container">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Contraseña de Autorización</label>
+                        <input type="password" id="role-password" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="Ingresa contraseña de rol">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="closeRoleModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
+                    <button onclick="submitRoleChange()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-600/15">Aplicar Rol</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PERSONALIZADO: CONFIRMACIONES DE ACCIÓN (Reemplaza a confirm()) -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div onclick="closeConfirmModal(false)" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-sm w-full z-10 p-6 space-y-4 text-center">
+                <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center text-xl mx-auto mb-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-800" id="confirm-title">¿Estás seguro?</h3>
+                    <p class="text-xs text-slate-500 mt-1" id="confirm-message">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="flex justify-center gap-2 pt-2">
+                    <button onclick="closeConfirmModal(false)" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl w-1/2">Cancelar</button>
+                    <button onclick="closeConfirmModal(true)" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl w-1/2 shadow-lg shadow-rose-600/15">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Módulos de Firebase y Script Principal de Aplicación -->
+    <script type="module">
+        import { initializeApp, getApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+        // --- Estado Global de la Aplicación ---
+        window.appState = {
+            affiliates: [],
+            payments: [],
+            currentPage: 1,
+            itemsPerPage: 8,
+            currentTab: 'dashboard',
+            filteredAffiliates: [],
+            firebaseEnabled: false,
+            db: null,
+            auth: null,
+            appId: typeof __app_id !== 'undefined'
+                ? __app_id
+                : localStorage.getItem('siga_custom_network_id') || 'siga-gremio-principal-v2',
+            sectors: new Set(),
+            currentUserRole: 'operador' // Roles: admin, operador
+        };
+
+        // Gráfico global
+        let sectorChartInstance = null;
+        let confirmPromiseResolver = null;
+        let unsubscribeAffiliates = null;
+        let unsubscribePayments = null;
+        let paymentsRealtimeSubscribed = false;
+        let isFlushingPendingChanges = false;
+        const roleAuthEmails = {
+            admin: 'administrador@siga.com',
+            operador: 'operador@siga.com'
+        };
+/* STREAMING_CHUNK:Corrigiendo formato JSON de configuración... */
+/* STREAMING_CHUNK:Corrigiendo IDs de Firebase... */
+window.__firebase_config = {
+    "apiKey": "AIzaSyC5-_AUlTMIGmv0oRUXeRUCaO79NNHFBY0",
+    "authDomain": "siga-85bdd.firebaseapp.com",
+    "projectId": "siga-85bdd",
+    "storageBucket": "siga-85bdd.firebasestorage.app",
+    "messagingSenderId": "1065738174061",
+    "appId": "1:1065738174061:web:7f62a435474bb4cbce4964"
+};
+        // --- Configuración e Inicialización de Firebase ---
+        async function setupFirebase() {
+            try {
+                document.getElementById('cloud-sync-status').className = 'flex items-center gap-1 text-amber-500 font-semibold';
+                document.getElementById('cloud-sync-status').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Sincronizando red';
+                const app = getApps().length ? getApp() : initializeApp(window.__firebase_config);
+                window.appState.db = getFirestore(app);
+                window.appState.auth = getAuth(app);
+                window.appState.firebaseEnabled = true;
+
+                const authToken = typeof window.__initial_auth_token === 'string'
+                    ? window.__initial_auth_token
+                    : '';
+                const userCredential = window.appState.auth.currentUser
+                    ? { user: window.appState.auth.currentUser }
+                    : authToken
+                        ? await signInWithCustomToken(window.appState.auth, authToken)
+                        : await signInAnonymously(window.appState.auth);
+
+                if (userCredential.user) {
+                    document.getElementById('cloud-sync-status').className = 'flex items-center gap-1 text-emerald-500 font-semibold';
+                    document.getElementById('cloud-sync-status').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Red Conectada';
+                    // La pantalla ya se abrió con la copia local. Estas tareas
+                    // continúan en segundo plano para no demorar el inicio.
+                    void flushPendingChanges();
+                    void removeLegacyDemoAffiliates();
+                    setupRealtimeSync();
+                }
+            } catch (error) {
+                console.error('Error al inicializar Firebase:', error);
+                window.appState.firebaseEnabled = false;
+                showToast('Servidor Local', 'Iniciando en modo terminal desconectada.', 'warning');
+                loadLocalFallback(false);
+            }
+        }
+
+        // --- STREAMING_CHUNK: Handling Real-time Synchronization... ---
+
+        // Sincronización en Tiempo Real de Red (Cumpliendo reglas estrictas de Firestore)
+        function setupRealtimeSync() {
+            // Cancelar suscripciones previas si cambian de ID de red
+            if (unsubscribeAffiliates) unsubscribeAffiliates();
+            if (unsubscribePayments) {
+                unsubscribePayments();
+                unsubscribePayments = null;
+                paymentsRealtimeSubscribed = false;
+            }
+
+            // Rutas estrictas (Regla 1)
+            const affiliatesColRef = collection(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'afiliados');
+            const paymentsColRef = collection(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'pagos');
+
+            // Suscribirse a Afiliados
+            unsubscribeAffiliates = onSnapshot(affiliatesColRef, (snapshot) => {
+                const loaded = [];
+                snapshot.forEach((doc) => {
+                    loaded.push({ id: doc.id, ...doc.data() });
+                });
+                
+                window.appState.affiliates = loaded;
+                saveLocalData();
+                processStateChange();
+            }, (error) => {
+                console.error("Error de permisos / sincronización Firestore:", error);
+                showToast('Red Restringida', 'Verifica el código de red o permisos.', 'error');
+            });
+
+            // Los pagos se descargan solamente al abrir Control de Cuotas.
+            // Así el inicio del padrón no espera una segunda colección.
+            window.subscribePaymentsRealtime = function() {
+                if (paymentsRealtimeSubscribed) return;
+                paymentsRealtimeSubscribed = true;
+                unsubscribePayments = onSnapshot(paymentsColRef, (snapshot) => {
+                const loadedPayments = [];
+                snapshot.forEach((doc) => {
+                    loadedPayments.push({ id: doc.id, ...doc.data() });
+                });
+                // Ordenar localmente (Regla 2: Sin queries complejas en Firestore)
+                window.appState.payments = loadedPayments.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+                saveLocalData();
+                renderPaymentsList();
+            }, (error) => {
+                console.error("Error sincronizando pagos:", error);
+                    paymentsRealtimeSubscribed = false;
+                });
+            };
+        }
+
+        // --- Carga en Almacenamiento Local (Fallback) ---
+        function loadLocalFallback(showOfflineStatus = true) {
+            if (showOfflineStatus) {
+                document.getElementById('cloud-sync-status').className = 'flex items-center gap-1 text-slate-500 font-semibold';
+                document.getElementById('cloud-sync-status').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Copia local';
+            }
+
+            const localData = localStorage.getItem('siga_affiliates_data');
+            const localPayments = localStorage.getItem('siga_payments_data');
+            
+            if (localData) {
+                window.appState.affiliates = JSON.parse(localData);
+            } else {
+                window.appState.affiliates = [];
+            }
+
+            if (localPayments) {
+                window.appState.payments = JSON.parse(localPayments);
+            }
+            
+            processStateChange();
+        }
+
+        // --- Respaldo local y sincronización diferida ---
+        function pendingChangesKey() {
+            return `siga_pending_changes_${window.appState.appId}`;
+        }
+
+        function queuePendingChange(change) {
+            const pending = JSON.parse(localStorage.getItem(pendingChangesKey()) || '[]')
+                .filter(item => !(item.collection === change.collection && item.id === change.id));
+            pending.push(change);
+            localStorage.setItem(pendingChangesKey(), JSON.stringify(pending));
+        }
+
+        async function sendChangeToFirestore(change) {
+            const docRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', change.collection, change.id);
+            if (change.type === 'delete') {
+                await deleteDoc(docRef);
+            } else {
+                await setDoc(docRef, change.data);
+            }
+        }
+
+        // Removes only the exact legacy demo records, never user-created affiliates.
+        async function removeLegacyDemoAffiliates() {
+            const legacyDemoAffiliates = {
+                '1': 'Laura Beatriz Giménez',
+                '2': 'Carlos Javier Montes',
+                '3': 'Nélida Esther Gómez',
+                '4': 'Facundo Andrés López',
+                '5': 'Mariela Sofía Pereyra'
+            };
+
+            await Promise.all(Object.entries(legacyDemoAffiliates).map(async ([id, name]) => {
+                const ref = doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'afiliados', id);
+                const snapshot = await getDoc(ref);
+                if (snapshot.exists() && snapshot.data().name === name) {
+                    await deleteDoc(ref);
+                }
+            }));
+        }
+
+        async function flushPendingChanges() {
+            if (isFlushingPendingChanges || !window.appState.firebaseEnabled || !window.appState.db || !window.appState.auth?.currentUser) return;
+            isFlushingPendingChanges = true;
+            const pending = JSON.parse(localStorage.getItem(pendingChangesKey()) || '[]');
+            const remaining = [];
+            try {
+                for (const change of pending) {
+                    try {
+                        await sendChangeToFirestore(change);
+                    } catch (error) {
+                        console.error('Error al sincronizar cambio pendiente:', error);
+                        remaining.push(change);
+                    }
+                }
+                const changesAddedDuringSync = JSON.parse(localStorage.getItem(pendingChangesKey()) || '[]')
+                    .filter(item => !pending.some(original => JSON.stringify(original) === JSON.stringify(item)));
+                const finalPending = [...remaining, ...changesAddedDuringSync]
+                    .reverse()
+                    .filter((item, index, list) => list.findIndex(candidate => candidate.collection === item.collection && candidate.id === item.id) === index)
+                    .reverse();
+                if (finalPending.length) localStorage.setItem(pendingChangesKey(), JSON.stringify(finalPending));
+                else localStorage.removeItem(pendingChangesKey());
+            } finally {
+                isFlushingPendingChanges = false;
+            }
+        }
+
+        function syncChange(change) {
+            // Primero se registra en la cola local; la red nunca bloquea el guardado.
+            queuePendingChange(change);
+            if (window.appState.firebaseEnabled && window.appState.db && window.appState.auth?.currentUser) {
+                void flushPendingChanges().catch(error => {
+                    console.error('Error de sincronización en segundo plano:', error);
+                });
+            }
+        }
+
+        // Los adjuntos se almacenan en esta PC con IndexedDB. No usan Firebase
+        // Storage, por lo que no requieren contratar un plan pago.
+        const localAttachmentsDbName = 'siga_local_attachments_v1';
+        function openAttachmentsDb() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(localAttachmentsDbName, 1);
+                request.onupgradeneeded = () => request.result.createObjectStore('files', { keyPath: 'id' });
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveLocalAttachment(record) {
+            const db = await openAttachmentsDb();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction('files', 'readwrite');
+                transaction.objectStore('files').put(record);
+                transaction.oncomplete = () => { db.close(); resolve(); };
+                transaction.onerror = () => { db.close(); reject(transaction.error); };
+            });
+        }
+
+        async function getLocalAttachment(id) {
+            const db = await openAttachmentsDb();
+            return new Promise((resolve, reject) => {
+                const request = db.transaction('files', 'readonly').objectStore('files').get(id);
+                request.onsuccess = () => { db.close(); resolve(request.result); };
+                request.onerror = () => { db.close(); reject(request.error); };
+            });
+        }
+
+        async function openLocalAttachment(id) {
+            try {
+                const record = await getLocalAttachment(id);
+                if (!record?.blob) throw new Error('not found');
+                const url = URL.createObjectURL(record.blob);
+                window.open(url, '_blank', 'noopener');
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+            } catch {
+                showToast('Archivo local', 'Este archivo está disponible solamente en la PC donde fue adjuntado.', 'warning');
+            }
+        }
+        window.openLocalAttachment = openLocalAttachment;
+
+        async function uploadAttachments(fileList, category, ownerId) {
+            const files = Array.from(fileList || []);
+            if (!files.length) return [];
+            return Promise.all(files.map(async file => {
+                if (file.size > 10 * 1024 * 1024) throw new Error(`El archivo ${file.name} supera el límite de 10 MB.`);
+                const id = `${category}-${ownerId}-${Date.now()}-${crypto.randomUUID()}`;
+                await saveLocalAttachment({ id, blob: file, name: file.name, type: file.type || 'application/octet-stream', savedAt: new Date().toISOString() });
+                return { id, name: file.name, type: file.type || 'application/octet-stream', size: file.size, localOnly: true, uploadedAt: new Date().toISOString() };
+            }));
+        }
+
+        function attachmentLinksHtml(attachments = []) {
+            if (!attachments.length) return '<span class="text-[11px] text-slate-400">Sin archivos adjuntos.</span>';
+            return attachments.map(file => file.url
+                ? `<a href="${file.url}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-[11px] font-semibold text-slate-600 hover:text-emerald-700"><i class="fa-solid fa-paperclip"></i>${file.name}</a>`
+                : `<button type="button" onclick="openLocalAttachment('${file.id}')" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-[11px] font-semibold text-slate-600 hover:text-emerald-700"><i class="fa-solid fa-paperclip"></i>${file.name} <span class="text-slate-400">(local)</span></button>`).join('');
+        }
+
+        function renderAffiliateAttachments(attachments = []) {
+            document.getElementById('affiliate-existing-attachments').innerHTML = attachmentLinksHtml(attachments);
+        }
+
+        function saveAffiliateLocally(affiliate) {
+            const index = window.appState.affiliates.findIndex(a => a.id === affiliate.id);
+            if (index > -1) window.appState.affiliates[index] = affiliate;
+            else window.appState.affiliates.push(affiliate);
+            saveLocalData();
+            processStateChange();
+        }
+
+        async function commitToDatabase(affiliate) {
+            saveAffiliateLocally(affiliate);
+            await syncChange({ type: 'set', collection: 'afiliados', id: affiliate.id, data: affiliate });
+        }
+
+        async function removeFromDatabase(id) {
+            window.appState.affiliates = window.appState.affiliates.filter(a => a.id !== id);
+            saveLocalData();
+            processStateChange();
+            await syncChange({ type: 'delete', collection: 'afiliados', id });
+        }
+
+        async function commitPaymentToDatabase(payment) {
+            const index = window.appState.payments.findIndex(p => p.id === payment.id);
+            if (index > -1) window.appState.payments[index] = payment;
+            else window.appState.payments.unshift(payment);
+            saveLocalData();
+            renderPaymentsList();
+            await syncChange({ type: 'set', collection: 'pagos', id: payment.id, data: payment });
+        }
+
+        async function removePaymentFromDatabase(id) {
+            window.appState.payments = window.appState.payments.filter(p => p.id !== id);
+            saveLocalData();
+            renderPaymentsList();
+            await syncChange({ type: 'delete', collection: 'pagos', id });
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('siga_affiliates_data', JSON.stringify(window.appState.affiliates));
+            localStorage.setItem('siga_payments_data', JSON.stringify(window.appState.payments));
+        }
+
+        // --- STREAMING_CHUNK: Processing interface states... ---
+
+        // --- Procesamiento de Estados, Gráficos y Renderizado ---
+        function processStateChange() {
+            // Actualizar sectores únicos
+            window.appState.sectors.clear();
+            window.appState.affiliates.forEach(a => {
+                if (a.sector) window.appState.sectors.add(a.sector.trim());
+            });
+
+            // Actualizar select de filtros de sector
+            const sectorFilter = document.getElementById('filter-sector');
+            const savedSelected = sectorFilter.value;
+            sectorFilter.innerHTML = '<option value="">Todos los sectores</option>';
+            Array.from(window.appState.sectors).sort().forEach(sector => {
+                const opt = document.createElement('option');
+                opt.value = sector;
+                opt.textContent = sector;
+                sectorFilter.appendChild(opt);
+            });
+            sectorFilter.value = savedSelected;
+
+            populateDropdowns();
+            applyFilters();
+            renderDashboardStats();
+            renderSectorChart();
+        }
+
+        // --- Sistema de Búsqueda Flexible y Unificada ---
+        window.applyFilters = function() {
+            const searchQuery = document.getElementById('filter-search').value.toLowerCase().trim();
+            const sectorVal = document.getElementById('filter-sector').value;
+            const paymentVal = document.getElementById('filter-payment').value;
+            const statusVal = document.getElementById('filter-status').value;
+
+            window.appState.filteredAffiliates = window.appState.affiliates.filter(a => {
+                const matchQuery = !searchQuery || 
+                    a.name.toLowerCase().includes(searchQuery) ||
+                    a.dni.includes(searchQuery) ||
+                    (a.number && a.number.toLowerCase().includes(searchQuery)) ||
+                    (a.company && a.company.toLowerCase().includes(searchQuery)) ||
+                    (a.consultant && a.consultant.toLowerCase().includes(searchQuery));
+
+                const matchSector = !sectorVal || a.sector === sectorVal;
+                const matchPayment = !paymentVal || (a.hasPaid.toString() === paymentVal);
+                const matchStatus = !statusVal || a.status === statusVal;
+
+                return matchQuery && matchSector && matchPayment && matchStatus;
+            });
+
+            renderAffiliatesTable();
+        };
+
+        // Renderizado de tabla de afiliados
+        function renderAffiliatesTable() {
+            const tbody = document.getElementById('affiliates-table-body');
+            const noResults = document.getElementById('no-results');
+            tbody.innerHTML = '';
+
+            const list = window.appState.filteredAffiliates;
+            const total = list.length;
+            const limit = window.appState.itemsPerPage;
+            
+            const maxPages = Math.ceil(total / limit) || 1;
+            if (window.appState.currentPage > maxPages) window.appState.currentPage = maxPages;
+            
+            const start = (window.appState.currentPage - 1) * limit;
+            const end = Math.min(start + limit, total);
+
+            document.getElementById('table-page-num').textContent = window.appState.currentPage;
+            document.getElementById('table-pagination-info').textContent = `Mostrando ${total > 0 ? start + 1 : 0} a ${end} de ${total} afiliados`;
+            document.getElementById('btn-page-prev').disabled = window.appState.currentPage === 1;
+            document.getElementById('btn-page-next').disabled = window.appState.currentPage === maxPages;
+
+            if (total === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            const pageItems = list.slice(start, end);
+            const formatAffiliationDate = (value) => {
+                if (!value) return '<span class="text-slate-400">—</span>';
+                const [year, month, day] = String(value).split('-');
+                return year && month && day ? `${day}/${month}/${year}` : value;
+            };
+            pageItems.forEach(a => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition-colors";
+
+                const isPaidBadge = a.hasPaid 
+                    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Al día</span>`
+                    : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-100"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Impago</span>`;
+
+                let statusBadge = '';
+                if (a.status === 'Activo') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">Activo</span>`;
+                } else if (a.status === 'Jubilado') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">Jubilado</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">Inactivo</span>`;
+                }
+
+                const representationBadges = [
+                    a.isDelegate ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100"><i class="fa-solid fa-user-tie"></i> Delegado/a</span>' : '',
+                    a.isInternalCommission ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-100"><i class="fa-solid fa-people-group"></i> Comisión interna</span>' : ''
+                ].filter(Boolean).join('<br>') || '<span class="text-xs text-slate-400">—</span>';
+
+                // Deshabilitar controles de edición/borrado según rol activo (Seguridad en interfaz)
+                const isReader = window.appState.currentUserRole === 'lector';
+
+                const editBtn = isReader 
+                    ? `<span class="p-2 text-slate-300 cursor-not-allowed"><i class="fa-solid fa-lock"></i></span>`
+                    : `<button onclick="editAffiliate('${a.id}')" title="Editar Afiliado" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"><i class="fa-solid fa-pen-to-square"></i></button>`;
+
+                const deleteBtn = isReader
+                    ? `<span class="p-2 text-slate-300 cursor-not-allowed"><i class="fa-solid fa-lock"></i></span>`
+                    : `<button onclick="deleteAffiliate('${a.id}')" title="Dar de Baja" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><i class="fa-solid fa-trash-can"></i></button>`;
+
+                tr.innerHTML = `
+                    <td class="py-4 px-6">
+                        <div class="font-bold text-slate-800 text-sm">${a.name}</div>
+                        <div class="text-xs text-slate-400 font-semibold mt-0.5">Legajo: ${a.number || 'N/A'}</div>
+                    </td>
+                    <td class="py-4 px-6 text-slate-700 font-medium">${a.dni}</td>
+                    <td class="py-4 px-6 text-xs font-medium text-slate-700 whitespace-nowrap">${formatAffiliationDate(a.affiliationDate)}</td>
+                    <td class="py-4 px-6">
+                        <div class="font-semibold text-slate-700 text-xs">${a.company || 'Sin Empresa'}</div>
+                        <div class="text-slate-400 text-[11px] mt-0.5">${a.consultant ? 'Consultora: ' + a.consultant : 'Sin Consultora'}</div>
+                        <div class="text-emerald-600 text-[10px] mt-0.5 font-medium">${a.sector}</div>
+                    </td>
+                    <td class="py-4 px-6 text-xs">
+                        <div class="text-slate-700 font-medium"><i class="fa-solid fa-phone mr-1.5 text-slate-400"></i>${a.phone || '-'}</div>
+                        <div class="text-slate-400 mt-0.5"><i class="fa-solid fa-envelope mr-1.5 text-slate-400"></i>${a.email || '-'}</div>
+                    </td>
+                    <td class="py-4 px-6">${isPaidBadge}</td>
+                    <td class="py-4 px-6">${statusBadge}</td>
+                    <td class="py-4 px-6 whitespace-nowrap">${representationBadges}</td>
+                    <td class="py-4 px-6 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            ${editBtn}
+                            <button onclick="printAffiliateSheet('${a.id}')" title="Imprimir ficha" class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-all"><i class="fa-solid fa-print"></i></button>
+                            <button onclick="openSpecificCredential('${a.id}')" title="Ver Credencial" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all">
+                                <i class="fa-solid fa-id-card"></i>
+                            </button>
+                            ${deleteBtn}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- STREAMING_CHUNK: Managing Role Permissions dynamically... ---
+
+        // --- GESTIÓN DE ROLES (RBAC) ---
+        window.openChangeRoleModal = function() {
+            document.getElementById('role-select').value = window.appState.currentUserRole;
+            toggleRolePasswordInput(window.appState.currentUserRole);
+            document.getElementById('role-modal').classList.remove('hidden');
+        };
+
+        window.closeRoleModal = function() {
+            document.getElementById('role-modal').classList.add('hidden');
+            document.getElementById('role-password').value = '';
+        };
+
+        window.toggleRolePasswordInput = function(role) {
+            const pwdContainer = document.getElementById('role-password-container');
+            pwdContainer.classList.remove('hidden');
+        };
+
+        window.submitRoleChange = async function() {
+            const roleSelected = document.getElementById('role-select').value;
+            const password = document.getElementById('role-password').value;
+
+            if (!window.appState.auth) {
+                showToast('Sin conexión', 'Espera a que SIGA se conecte con el servidor para validar tu acceso.', 'warning');
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(window.appState.auth, roleAuthEmails[roleSelected], password);
+                setRole(roleSelected);
+            } catch (error) {
+                console.error('No se pudo validar el rol:', error);
+                showToast('Acceso denegado', 'Usuario o contraseña incorrectos.', 'error');
+            }
+        };
+
+        function setRole(role) {
+            window.appState.currentUserRole = role;
+            document.body.dataset.role = role;
+
+            // Ajustes visuales de Avatar e información en el Sidebar
+            const avatar = document.getElementById('role-avatar');
+            const nameEl = document.getElementById('auth-user-name');
+            const roleEl = document.getElementById('auth-user-role');
+            const statusText = document.getElementById('role-status-text');
+
+            if (role === 'admin') {
+                avatar.textContent = 'AD';
+                avatar.className = "w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs";
+                nameEl.textContent = 'Administrador';
+                roleEl.textContent = 'Control Total';
+                statusText.innerHTML = '<b>Administrador (Control Total)</b>. Todas las funciones de red desbloqueadas.';
+            } else if (role === 'operador') {
+                avatar.textContent = 'OP';
+                avatar.className = "w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs";
+                nameEl.textContent = 'Operador Gremial';
+                roleEl.textContent = 'Carga, Búsqueda y Baja';
+                statusText.innerHTML = '<b>Operador</b>. Puedes agregar afiliados, buscar y dar de baja afiliados. Reinicio de red restringido.';
+            }
+
+            // Aplicar restricciones UI críticas según rol
+            applyRoleUIRestrictions();
+            
+            closeRoleModal();
+            showToast('Rol Actualizado', `Ahora tienes permisos de: ${role.toUpperCase()}`, 'info');
+            processStateChange();
+        }
+
+        function applyRoleUIRestrictions() {
+            const role = window.appState.currentUserRole;
+            const btnNewAffiliate = document.getElementById('nav-btn-new-affiliate');
+            const payNotice = document.getElementById('pay-role-notice');
+            const btnSubmitPayment = document.getElementById('btn-submit-payment');
+            const btnClearPayments = document.getElementById('btn-clear-payments');
+            const adminPanel = document.getElementById('config-admin-panel');
+            const backupActions = document.getElementById('config-backup-actions');
+            const importContainer = document.getElementById('config-import-container');
+            const adminNavigation = document.getElementById('admin-nav-section');
+            const permissionsNavigation = document.getElementById('btn-tab-usuarios');
+            const configurationNavigation = document.getElementById('btn-tab-configuracion');
+
+            if (role === 'admin') {
+                btnNewAffiliate.classList.remove('hidden');
+                payNotice.classList.add('hidden');
+                btnSubmitPayment.disabled = false;
+                btnSubmitPayment.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnClearPayments.classList.remove('hidden');
+                adminPanel.classList.remove('hidden');
+                backupActions.classList.remove('hidden');
+                importContainer.classList.remove('hidden');
+                adminNavigation.classList.remove('hidden');
+                permissionsNavigation.classList.remove('hidden');
+                configurationNavigation.classList.remove('hidden');
+            } else if (role === 'operador') {
+                btnNewAffiliate.classList.remove('hidden');
+                payNotice.classList.add('hidden');
+                btnSubmitPayment.disabled = false;
+                btnSubmitPayment.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnClearPayments.classList.add('hidden');
+                adminPanel.classList.add('hidden'); // Ocultar panel crítico de formateo de red
+                backupActions.classList.remove('hidden');
+                importContainer.classList.add('hidden');
+                adminNavigation.classList.add('hidden');
+                permissionsNavigation.classList.add('hidden');
+                configurationNavigation.classList.add('hidden');
+            }
+        }
+
+        // --- MODAL DE CONFIRMACIÓN (Alternativa a confirm()) ---
+        window.customConfirm = function(title, message) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            return new Promise((resolve) => {
+                confirmPromiseResolver = resolve;
+            });
+        };
+
+        window.closeConfirmModal = function(decision) {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            if (confirmPromiseResolver) {
+                confirmPromiseResolver(decision);
+                confirmPromiseResolver = null;
+            }
+        };
+
+        // --- GESTIÓN DE AFILIADOS (CRUD) ---
+        window.switchAffiliateFormTab = function(tab) {
+            const personal = tab === 'personal';
+            document.getElementById('affiliate-panel-personal').classList.toggle('hidden', !personal);
+            document.getElementById('affiliate-panel-family').classList.toggle('hidden', personal);
+            document.getElementById('affiliate-tab-personal').className = personal
+                ? 'px-3 py-2 text-sm font-semibold text-emerald-600 border-b-2 border-emerald-500'
+                : 'px-3 py-2 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-emerald-600';
+            document.getElementById('affiliate-tab-family').className = personal
+                ? 'px-3 py-2 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-emerald-600'
+                : 'px-3 py-2 text-sm font-semibold text-emerald-600 border-b-2 border-emerald-500';
+        };
+
+        function updateFamilyChildrenEmptyState() {
+            const list = document.getElementById('family-children-list');
+            document.getElementById('family-children-empty').classList.toggle('hidden', list.children.length > 0);
+        }
+
+        window.addFamilyChild = function(child = {}) {
+            const row = document.createElement('div');
+            row.className = 'family-child grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_100px_auto] gap-3 items-end rounded-xl bg-slate-50 p-3 border border-slate-100';
+            row.innerHTML = `
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Nombre</label><input data-family-field="firstName" type="text" class="w-full bg-white border border-slate-200 text-sm rounded-xl p-3" placeholder="Nombre"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Apellido</label><input data-family-field="lastName" type="text" class="w-full bg-white border border-slate-200 text-sm rounded-xl p-3" placeholder="Apellido"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">DNI</label><input data-family-field="dni" type="text" inputmode="numeric" class="w-full bg-white border border-slate-200 text-sm rounded-xl p-3" placeholder="DNI"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 mb-1">Edad</label><input data-family-field="age" type="number" min="0" max="130" class="w-full bg-white border border-slate-200 text-sm rounded-xl p-3" placeholder="Edad"></div>
+                <button type="button" class="h-11 w-11 mb-0.5 text-rose-600 hover:bg-rose-50 rounded-xl" title="Quitar hijo"><i class="fa-solid fa-trash"></i></button>`;
+            Object.entries(child).forEach(([field, value]) => {
+                const input = row.querySelector(`[data-family-field="${field}"]`);
+                if (input) input.value = value ?? '';
+            });
+            row.querySelector('button').addEventListener('click', () => {
+                row.remove();
+                updateFamilyChildrenEmptyState();
+            });
+            document.getElementById('family-children-list').appendChild(row);
+            updateFamilyChildrenEmptyState();
+        };
+
+        function renderFamilyGroup(family = {}) {
+            family = family || {};
+            const partner = family.partner || {};
+            document.getElementById('form-partner-first-name').value = partner.firstName || '';
+            document.getElementById('form-partner-last-name').value = partner.lastName || '';
+            document.getElementById('form-partner-dni').value = partner.dni || '';
+            document.getElementById('form-partner-age').value = partner.age ?? '';
+            document.getElementById('family-children-list').innerHTML = '';
+            (family.children || []).forEach(child => addFamilyChild(child));
+            updateFamilyChildrenEmptyState();
+        }
+
+        function readFamilyGroup() {
+            const partner = {
+                firstName: document.getElementById('form-partner-first-name').value.trim(),
+                lastName: document.getElementById('form-partner-last-name').value.trim(),
+                dni: document.getElementById('form-partner-dni').value.trim(),
+                age: document.getElementById('form-partner-age').value
+            };
+            const partnerValues = Object.values(partner);
+            if (partnerValues.some(Boolean) && partnerValues.some(value => !String(value).trim())) {
+                showToast('Datos incompletos', 'Completa nombre, apellido, DNI y edad de la pareja.', 'warning');
+                return null;
+            }
+            const children = Array.from(document.querySelectorAll('.family-child')).map(row => ({
+                firstName: row.querySelector('[data-family-field="firstName"]').value.trim(),
+                lastName: row.querySelector('[data-family-field="lastName"]').value.trim(),
+                dni: row.querySelector('[data-family-field="dni"]').value.trim(),
+                age: row.querySelector('[data-family-field="age"]').value
+            }));
+            if (children.some(child => Object.values(child).some(value => !String(value).trim()))) {
+                showToast('Datos incompletos', 'Completa nombre, apellido, DNI y edad de cada hijo.', 'warning');
+                return null;
+            }
+            return { partner: partnerValues.some(Boolean) ? { ...partner, age: Number(partner.age) } : null, children: children.map(child => ({ ...child, age: Number(child.age) })) };
+        }
+
+        window.openAffiliateModal = function() {
+            if (window.appState.currentUserRole === 'lector') {
+                showToast('Denegado', 'No tienes permisos para agregar afiliados.', 'error');
+                return;
+            }
+            document.getElementById('modal-title').textContent = 'Agregar Nuevo Afiliado';
+            document.getElementById('affiliate-form').reset();
+            document.getElementById('form-id').value = '';
+            document.getElementById('form-affiliation-date').value = new Date().toISOString().slice(0, 10);
+            renderFamilyGroup();
+            renderAffiliateAttachments();
+            switchAffiliateFormTab('personal');
+            document.getElementById('affiliate-modal').classList.remove('hidden');
+        };
+
+        window.closeAffiliateModal = function() {
+            document.getElementById('affiliate-modal').classList.add('hidden');
+        };
+
+        window.saveAffiliate = async function(event) {
+            event.preventDefault();
+            if (window.appState.currentUserRole === 'lector') return;
+
+            const id = document.getElementById('form-id').value || crypto.randomUUID();
+            const existing = window.appState.affiliates.find(a => a.id === id);
+            const submittedDni = document.getElementById('form-dni').value.trim();
+            if (existing?.mobileAccess?.uid && submittedDni.replace(/\D/g, '') !== String(existing.dni || '').replace(/\D/g, '')) {
+                showToast('DNI vinculado', 'No se puede cambiar el DNI mientras el afiliado tenga una cuenta móvil activa.', 'warning');
+                return;
+            }
+            const familyGroup = readFamilyGroup();
+            if (!familyGroup) {
+                switchAffiliateFormTab('family');
+                return;
+            }
+            let newAttachments;
+            try {
+                newAttachments = await uploadAttachments(document.getElementById('form-affiliate-attachments').files, 'afiliados', id);
+            } catch (error) {
+                showToast('Adjuntos no guardados', error.message || 'No se pudieron subir los archivos.', 'error');
+                return;
+            }
+            const affiliate = {
+                id,
+                name: document.getElementById('form-name').value.trim(),
+                number: document.getElementById('form-number').value.trim(),
+                dni: submittedDni,
+                birthdate: document.getElementById('form-birthdate').value,
+                affiliationDate: document.getElementById('form-affiliation-date').value,
+                company: document.getElementById('form-company').value.trim(),
+                consultant: document.getElementById('form-consultant').value.trim(),
+                sector: document.getElementById('form-sector').value.trim(),
+                phone: document.getElementById('form-phone').value.trim(),
+                email: document.getElementById('form-email').value.trim(),
+                address: document.getElementById('form-address').value.trim(),
+                status: document.getElementById('form-status').value,
+                hasPaid: document.getElementById('form-hasPaid').checked,
+                isDelegate: document.getElementById('form-is-delegate').checked,
+                isInternalCommission: document.getElementById('form-is-internal-commission').checked,
+                familyGroup,
+                attachments: [...(existing?.attachments || []), ...newAttachments],
+                createdAt: existing?.createdAt || new Date().toISOString()
+            };
+
+            await commitToDatabase(affiliate);
+            try {
+                await syncMobileCredential(affiliate);
+            } catch (error) {
+                console.error('No se pudo sincronizar la credencial móvil:', error);
+                showToast('Credencial móvil', 'Los datos se guardaron, pero la app móvil no pudo sincronizarse.', 'warning');
+            }
+            closeAffiliateModal();
+            showToast('Afiliado guardado', 'Los datos se actualizaron correctamente.', 'success');
+        };
+
+        window.editAffiliate = function(id) {
+            if (window.appState.currentUserRole === 'lector') return;
+            const a = window.appState.affiliates.find(item => item.id === id);
+            if (!a) return;
+
+            document.getElementById('modal-title').textContent = 'Editar Datos de Afiliado';
+            document.getElementById('form-id').value = a.id;
+            document.getElementById('form-name').value = a.name;
+            document.getElementById('form-number').value = a.number;
+            document.getElementById('form-dni').value = a.dni;
+            document.getElementById('form-birthdate').value = a.birthdate || '';
+            document.getElementById('form-affiliation-date').value = a.affiliationDate || '';
+            document.getElementById('form-company').value = a.company || '';
+            document.getElementById('form-consultant').value = a.consultant || '';
+            document.getElementById('form-sector').value = a.sector || '';
+            document.getElementById('form-phone').value = a.phone || '';
+            document.getElementById('form-email').value = a.email || '';
+            document.getElementById('form-address').value = a.address || '';
+            document.getElementById('form-status').value = a.status;
+            document.getElementById('form-hasPaid').checked = a.hasPaid;
+            document.getElementById('form-is-delegate').checked = Boolean(a.isDelegate);
+            document.getElementById('form-is-internal-commission').checked = Boolean(a.isInternalCommission);
+            renderFamilyGroup(a.familyGroup);
+            document.getElementById('form-affiliate-attachments').value = '';
+            renderAffiliateAttachments(a.attachments || []);
+            switchAffiliateFormTab('personal');
+
+            document.getElementById('affiliate-modal').classList.remove('hidden');
+        };
+
+        window.deleteAffiliate = async function(id) {
+            if (window.appState.currentUserRole === 'lector') {
+                showToast('Restringido', 'Solo usuarios con permisos pueden eliminar afiliados de la red.', 'warning');
+                return;
+            }
+            const a = window.appState.affiliates.find(item => item.id === id);
+            if (!a) return;
+            
+            const confirmed = await customConfirm(
+                '¿Confirmar Baja de Red?', 
+                `¿Estás seguro de que deseas eliminar permanentemente a ${a.name} de los registros sindicales de toda la red?`
+            );
+            if (confirmed) {
+                if (a.mobileAccess?.uid) {
+                    if (!canManageMobileAccess()) {
+                        showToast('Acceso móvil activo', 'Autorizá el rol Administrador u Operador con su contraseña antes de darlo de baja.', 'warning');
+                        return;
+                    }
+                    try {
+                        const credentialRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'mobile_credentials', a.mobileAccess.uid);
+                        await setDoc(credentialRef, {
+                            enabled: false,
+                            revokedAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        }, { merge: true });
+                    } catch (error) {
+                        console.error('No se pudo revocar el acceso móvil:', error);
+                        showToast('Baja cancelada', 'No se pudo bloquear el acceso móvil. Verificá la conexión e intentá nuevamente.', 'error');
+                        return;
+                    }
+                }
+                await removeFromDatabase(id);
+                showToast('Eliminado', `Afiliado ${a.name} removido y acceso móvil revocado.`, 'info');
+            }
+        };
+
+        window.changePage = function(direction) {
+            window.appState.currentPage += direction;
+            renderAffiliatesTable();
+        };
+
+        // --- STREAMING_CHUNK: Setting up statistics dashboards... ---
+
+        // --- RENDERIZADO DE DASHBOARD Y MÉTRICAS ---
+        function renderDashboardStats() {
+            const list = window.appState.affiliates;
+            const total = list.length;
+            const paid = list.filter(a => a.hasPaid).length;
+            const unpaid = total - paid;
+            
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const newJoiners = list.filter(a => a.createdAt && new Date(a.createdAt) > thirtyDaysAgo).length;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-paid').textContent = paid;
+            document.getElementById('stat-unpaid').textContent = unpaid;
+            document.getElementById('stat-new').textContent = newJoiners;
+
+            const paidPct = total > 0 ? Math.round((paid / total) * 100) : 0;
+            const unpaidPct = total > 0 ? Math.round((unpaid / total) * 100) : 0;
+
+            document.getElementById('stat-paid-pct').textContent = `${paidPct}% del padrón total`;
+            document.getElementById('stat-unpaid-pct').textContent = `${unpaidPct}% requiere atención`;
+
+            // Estados del padrón
+            const active = list.filter(a => a.status === 'Activo').length;
+            const retired = list.filter(a => a.status === 'Jubilado').length;
+            const inactive = total - active - retired;
+
+            const actPct = total > 0 ? Math.round((active / total) * 100) : 0;
+            const retPct = total > 0 ? Math.round((retired / total) * 100) : 0;
+            const inactPct = total > 0 ? Math.round((inactive / total) * 100) : 0;
+
+            document.getElementById('label-active-count').textContent = `${active} (${actPct}%)`;
+            document.getElementById('label-retired-count').textContent = `${retired} (${retPct}%)`;
+            document.getElementById('label-inactive-count').textContent = `${inactive} (${inactPct}%)`;
+
+            document.getElementById('bar-active').style.width = `${actPct}%`;
+            document.getElementById('bar-retired').style.width = `${retPct}%`;
+            document.getElementById('bar-inactive').style.width = `${inactPct}%`;
+
+            // Tabla de ingresos recientes
+            const recentList = document.getElementById('recent-affiliates-list');
+            recentList.innerHTML = '';
+            
+            const sortedRecent = [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5);
+            
+            if (sortedRecent.length === 0) {
+                recentList.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-xs text-slate-400">Sin afiliados registrados actualmente.</td></tr>`;
+                return;
+            }
+
+            sortedRecent.forEach(a => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+                const badge = a.hasPaid 
+                    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Al día</span>`
+                    : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Con Deuda</span>`;
+                
+                tr.innerHTML = `
+                    <td class="py-3 px-6 font-bold text-slate-800">${a.name}</td>
+                    <td class="py-3 px-6 text-xs">${a.dni}</td>
+                    <td class="py-3 px-6 text-xs">
+                        <div>${a.company || '-'}</div>
+                        <div class="text-[10px] text-slate-400 font-medium">${a.consultant ? 'C: ' + a.consultant : ''}</div>
+                    </td>
+                    <td class="py-3 px-6 text-xs font-semibold text-slate-500">${a.sector}</td>
+                    <td class="py-3 px-6">${badge}</td>
+                    <td class="py-3 px-6 text-right">
+                        <button onclick="switchTab('afiliados'); editAffiliate('${a.id}')" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Ver</button>
+                    </td>
+                `;
+                recentList.appendChild(tr);
+            });
+        }
+
+        // --- GRÁFICO SECTORES CON CHART.JS ---
+        function renderSectorChart() {
+            const ctx = document.getElementById('chartSectors');
+            if (!ctx) return;
+
+            const sectorsMap = {};
+            window.appState.affiliates.forEach(a => {
+                const sector = a.sector || 'No Definido';
+                sectorsMap[sector] = (sectorsMap[sector] || 0) + 1;
+            });
+
+            const labels = Object.keys(sectorsMap);
+            const data = Object.values(sectorsMap);
+
+            if (sectorChartInstance) {
+                sectorChartInstance.destroy();
+            }
+
+            if (labels.length === 0) return;
+
+            sectorChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Número de Afiliados',
+                        data: data,
+                        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 1.5,
+                        borderRadius: 8,
+                        hoverBackgroundColor: 'rgba(5, 150, 105, 0.95)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Inter', size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- SISTEMA DE DROPDOWNS SINCRO ---
+        function populateDropdowns() {
+            const selects = [
+                document.getElementById('payment-affiliate-select'),
+                document.getElementById('card-affiliate-select')
+            ];
+
+            selects.forEach(select => {
+                if (!select) return;
+                const prevValue = select.value;
+                select.innerHTML = '<option value="">-- Seleccionar un Afiliado --</option>';
+                
+                const sorted = [...window.appState.affiliates].sort((a, b) => a.name.localeCompare(b.name));
+                sorted.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${a.name} (Legajo: ${a.number || 'S/N'})`;
+                    select.appendChild(opt);
+                });
+
+                select.value = prevValue;
+            });
+
+            // La lista se reconstruye luego de cada sincronización. Volvemos a
+            // pintar la credencial seleccionada para reflejar los cambios guardados.
+            const selectedCredential = document.getElementById('card-affiliate-select');
+            if (selectedCredential?.value && typeof window.generateCredential === 'function') {
+                window.generateCredential(selectedCredential.value);
+            }
+        }
+
+        // --- STREAMING_CHUNK: Registering Payments and Credential printing... ---
+
+        // --- CONTROL DE PAGOS Y CUOTAS ---
+        window.registerPayment = async function() {
+            if (window.appState.currentUserRole === 'lector') return;
+
+            const affiliateId = document.getElementById('payment-affiliate-select').value;
+            const month = document.getElementById('payment-month').value;
+            const year = document.getElementById('payment-year').value;
+            const amount = document.getElementById('payment-amount').value;
+
+            if (!affiliateId) {
+                showToast('Advertencia', 'Por favor selecciona un afiliado para registrar el pago.', 'warning');
+                return;
+            }
+            if (!amount || amount <= 0) {
+                showToast('Advertencia', 'Por favor ingresa un monto válido.', 'warning');
+                return;
+            }
+
+            const affiliate = window.appState.affiliates.find(a => a.id === affiliateId);
+            if (!affiliate) return;
+
+            const paymentId = crypto.randomUUID();
+            let attachments;
+            try {
+                attachments = await uploadAttachments(document.getElementById('payment-attachments').files, 'pagos', paymentId);
+            } catch (error) {
+                showToast('Adjuntos no guardados', error.message || 'No se pudieron subir los archivos.', 'error');
+                return;
+            }
+
+            // Actualizar estado de cuota
+            affiliate.hasPaid = true;
+            await commitToDatabase(affiliate);
+
+            const paymentObj = {
+                id: paymentId,
+                affiliateId: affiliateId,
+                name: affiliate.name,
+                period: `${month} ${year}`,
+                amount: parseFloat(amount),
+                attachments,
+                date: new Date().toLocaleDateString('es-ES', {hour: '2-digit', minute:'2-digit'}),
+                timestamp: new Date().toISOString()
+            };
+
+            await commitPaymentToDatabase(paymentObj);
+            showToast('Pago Registrado', `Cobro para ${affiliate.name} guardado correctamente en red.`, 'success');
+            document.getElementById('payment-amount').value = '';
+            document.getElementById('payment-attachments').value = '';
+        };
+
+        function renderPaymentsList() {
+            const list = window.appState.payments;
+            const body = document.getElementById('payment-history-body');
+            const noPayments = document.getElementById('no-payments');
+            body.innerHTML = '';
+
+            if (list.length === 0) {
+                noPayments.classList.remove('hidden');
+                return;
+            } else {
+                noPayments.classList.add('hidden');
+            }
+
+            list.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 text-xs font-semibold text-slate-400">${p.date}</td>
+                    <td class="py-2.5 px-4 font-bold text-slate-700">${p.name}</td>
+                    <td class="py-2.5 px-4 text-xs font-medium text-emerald-700">${p.period}</td>
+                    <td class="py-2.5 px-4 font-bold text-right text-slate-800">$${p.amount.toLocaleString('es-ES')}</td>
+                    <td class="py-2.5 px-4 text-right whitespace-nowrap">
+                        ${p.attachments?.length ? `<span title="${p.attachments.length} archivo(s) adjunto(s)" class="inline-flex items-center text-emerald-600 mr-2"><i class="fa-solid fa-paperclip"></i></span>` : ''}
+                        <button onclick="printPaymentReceipt('${p.id}')" title="Imprimir comprobante" class="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg"><i class="fa-solid fa-print"></i></button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        window.triggerClearPaymentHistory = async function() {
+            if (window.appState.currentUserRole !== 'admin') {
+                showToast('Denegado', 'Acción restringida para administradores.', 'warning');
+                return;
+            }
+
+            const confirmed = await customConfirm(
+                '¿Vaciar Historial?', 
+                '¿Estás seguro de que deseas eliminar permanentemente el historial de cobros de toda la red?'
+            );
+            
+            if (confirmed) {
+                for (const payment of [...window.appState.payments]) {
+                    await removePaymentFromDatabase(payment.id);
+                }
+                showToast('Historial Vacío', 'Se borró el historial de pagos de red.', 'info');
+            }
+        };
+
+        // --- SISTEMA DE CREDENCIAL SINDICAL ---
+        window.generateCredential = function(id) {
+            const cardName = document.getElementById('card-name');
+            const cardIdNum = document.getElementById('card-id-num');
+            const cardDni = document.getElementById('card-dni');
+            const cardCompany = document.getElementById('card-company');
+            const cardConsultant = document.getElementById('card-consultant');
+            const cardRepresentation = document.getElementById('card-representation');
+
+            if (!id) {
+                cardName.textContent = 'SELECCIONAR AFILIADO';
+                cardIdNum.textContent = 'Nº AFILIADO: ----';
+                cardDni.textContent = '--------';
+                cardCompany.textContent = '--------';
+                cardConsultant.textContent = '--------';
+                cardRepresentation.textContent = '';
+                return;
+            }
+
+            const a = window.appState.affiliates.find(item => item.id === id);
+            if (!a) return;
+
+            cardName.textContent = a.name;
+            cardIdNum.textContent = `Nº AFILIADO: ${a.number || 'S/N'}`;
+            cardDni.textContent = a.dni;
+            cardCompany.textContent = a.company || 'Sin Empresa';
+            cardConsultant.textContent = a.consultant || 'Sin Consultora';
+            renderMobileAccessStatus(a);
+            cardRepresentation.textContent = [a.isDelegate ? 'Delegado/a' : '', a.isInternalCommission ? 'Comisión interna' : ''].filter(Boolean).join(' · ');
+        };
+
+        function mobileLoginEmail(dni) {
+            const normalized = String(dni || '').replace(/\D/g, '');
+            return `${normalized}@afiliados.siga.app`;
+        }
+
+        function mobileCredentialData(affiliate, enabled = true) {
+            return {
+                affiliateId: affiliate.id,
+                name: affiliate.name || '', number: affiliate.number || '', dni: affiliate.dni || '',
+                company: affiliate.company || '', consultant: affiliate.consultant || '', sector: affiliate.sector || '',
+                status: affiliate.status || '', hasPaid: Boolean(affiliate.hasPaid),
+                isDelegate: Boolean(affiliate.isDelegate), isInternalCommission: Boolean(affiliate.isInternalCommission),
+                enabled, updatedAt: new Date().toISOString()
+            };
+        }
+
+        function renderMobileAccessStatus(affiliate) {
+            const status = document.getElementById('mobile-access-status');
+            const toggle = document.getElementById('mobile-access-toggle');
+            if (!status || !toggle) return;
+            const access = affiliate?.mobileAccess;
+            if (!access?.uid) {
+                status.textContent = affiliate ? `Todavía no tiene acceso. Ingresará con el DNI ${affiliate.dni}.` : 'Seleccioná un afiliado para administrar su acceso.';
+                status.className = 'text-[11px] text-slate-500 mt-1';
+                toggle.classList.add('hidden');
+                return;
+            }
+            const enabled = access.enabled !== false;
+            status.textContent = enabled ? 'Acceso habilitado y credencial sincronizada.' : 'El acceso está bloqueado.';
+            status.className = `text-[11px] mt-1 font-semibold ${enabled ? 'text-emerald-600' : 'text-rose-600'}`;
+            toggle.textContent = enabled ? 'Bloquear' : 'Habilitar';
+            toggle.classList.remove('hidden');
+        }
+
+        async function syncMobileCredential(affiliate) {
+            if (!affiliate?.mobileAccess?.uid || !window.appState.firebaseEnabled) return;
+            const credentialRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'mobile_credentials', affiliate.mobileAccess.uid);
+            await setDoc(credentialRef, mobileCredentialData(affiliate, affiliate.mobileAccess.enabled !== false));
+        }
+
+        function canManageMobileAccess() {
+            const role = window.appState.currentUserRole;
+            return (role === 'admin' || role === 'operador')
+                && window.appState.auth?.currentUser?.email === roleAuthEmails[role];
+        }
+
+        window.createMobileAccess = async function() {
+            const affiliateId = document.getElementById('card-affiliate-select').value;
+            const passwordInput = document.getElementById('mobile-initial-password');
+            const affiliate = window.appState.affiliates.find(item => item.id === affiliateId);
+            if (!affiliate) return showToast('Acceso móvil', 'Seleccioná un afiliado.', 'warning');
+            if (!canManageMobileAccess()) {
+                return showToast('Acceso restringido', 'Autorizá el rol Administrador u Operador con su contraseña.', 'warning');
+            }
+            if (!/^\d{7,9}$/.test(String(affiliate.dni || '').replace(/\D/g, ''))) {
+                return showToast('DNI inválido', 'El afiliado debe tener un DNI válido.', 'warning');
+            }
+            if ((passwordInput.value || '').length < 8) {
+                return showToast('Contraseña débil', 'La contraseña inicial debe tener al menos 8 caracteres.', 'warning');
+            }
+            if (affiliate.mobileAccess?.uid) {
+                try {
+                    await syncMobileCredential(affiliate);
+                    renderMobileAccessStatus(affiliate);
+                    showToast('Acceso sincronizado', 'La cuenta existente y su credencial están actualizadas.', 'success');
+                } catch (error) {
+                    console.error(error);
+                    showToast('Acceso móvil', 'No se pudo reparar la credencial existente.', 'error');
+                }
+                return;
+            }
+
+            let secondaryApp;
+            try {
+                secondaryApp = initializeApp(window.__firebase_config, `mobile-provision-${Date.now()}`);
+                const secondaryAuth = getAuth(secondaryApp);
+                const credential = await createUserWithEmailAndPassword(secondaryAuth, mobileLoginEmail(affiliate.dni), passwordInput.value);
+                await signOut(secondaryAuth);
+                const updated = { ...affiliate, mobileAccess: { uid: credential.user.uid, enabled: true, createdAt: new Date().toISOString() } };
+                await commitToDatabase(updated);
+                await syncMobileCredential(updated);
+                passwordInput.value = '';
+                renderMobileAccessStatus(updated);
+                showToast('Acceso creado', `Ya puede ingresar con su DNI ${affiliate.dni}.`, 'success');
+            } catch (error) {
+                console.error('No se pudo crear el acceso móvil:', error);
+                const message = error?.code === 'auth/email-already-in-use'
+                    ? 'Ya existe una cuenta para ese DNI. Verificá que el DNI no esté duplicado.'
+                    : 'No se pudo crear la cuenta. Verificá Authentication y las reglas de Firebase.';
+                showToast('Acceso móvil', message, 'error');
+            } finally {
+                if (secondaryApp) await deleteApp(secondaryApp).catch(() => {});
+            }
+        };
+
+        window.toggleMobileAccess = async function() {
+            const affiliateId = document.getElementById('card-affiliate-select').value;
+            const affiliate = window.appState.affiliates.find(item => item.id === affiliateId);
+            if (!affiliate?.mobileAccess?.uid) return;
+            if (!canManageMobileAccess()) {
+                return showToast('Acceso restringido', 'Autorizá el rol Administrador u Operador con su contraseña.', 'warning');
+            }
+            const updated = { ...affiliate, mobileAccess: { ...affiliate.mobileAccess, enabled: affiliate.mobileAccess.enabled === false } };
+            try {
+                await commitToDatabase(updated);
+                await syncMobileCredential(updated);
+                renderMobileAccessStatus(updated);
+                showToast('Acceso actualizado', updated.mobileAccess.enabled ? 'La cuenta fue habilitada.' : 'La cuenta fue bloqueada.', 'success');
+            } catch (error) {
+                console.error(error);
+                showToast('Acceso móvil', 'No se pudo actualizar el acceso.', 'error');
+            }
+        };
+
+        window.openSpecificCredential = function(id) {
+            switchTab('credenciales');
+            const select = document.getElementById('card-affiliate-select');
+            select.value = id;
+            generateCredential(id);
+        };
+
+        function escapePrintHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+        }
+
+        function printHtmlDocument(html) {
+            const frame = document.createElement('iframe');
+            frame.setAttribute('aria-hidden', 'true');
+            frame.style.cssText = 'position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none';
+            frame.srcdoc = html;
+            frame.onload = () => setTimeout(() => {
+                try {
+                    frame.contentWindow.focus();
+                    frame.contentWindow.print();
+                } finally {
+                    setTimeout(() => frame.remove(), 1500);
+                }
+            }, 150);
+            document.body.appendChild(frame);
+        }
+
+        window.printConvention = function() {
+            const pdfFrame = document.getElementById('convention-pdf');
+            try {
+                pdfFrame.contentWindow.focus();
+                pdfFrame.contentWindow.print();
+            } catch {
+                showToast('Impresión', 'Usá el botón de imprimir de la barra del PDF para imprimir el convenio.', 'info');
+            }
+        };
+
+        let conventionTextPromise = null;
+        function normalizeConventionText(value) {
+            return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es-AR');
+        }
+
+        window.searchConvention = async function() {
+            const input = document.getElementById('convention-search');
+            const status = document.getElementById('convention-search-status');
+            const results = document.getElementById('convention-search-results');
+            const searchTerm = input.value.trim();
+            if (searchTerm.length < 2) {
+                status.textContent = 'Ingresá al menos dos caracteres para buscar.';
+                results.classList.add('hidden');
+                return;
+            }
+            try {
+                if (!conventionTextPromise) {
+                    conventionTextPromise = fetch('assets/convenio-77-89.txt').then(response => {
+                        if (!response.ok) throw new Error('No se pudo leer el convenio.');
+                        return response.text();
+                    });
+                }
+                status.textContent = 'Buscando en el Convenio 77/89…';
+                const sourceText = await conventionTextPromise;
+                const searchableText = normalizeConventionText(sourceText);
+                const term = normalizeConventionText(searchTerm);
+                const matches = [];
+                let position = searchableText.indexOf(term);
+                while (position !== -1 && matches.length < 12) {
+                    const start = Math.max(0, position - 115);
+                    const end = Math.min(sourceText.length, position + searchTerm.length + 145);
+                    const excerpt = `${start ? '…' : ''}${sourceText.slice(start, end).replace(/\s+/g, ' ')}${end < sourceText.length ? '…' : ''}`;
+                    matches.push(excerpt);
+                    position = searchableText.indexOf(term, position + term.length);
+                }
+                if (!matches.length) {
+                    status.textContent = `No se encontraron coincidencias para “${searchTerm}”.`;
+                    results.classList.add('hidden');
+                    return;
+                }
+                status.textContent = matches.length === 12
+                    ? 'Se muestran las primeras 12 coincidencias.'
+                    : `${matches.length} coincidencia${matches.length === 1 ? '' : 's'} encontrada${matches.length === 1 ? '' : 's'}.`;
+                results.innerHTML = matches.map((excerpt, index) => `<div class="p-3 rounded-xl bg-white border border-emerald-100 text-xs leading-relaxed text-slate-600"><span class="font-bold text-emerald-700 mr-2">${index + 1}.</span>${escapePrintHtml(excerpt)}</div>`).join('');
+                results.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error buscando en el convenio:', error);
+                status.textContent = 'No se pudo cargar el texto del convenio para buscar.';
+                results.classList.add('hidden');
+            }
+        };
+
+        window.printAffiliateSheet = function(id) {
+            const affiliate = window.appState.affiliates.find(item => item.id === id);
+            if (!affiliate) return;
+            const family = affiliate.familyGroup || {};
+            const partner = family.partner ? `<p><strong>Pareja:</strong> ${escapePrintHtml(`${family.partner.firstName} ${family.partner.lastName}`)} · DNI ${escapePrintHtml(family.partner.dni)} · ${escapePrintHtml(family.partner.age)} años</p>` : '<p><strong>Pareja:</strong> No informada</p>';
+            const children = (family.children || []).length
+                ? `<ul>${family.children.map(child => `<li>${escapePrintHtml(`${child.firstName} ${child.lastName}`)} · DNI ${escapePrintHtml(child.dni)} · ${escapePrintHtml(child.age)} años</li>`).join('')}</ul>`
+                : '<p>Sin hijos informados.</p>';
+            const attachments = (affiliate.attachments || []).length
+                ? `<ul>${affiliate.attachments.map(file => `<li>${escapePrintHtml(file.name)}</li>`).join('')}</ul>`
+                : '<p>Sin archivos adjuntos.</p>';
+            const representation = [
+                affiliate.isDelegate ? 'Delegado/a' : '',
+                affiliate.isInternalCommission ? 'Comisión interna' : ''
+            ].filter(Boolean).join(' · ') || 'Sin función de representación informada.';
+            printHtmlDocument(`<!doctype html><html><head><title>Ficha de ${escapePrintHtml(affiliate.name)}</title><style>body{font-family:Arial,sans-serif;color:#1e293b;margin:34px}h1{color:#065f46;margin-bottom:4px}h2{font-size:15px;border-bottom:1px solid #cbd5e1;padding-bottom:6px;margin-top:26px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}p,li{font-size:13px;line-height:1.5}strong{color:#334155}.meta{color:#64748b;font-size:12px}</style></head><body><h1>SIGA · Ficha de Afiliado</h1><p class="meta">Emitida el ${new Date().toLocaleString('es-AR')}</p><h2>Datos personales</h2><div class="grid"><p><strong>Nombre:</strong> ${escapePrintHtml(affiliate.name)}</p><p><strong>Legajo:</strong> ${escapePrintHtml(affiliate.number)}</p><p><strong>DNI:</strong> ${escapePrintHtml(affiliate.dni)}</p><p><strong>Estado:</strong> ${escapePrintHtml(affiliate.status)}</p><p><strong>Empresa:</strong> ${escapePrintHtml(affiliate.company || '-')}</p><p><strong>Sector:</strong> ${escapePrintHtml(affiliate.sector || '-')}</p><p><strong>Teléfono:</strong> ${escapePrintHtml(affiliate.phone || '-')}</p><p><strong>Correo:</strong> ${escapePrintHtml(affiliate.email || '-')}</p></div><h2>Representación sindical</h2><p>${escapePrintHtml(representation)}</p><h2>Grupo familiar</h2>${partner}<p><strong>Hijos:</strong></p>${children}<h2>Archivos adjuntos</h2>${attachments}</body></html>`);
+        };
+
+        window.printPaymentReceipt = function(id) {
+            const payment = window.appState.payments.find(item => item.id === id);
+            if (!payment) return;
+            const attachments = (payment.attachments || []).length ? (payment.attachments || []).map(file => `<li>${escapePrintHtml(file.name)}</li>`).join('') : '<li>Sin adjuntos</li>';
+            printHtmlDocument(`<!doctype html><html><head><title>Comprobante de pago</title><style>body{font-family:Arial,sans-serif;color:#1e293b;margin:34px;max-width:540px}h1{color:#065f46;font-size:22px;border-bottom:2px solid #10b981;padding-bottom:10px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:10px 0;font-size:14px}.total{font-size:20px;font-weight:bold;color:#065f46;margin-top:22px}</style></head><body><h1>SIGA · Comprobante de pago</h1><div class="row"><span>Afiliado</span><strong>${escapePrintHtml(payment.name)}</strong></div><div class="row"><span>Período</span><strong>${escapePrintHtml(payment.period)}</strong></div><div class="row"><span>Fecha</span><strong>${escapePrintHtml(payment.date)}</strong></div><p class="total">Total: $${Number(payment.amount).toLocaleString('es-AR')}</p><p><strong>Adjuntos:</strong></p><ul>${attachments}</ul></body></html>`);
+        };
+
+        window.printCard = function() {
+            const affiliateId = document.getElementById('card-affiliate-select').value;
+            if (!affiliateId) {
+                showToast('Advertencia', 'Por favor selecciona un afiliado primero.', 'warning');
+                return;
+            }
+
+            const a = window.appState.affiliates.find(item => item.id === affiliateId);
+            if (!a) return;
+            const representation = [a.isDelegate ? 'Delegado/a' : '', a.isInternalCommission ? 'Comisión interna' : ''].filter(Boolean).join(' · ');
+
+            printHtmlDocument(`
+                <html>
+                <head>
+                    <title>SIGA - Credencial Digital - ${a.name}</title>
+                    <style>
+                        @page { size: 85.6mm 54mm; margin: 0; }
+                        html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                        body { font-family: 'Helvetica', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #fff; }
+                        .card { width: 335px; height: 195px; border-radius: 12px; background: linear-gradient(135deg, #0f172a 0%, #022c22 100%) !important; color: white; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #334155; position: relative; }
+                        .top { display: flex; justify-content: space-between; align-items: flex-start; }
+                        .logo-text { font-size: 9px; font-weight: bold; letter-spacing: 1.5px; color: #10b981; margin: 0; }
+                        .sub-text { font-size: 11px; margin: 0; color: #cbd5e1; }
+                        .badge { background: #10b981; color: #0f172a; font-size: 8px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+                        .middle { margin: 8px 0; }
+                        .name { font-size: 13px; font-weight: bold; text-transform: uppercase; margin: 0; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                        .id-num { font-size: 10px; color: #94a3b8; margin: 2px 0 0 0; }
+                        .representation { font-size: 8px; color: #fcd34d; font-weight: bold; text-transform: uppercase; margin: 4px 0 0 0; }
+                        .bottom { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid rgba(51, 65, 85, 0.5); padding-top: 6px; }
+                        .info-p { font-size: 8.5px; color: #94a3b8; margin: 1px 0; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                        .info-p span { color: #f8fafc; font-weight: 600; }
+                        .barcode-container { display: flex; flex-direction: column; align-items: center; }
+                        .barcode { display: flex; align-items: flex-end; gap: 1px; height: 22px; }
+                        .bar { width: 1.5px; background: white; }
+                        .bar.thin { width: 0.7px; }
+                        .bar.thick { width: 2.5px; }
+                        .barcode-label { font-size: 6px; color: #94a3b8; margin-top: 2px; }
+                        @media print {
+                            html, body { width: 85.6mm; height: 54mm; overflow: hidden; background: #fff !important; }
+                            .card { width: 85.6mm; height: 54mm; border-radius: 0; background-color: #10251f !important; background-image: linear-gradient(135deg, #0f172a 0%, #022c22 100%) !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <div class="top">
+                            <div>
+                                <h1 class="logo-text">SIGA - ASOCIACIÓN GREMIAL</h1>
+                                <p class="sub-text">Sindicato Integral</p>
+                            </div>
+                            <span class="badge">AFILIADO</span>
+                        </div>
+                        <div class="middle">
+                            <h2 class="name">${a.name}</h2>
+                            <p class="id-num">Nº AFILIADO: ${a.number || 'S/N'}</p>
+                            ${representation ? `<p class="representation">${representation}</p>` : ''}
+                        </div>
+                        <div class="bottom">
+                            <div>
+                                <p class="info-p">DNI: <span>${a.dni}</span></p>
+                                <p class="info-p">Empresa: <span>${a.company || 'Sin Empresa'}</span></p>
+                                <p class="info-p">Consultora: <span>${a.consultant || 'Sin Consultora'}</span></p>
+                            </div>
+                            <div class="barcode-container">
+                                <div class="barcode">
+                                    <div class="bar" style="height:20px;"></div>
+                                    <div class="bar thick" style="height:24px;"></div>
+                                    <div class="bar thin" style="height:18px;"></div>
+                                    <div class="bar" style="height:22px;"></div>
+                                    <div class="bar thick" style="height:24px;"></div>
+                                    <div class="bar thin" style="height:18px;"></div>
+                                    <div class="bar" style="height:22px;"></div>
+                                </div>
+                                <span class="barcode-label">SIGA-RED</span>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+        };
+
+        // --- STREAMING_CHUNK: Managing Backup Systems and Network Configuration... ---
+
+        // --- SISTEMAS DE RED Y RESPALDO ---
+        window.applyNewNetworkID = function() {
+            const inputVal = document.getElementById('config-network-id').value.trim();
+            if (!inputVal) {
+                showToast('Advertencia', 'Por favor ingresa un código de red válido.', 'warning');
+                return;
+            }
+
+            window.appState.appId = inputVal;
+            localStorage.setItem('siga_custom_network_id', inputVal);
+            
+            showToast('Sincronizando', `Conectando con el Servidor de Red: ${inputVal}...`, 'info');
+            
+            if (window.appState.firebaseEnabled) {
+                setupRealtimeSync();
+            } else {
+                loadLocalFallback();
+            }
+        };
+
+        window.exportDataToJSON = function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.appState.affiliates, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `siga_red_${window.appState.appId}_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+            showToast('Respaldo', 'Copia de seguridad local (JSON) guardada.', 'success');
+        };
+
+        window.exportDataToCSV = function() {
+            if (window.appState.affiliates.length === 0) {
+                showToast('Advertencia', 'No hay datos para exportar.', 'warning');
+                return;
+            }
+            
+            const headers = ["Legajo/Nro", "Nombre", "DNI", "Fecha Nacimiento", "Fecha Afiliacion", "Empresa", "Consultora", "Sector", "Telefono", "Email", "Direccion", "Estado", "Al Dia"];
+            const rows = window.appState.affiliates.map(a => [
+                a.number || '',
+                a.name,
+                a.dni,
+                a.birthdate || '',
+                a.affiliationDate || '',
+                a.company || '',
+                a.consultant || '',
+                a.sector || '',
+                a.phone || '',
+                a.email || '',
+                a.address || '',
+                a.status,
+                a.hasPaid ? 'SI' : 'NO'
+            ]);
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"
+                + [headers.join(";"), ...rows.map(e => e.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(";"))].join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `siga_red_planilla_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Exportación', 'Planilla de Red CSV guardada con éxito.', 'success');
+        };
+
+        // --- SISTEMA DE ACTUALIZACIONES ---
+        const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
+        const APP_VERSION = "1.2.18";
+
+        window.checkForUpdatesManual = async function() {
+            const statusContainer = document.getElementById('update-status-container');
+            
+            // Mostrar que está verificando
+            document.getElementById('update-checking').classList.remove('hidden');
+            document.getElementById('update-unavailable').classList.add('hidden');
+            document.getElementById('update-available').classList.add('hidden');
+            document.getElementById('update-error').classList.add('hidden');
+
+            try {
+                const response = await fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`);
+                if (!response.ok) throw new Error('No se pudo obtener el manifiesto');
+                
+                const manifest = await response.json();
+                
+                if (!manifest.version) throw new Error('Formato de manifiesto inválido');
+                
+                const hasUpdate = compareVersions(manifest.version, APP_VERSION) > 0;
+                
+                document.getElementById('update-checking').classList.add('hidden');
+                
+                if (hasUpdate) {
+                    // Actualización disponible
+                    document.getElementById('current-version-text').textContent = `v${APP_VERSION}`;
+                    document.getElementById('new-version-text').textContent = `v${manifest.version}`;
+                    document.getElementById('update-notes').textContent = manifest.notes || 'Nueva versión disponible';
+                    document.getElementById('update-available').classList.remove('hidden');
+                    
+                    // Mostrar badge de actualización disponible
+                    const badge = document.getElementById('update-badge');
+                    if (badge) {
+                        badge.textContent = 'NUEVA';
+                        badge.classList.remove('hidden');
+                    }
+                    
+                    // Guardar manifiesto para usar después
+                    window.appState.updateManifest = manifest;
+                } else {
+                    // Sin actualizaciones
+                    document.getElementById('update-unavailable').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error verificando actualizaciones:', error);
+                document.getElementById('update-checking').classList.add('hidden');
+                document.getElementById('error-message').textContent = error.message || 'No se pudo conectar con el servidor. Intenta más tarde.';
+                document.getElementById('update-error').classList.remove('hidden');
+            }
+        };
+
+        window.downloadAndInstallUpdate = async function() {
+            if (!window.appState.updateManifest) {
+                showToast('Error', 'No hay información de actualización disponible.', 'error');
+                return;
+            }
+
+            const manifest = window.appState.updateManifest;
+
+            try {
+                document.getElementById('download-update-btn').disabled = true;
+                document.getElementById('download-update-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                document.getElementById('update-progress').classList.remove('hidden');
+
+                document.getElementById('progress-bar').style.width = '35%';
+                document.getElementById('progress-text').textContent = 'Descargando y verificando actualización...';
+
+                if (!window.pywebview?.api?.install_available_update) {
+                    throw new Error('Esta función requiere la aplicación de escritorio SIGA.');
+                }
+                const result = await window.pywebview.api.install_available_update();
+                if (!result?.ok) throw new Error(result?.error || 'No se pudo instalar la actualización.');
+                document.getElementById('progress-bar').style.width = '100%';
+                document.getElementById('progress-text').textContent = `Versión ${result.version || manifest.version} verificada. Reiniciando SIGA...`;
+            } catch (error) {
+                console.error('Error descargando actualización:', error);
+                showToast('Error', 'No se pudo descargar la actualización. Intenta más tarde.', 'error');
+                document.getElementById('download-update-btn').disabled = false;
+                document.getElementById('download-update-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('update-progress').classList.add('hidden');
+            }
+        };
+
+        function compareVersions(v1, v2) {
+            const parts1 = v1.split('.').map(Number);
+            const parts2 = v2.split('.').map(Number);
+            
+            for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+                const part1 = parts1[i] || 0;
+                const part2 = parts2[i] || 0;
+                
+                if (part1 > part2) return 1;
+                if (part1 < part2) return -1;
+            }
+            
+            return 0;
+        }
+
+        // La verificación automática está deshabilitada; este bloque no se registra.
+        const checkForUpdatesOnStartup = () => {
+            setTimeout(() => {
+                fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
+                    .then(r => r.json())
+                    .then(manifest => {
+                        if (manifest.version && compareVersions(manifest.version, APP_VERSION) > 0) {
+                            // Hay actualización disponible
+                            window.appState.updateManifest = manifest;
+                            const badge = document.getElementById('update-badge');
+                            if (badge) {
+                                badge.textContent = 'NUEVA';
+                                badge.classList.remove('hidden');
+                            }
+                            showToast('Actualización disponible', `La versión ${manifest.version} está lista. Abrí Actualizaciones para instalarla.`, 'info');
+                        }
+                    })
+                    .catch(err => console.log('Update check silencioso fallió:', err));
+            }, 2000);
+        };
+
+        window.importDataFromJSON = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        for (const item of imported) {
+                            if (item.name && item.dni) {
+                                if (!item.id) item.id = crypto.randomUUID();
+                                if (!item.createdAt) item.createdAt = new Date().toISOString();
+                                await commitToDatabase(item);
+                            }
+                        }
+                        showToast('Restauración', 'Padrón de afiliados importado y sincronizado.', 'success');
+                        event.target.value = '';
+                    } else {
+                        showToast('Error de Archivo', 'El formato de respaldo es inválido.', 'error');
+                    }
+                } catch (err) {
+                    showToast('Error', 'No se pudo decodificar el archivo de respaldo.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        window.triggerClearAllData = async function() {
+            if (window.appState.currentUserRole !== 'admin') return;
+
+            const confirmed = await customConfirm(
+                '¡Peligro: Vaciar Red!', 
+                'Estás por eliminar TODOS los registros de afiliados de esta red. Esta acción desconectará y borrará los datos de todas las máquinas sincronizadas. ¿Continuar?'
+            );
+
+            if (confirmed) {
+                if (window.appState.firebaseEnabled) {
+                    for (const a of window.appState.affiliates) {
+                        await removeFromDatabase(a.id);
+                    }
+                } else {
+                    window.appState.affiliates = [];
+                    window.appState.payments = [];
+                    saveLocalData();
+                    processStateChange();
+                }
+                showToast('Padrón Vaciado', 'Se han borrado todos los registros de la red.', 'info');
+            }
+        };
+
+        // --- SISTEMA DE TOASTS FLOTANTES ---
+        function showToast(title, message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let colorClasses = 'bg-white border-emerald-500 text-slate-800';
+            let icon = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
+            if (type === 'error') {
+                colorClasses = 'bg-rose-50 border-rose-500 text-rose-900';
+                icon = '<i class="fa-solid fa-circle-xmark text-rose-500"></i>';
+            } else if (type === 'warning') {
+                colorClasses = 'bg-amber-50 border-amber-500 text-amber-900';
+                icon = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i>';
+            } else if (type === 'info') {
+                colorClasses = 'bg-indigo-50 border-indigo-500 text-indigo-900';
+                icon = '<i class="fa-solid fa-circle-info text-indigo-500"></i>';
+            }
+
+            toast.className = `flex items-start gap-3 p-4 rounded-xl border-l-4 shadow-lg min-w-[280px] max-w-[360px] animate-slide-in transition-all duration-300 ${colorClasses}`;
+            toast.innerHTML = `
+                <div class="text-lg">${icon}</div>
+                <div class="flex-1">
+                    <h5 class="font-bold text-xs uppercase tracking-wider">${title}</h5>
+                    <p class="text-xs mt-0.5 font-medium">${message}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        /* Datos de demostración retirados: la aplicación nunca debe cargar afiliados automáticamente.
+        function getMockDataset() {
+            return [
+                { id: '1', name: 'Laura Beatriz Giménez', number: 'AF-1002', dni: '32194823', birthdate: '1986-04-12', company: 'Techint', consultant: 'Adecco', sector: 'Metalurgia', phone: '3415901234', email: 'laura.g@mail.com', address: 'Pellegrini 1245', status: 'Activo', hasPaid: true, createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() },
+                { id: '2', name: 'Carlos Javier Montes', number: 'AF-1005', dni: '28472911', birthdate: '1981-08-22', company: 'Logística Regional', consultant: 'Manpower', sector: 'Transporte', phone: '3416809876', email: 'carlos.montes@mail.com', address: 'San Martín 450', status: 'Activo', hasPaid: false, createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
+                { id: '3', name: 'Nélida Esther Gómez', number: 'AF-0995', dni: '16283912', birthdate: '1955-11-05', company: 'Gremio Pasivos', consultant: '', sector: 'Administración', phone: '3413556677', email: 'nelida.gomez@mail.com', address: 'Mitre 2300', status: 'Jubilado', hasPaid: true, createdAt: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString() },
+                { id: '4', name: 'Facundo Andrés López', number: 'AF-1011', dni: '39482312', birthdate: '1995-02-14', company: 'Fábrica de Aceros S.A.', consultant: 'Randstad', sector: 'Metalurgia', phone: '3412773344', email: 'facu.lopez@mail.com', address: 'Corrientes 890', status: 'Activo', hasPaid: true, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+                { id: '5', name: 'Mariela Sofía Pereyra', number: 'AF-1014', dni: '35912822', birthdate: '1991-07-28', company: 'Servicios de Limpieza S.R.L.', consultant: 'Adecco', sector: 'Mantenimiento', phone: '3415112233', email: 'mariela.p@mail.com', address: 'Salta 3100', status: 'Inactivo', hasPaid: false, createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() }
+            ];
+        }
+
+        // --- NAVEGACIÓN DE SECCIONES (TABS) ---
+        */
+
+        window.switchTab = function(tabId) {
+            window.appState.currentTab = tabId;
+            
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white";
+            });
+            const activeBtn = document.getElementById(`btn-tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all bg-emerald-600 text-white";
+            }
+
+            const titles = {
+                'dashboard': 'Panel General - SIGA',
+                'afiliados': 'Padrón de Afiliados',
+                'pagos': 'Control de Cuotas',
+                'convenio': 'Convenio 77/89',
+                'credenciales': 'Credencial Digital',
+                'actualizaciones': 'Verificar Actualizaciones',
+                'usuarios': 'Control de Permisos y Accesos',
+                'configuracion': 'Configurar Red / Datos'
+            };
+            document.getElementById('current-section-title').textContent = titles[tabId] || 'SIGA';
+
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.add('hidden');
+
+            if (tabId === 'dashboard') {
+                renderSectorChart();
+            }
+            if (tabId === 'pagos' && typeof window.subscribePaymentsRealtime === 'function') {
+                window.subscribePaymentsRealtime();
+            }
+            if (tabId === 'credenciales') {
+                const selectedCredential = document.getElementById('card-affiliate-select');
+                if (selectedCredential?.value && typeof window.generateCredential === 'function') {
+                    window.generateCredential(selectedCredential.value);
+                }
+            }
+            if (tabId === 'actualizaciones') {
+                checkForUpdatesManual();
+            }
+        };
+
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        };
+
+        window.handleQuickSearch = function(val) {
+            switchTab('afiliados');
+            document.getElementById('filter-search').value = val;
+            applyFilters();
+        };
+
+        // --- SISTEMA INSTALABLE (PWA) ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Evita que Chrome muestre automáticamente el banner de instalación
+            e.preventDefault();
+            deferredPrompt = e;
+            // Mostrar botón personalizado para instalar
+            document.getElementById('pwa-install-container').style.display = 'block';
+        });
+
+        window.installPWAApp = function() {
+            if (!deferredPrompt) return;
+            document.getElementById('pwa-install-container').style.display = 'none';
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    showToast('Instalación', '¡SIGA instalada con éxito! Revisa tus accesos directos.', 'success');
+                }
+                deferredPrompt = null;
+            });
+        };
+
+        window.addEventListener('online', async () => {
+            await flushPendingChanges();
+            if (window.appState.firebaseEnabled) setupRealtimeSync();
+        });
+
+        // Registro de PWA. Requiere servir la aplicación desde HTTP(S), no abrirla como file://.
+        function initPWAService() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .then(() => console.log('SIGA: Service Worker listo.'))
+                    .catch(error => console.warn('PWA: Service Worker no disponible en este origen.', error));
+            }
+        }
+
+        window.onload = function() {
+            initPWAService();
+            // Inicio local primero: la pantalla queda lista aun sin red.
+            loadLocalFallback(true);
+            setupFirebase();
+
+            // Cada inicio habilita la carga y consulta; el control total sigue reservado al administrador.
+            setRole('operador');
+            checkForUpdatesOnStartup();
+        };
+
+    </script>
+</body>
+</html>

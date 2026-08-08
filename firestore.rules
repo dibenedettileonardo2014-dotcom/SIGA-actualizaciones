@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isStaff() {
+      return signedIn()
+        && (request.auth.token.email == 'administrador@siga.com'
+          || request.auth.token.email == 'operador@siga.com');
+    }
+
+    // Compatibilidad con las terminales SIGA actuales. Las cuentas móviles
+    // usan contraseña y no pueden ingresar en esta rama administrativa.
+    function isDesktopSession() {
+      return signedIn()
+        && (isStaff()
+          || request.auth.token.firebase.sign_in_provider == 'anonymous');
+    }
+
+    match /artifacts/{appId}/public/data/{document=**} {
+      allow read, write: if isDesktopSession();
+    }
+
+    match /artifacts/{appId}/mobile_credentials/{userId} {
+      allow read: if signedIn()
+        && request.auth.uid == userId
+        && resource.data.enabled == true
+        && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(resource.data.affiliateId));
+      allow create, update: if isStaff();
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

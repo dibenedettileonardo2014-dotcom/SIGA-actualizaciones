@@ -1,0 +1,15 @@
+# PyInstaller build/
+build/
+build-*/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+.Python
+env/
+.venv/
+.tools/
+.firebase/
+*.log
+.DS_Store
+Thumbs.db

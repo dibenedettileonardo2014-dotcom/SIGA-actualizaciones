@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#064e3b">
+  <meta name="description" content="Credencial digital y convenio colectivo para afiliados SIGA">
+  <link rel="manifest" href="afiliado-manifest.json">
+  <link rel="icon" href="assets/siga-app-icon.png">
+  <title>Mi SIGA</title>
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#e2e8f0;background:#071510;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 90% 0,#065f46 0,transparent 32%),linear-gradient(150deg,#071510,#0f172a 65%)}
+    button,input{font:inherit}.hidden{display:none!important}.shell{width:min(100%,520px);min-height:100vh;margin:auto;padding:24px 18px 104px}.brand{display:flex;align-items:center;gap:12px;margin:8px 0 28px}.brand img{width:48px;height:48px;border-radius:14px}.brand b{display:block;font-size:19px}.brand span{font-size:12px;color:#94a3b8}
+    .panel{background:rgba(255,255,255,.96);color:#0f172a;border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:24px;box-shadow:0 25px 60px rgba(0,0,0,.28)}h1{font-size:25px;margin:0 0 7px}.muted{color:#64748b;font-size:13px;line-height:1.5}.field{margin-top:18px}.field label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:7px}.field input{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:14px;background:#f8fafc;outline:none}.field input:focus{border-color:#10b981;box-shadow:0 0 0 3px #10b98122}.primary,.secondary,.danger{width:100%;border:0;border-radius:13px;padding:14px;font-weight:750;cursor:pointer}.primary{background:#059669;color:#fff;margin-top:20px}.primary:disabled{opacity:.6}.secondary{background:#e2e8f0;color:#334155}.danger{background:#fff1f2;color:#be123c}.message{min-height:20px;margin:12px 0 0;font-size:12px;color:#be123c}
+    .topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.topline small{color:#94a3b8}.icon-btn{border:1px solid #334155;background:#0f172a;color:#cbd5e1;border-radius:11px;padding:9px 12px}.credential{aspect-ratio:1.72;border-radius:22px;padding:20px;background:linear-gradient(135deg,#111827,#064e3b);box-shadow:0 22px 45px #02061766;border:1px solid #ffffff1a;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}.credential:after{content:"SIGA";position:absolute;right:-10px;bottom:-25px;font-weight:900;font-size:82px;color:#fff;opacity:.035}.card-head,.card-foot{display:flex;justify-content:space-between;gap:10px;position:relative;z-index:1}.eyebrow{font-size:9px;color:#34d399;font-weight:800;letter-spacing:.12em}.org{font-size:11px;color:#cbd5e1}.badge{font-size:9px;color:#052e16;background:#34d399;border-radius:5px;padding:3px 7px;height:max-content;font-weight:900}.card-name{font-size:17px;font-weight:850;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-number{font-size:11px;color:#94a3b8;margin-top:3px}.role{font-size:9px;color:#fcd34d;margin-top:4px;font-weight:800;text-transform:uppercase}.card-foot{border-top:1px solid #ffffff18;padding-top:9px;font-size:10px;color:#94a3b8}.card-foot b{color:#e2e8f0}.status{margin-top:14px;display:flex;gap:8px}.pill{flex:1;background:#ffffff10;border:1px solid #ffffff12;border-radius:14px;padding:12px;font-size:11px;color:#94a3b8}.pill b{display:block;color:#f8fafc;margin-top:3px;font-size:13px}
+    .tabs{position:fixed;z-index:10;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 28px),490px);display:flex;padding:7px;background:#0f172af2;border:1px solid #334155;border-radius:18px;box-shadow:0 15px 35px #0008}.tab{flex:1;border:0;background:transparent;color:#94a3b8;padding:10px 4px;border-radius:12px;font-size:11px;font-weight:700}.tab.active{background:#065f46;color:#d1fae5}.section-title{margin:0 0 15px;font-size:20px}.white-card{background:#fff;color:#0f172a;border-radius:20px;padding:20px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:12px 0;font-size:13px}.row:last-child{border:0}.row span{color:#64748b}.convention{width:100%;height:70vh;min-height:520px;border:0;border-radius:18px;background:#fff}.actions{display:grid;gap:10px;margin-top:16px}@media print{body{background:#fff}.shell>*:not(#credential-view),.tabs,.topline,.status{display:none!important}#credential-view{display:block!important}.credential{width:85.6mm;height:54mm;box-shadow:none;margin:0;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    .app-version{text-align:center;color:#64748b;font-size:11px;margin:18px 0 0}.update-notice{position:fixed;z-index:20;left:50%;top:14px;transform:translateX(-50%);width:min(calc(100% - 28px),490px);padding:13px 16px;border-radius:14px;background:#d1fae5;color:#064e3b;box-shadow:0 12px 30px #0006;font-size:13px;font-weight:750;text-align:center}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div id="update-notice" class="update-notice hidden" role="status">Nueva versión instalada. Actualizando Mi SIGA…</div>
+    <header class="brand"><img src="assets/siga-app-icon.png" alt="SIGA"><div><b>Mi SIGA</b><span>Portal del afiliado</span></div></header>
+
+    <section id="login-view" class="panel">
+      <h1>Ingresá a tu cuenta</h1>
+      <p class="muted">Consultá tu credencial sindical y el Convenio Colectivo 77/89.</p>
+      <form id="login-form">
+        <div class="field"><label for="dni">DNI</label><input id="dni" inputmode="numeric" autocomplete="username" maxlength="9" placeholder="Sin puntos ni espacios" required></div>
+        <div class="field"><label for="password">Contraseña</label><input id="password" type="password" autocomplete="current-password" minlength="8" required></div>
+        <button id="login-button" class="primary" type="submit">Ingresar</button>
+        <p id="login-message" class="message" role="alert"></p>
+      </form>
+      <div id="install-area" class="actions">
+        <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
+        <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
+      </div>
+      <p class="app-version">Versión 1.2.18</p>
+    </section>
+
+    <div id="app-view" class="hidden">
+      <div class="topline"><small id="welcome">Cuenta de afiliado</small><button id="logout-button" class="icon-btn">Salir</button></div>
+      <section id="credential-view">
+        <div class="credential">
+          <div class="card-head"><div><div class="eyebrow">SINDICATO DE TRABAJADORES</div><div class="org">Asociación Gremial · SIGA</div></div><div class="badge">AFILIADO</div></div>
+          <div><div id="card-name" class="card-name">—</div><div id="card-number" class="card-number">Nº AFILIADO: —</div><div id="card-role" class="role"></div></div>
+          <div class="card-foot"><div>DNI: <b id="card-dni">—</b><br>Empresa: <b id="card-company">—</b></div><div id="card-updated"></div></div>
+        </div>
+        <div class="status"><div class="pill">Estado<b id="affiliate-status">—</b></div><div class="pill">Cuota informada<b id="payment-status">—</b></div></div>
+        <div class="actions"><button class="secondary" id="print-button">Imprimir / guardar credencial</button></div>
+      </section>
+      <section id="data-view" class="hidden white-card"><h2 class="section-title">Mis datos</h2><div id="data-list"></div><div class="actions"><button id="password-toggle" class="secondary">Cambiar contraseña</button><form id="password-form" class="hidden"><div class="field"><label for="new-password">Nueva contraseña</label><input id="new-password" type="password" minlength="8" autocomplete="new-password" required></div><button class="primary" type="submit">Guardar contraseña</button><p id="password-message" class="message"></p></form></div></section>
+      <section id="convention-view" class="hidden"><h2 class="section-title">Convenio Colectivo 77/89</h2><iframe class="convention" src="assets/convenio-77-89.pdf" title="Convenio Colectivo 77/89"></iframe></section>
+      <nav class="tabs" aria-label="Secciones"><button class="tab active" data-view="credential-view">Credencial</button><button class="tab" data-view="data-view">Mis datos</button><button class="tab" data-view="convention-view">Convenio</button></nav>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, updatePassword } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+    import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+    const firebaseConfig = {apiKey:'AIzaSyC5-_AUlTMIGmv0oRUXeRUCaO79NNHFBY0',authDomain:'siga-85bdd.firebaseapp.com',projectId:'siga-85bdd',storageBucket:'siga-85bdd.firebasestorage.app',messagingSenderId:'1065738174061',appId:'1:1065738174061:web:7f62a435474bb4cbce4964'};
+    const networkId = 'siga-gremio-principal-v2';
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const $ = id => document.getElementById(id);
+    const loginView = $('login-view'), appView = $('app-view');
+    let installPrompt = null;
+
+    function isInstalled(){return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true}
+    function updateInstallUi(){
+      const area=$('install-area'),help=$('install-help');
+      if(isInstalled()){area.classList.add('hidden');return}
+      area.classList.remove('hidden');
+      const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+      help.textContent=ios?'En iPhone: tocá Compartir y luego “Agregar a pantalla de inicio”.':'Tocá el botón para agregar Mi SIGA a la pantalla principal.';
+    }
+
+    window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;updateInstallUi()});
+    window.addEventListener('appinstalled',()=>{installPrompt=null;updateInstallUi()});
+    $('install-button').addEventListener('click',async()=>{
+      if(installPrompt){
+        installPrompt.prompt();
+        await installPrompt.userChoice;
+        installPrompt=null;
+        updateInstallUi();
+        return;
+      }
+      const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+      $('install-help').textContent=ios
+        ? 'Abrí el menú Compartir de Safari y elegí “Agregar a pantalla de inicio”.'
+        : 'Abrí el menú ⋮ de Chrome y elegí “Instalar aplicación” o “Agregar a pantalla principal”.';
+    });
+
+    function loginEmail(dni){return `${String(dni||'').replace(/\D/g,'')}@afiliados.siga.app`}
+    function setText(id,value){$(id).textContent=value || '—'}
+    function showCredential(data){
+      setText('card-name',data.name); setText('card-number',`Nº AFILIADO: ${data.number||'S/N'}`); setText('card-dni',data.dni);
+      setText('card-company',data.company||'Sin empresa'); setText('affiliate-status',data.status); setText('payment-status',data.hasPaid?'Al día':'Pendiente');
+      const role=[data.isDelegate?'Delegado/a':'',data.isInternalCommission?'Comisión interna':''].filter(Boolean).join(' · '); setText('card-role',role);
+      setText('card-updated',data.updatedAt?`Actualizada ${new Date(data.updatedAt).toLocaleDateString('es-AR')}`:'');
+      $('welcome').textContent=`Hola, ${(data.name||'').split(' ')[0]}`;
+      const rows=[['Nombre',data.name],['DNI',data.dni],['Nº de afiliado',data.number],['Empresa',data.company],['Consultora',data.consultant],['Sector',data.sector],['Estado',data.status]];
+      $('data-list').replaceChildren(...rows.map(([label,value])=>{const row=document.createElement('div');row.className='row';const a=document.createElement('span');a.textContent=label;const b=document.createElement('b');b.textContent=value||'—';row.append(a,b);return row}));
+    }
+    let stopCredentialWatch=null;
+    function revokeCurrentSession(message){
+      localStorage.removeItem('siga_mobile_credential'); appView.classList.add('hidden'); loginView.classList.remove('hidden');
+      $('login-message').textContent=message; signOut(auth).catch(()=>{});
+    }
+    function loadCredential(user){
+      if(stopCredentialWatch)stopCredentialWatch();
+      stopCredentialWatch=onSnapshot(doc(db,'artifacts',networkId,'mobile_credentials',user.uid),snapshot=>{
+        if(!snapshot.exists())return revokeCurrentSession('La cuenta no tiene una credencial habilitada.');
+        const data=snapshot.data();
+        if(data.enabled===false)return revokeCurrentSession('Tu acceso está bloqueado. Comunicate con el sindicato.');
+        localStorage.setItem('siga_mobile_credential',JSON.stringify(data)); showCredential(data); loginView.classList.add('hidden'); appView.classList.remove('hidden');
+      },()=>revokeCurrentSession('No se pudo verificar tu acceso. Revisá la conexión e intentá nuevamente.'));
+    }
+    $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';try{await signInWithEmailAndPassword(auth,loginEmail(dni),$('password').value)}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{button.disabled=false;button.textContent='Ingresar'}});
+    onAuthStateChanged(auth,user=>{if(user)loadCredential(user);else{if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}appView.classList.add('hidden');loginView.classList.remove('hidden')}});
+    $('logout-button').addEventListener('click',async()=>{localStorage.removeItem('siga_mobile_credential');await signOut(auth)});
+    $('print-button').addEventListener('click',()=>window.print());
+    $('password-toggle').addEventListener('click',()=>$('password-form').classList.toggle('hidden'));
+    $('password-form').addEventListener('submit',async event=>{event.preventDefault();const message=$('password-message');try{await updatePassword(auth.currentUser,$('new-password').value);message.style.color='#047857';message.textContent='Contraseña actualizada.';$('new-password').value=''}catch{message.textContent='Volvé a iniciar sesión e intentá nuevamente.'}});
+    document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('#credential-view,#data-view,#convention-view').forEach(view=>view.classList.add('hidden'));$(button.dataset.view).classList.remove('hidden');document.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===button))}));
+    updateInstallUi();
+    if('serviceWorker'in navigator){
+      let reloading=false;
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{
+        if(reloading)return;
+        reloading=true;
+        $('update-notice').classList.remove('hidden');
+        setTimeout(()=>window.location.reload(),700);
+      });
+      navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(registration=>registration.update()).catch(()=>{});
+    }
+  </script>
+</body>
+</html>
