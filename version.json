@@ -1,8 +1,8 @@
 {
-  "version": "1.2.26",
+  "version": "1.2.27",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "8CEA0840D239578E1FF02B6B3D04DAFF56B25E7B66112AF5FFA9CE3BC1F2953E",
+  "sha256": "E29B39AB8616F2256B5E14EFE56869080A443C887CD9B87B3C1F78A05C01483F",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "E03537A45126FAACE13409BFBB4E4811C4541B73EB8D1CAE290C76F87372685F",
-  "notes": "Inicio más rápido, importaciones masivas optimizadas, menos lecturas de red y apertura instantánea de la PWA desde caché."
+  "packageSha256": "586BFA187E085F5D8730B02626BE7FEB8933E4A471849A3C85188391CC7A3BFD",
+  "notes": "Empresa y consultora obligatorias, y nueva función de miembro de comisión directiva."
 }

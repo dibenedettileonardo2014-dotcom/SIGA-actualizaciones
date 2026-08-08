@@ -38,7 +38,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.2.26</p>
+      <p class="app-version">Versión 1.2.27</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -157,7 +157,7 @@
     function showCredential(data){
       setText('card-name',data.name); setText('card-number',`Nº AFILIADO: ${data.number||'S/N'}`); setText('card-dni',data.dni);
       setText('card-company',data.company||'Sin empresa'); setText('affiliate-status',data.status); setText('payment-status',data.hasPaid?'Al día':'Pendiente');
-      const role=[data.isDelegate?'Delegado/a':'',data.isInternalCommission?'Comisión interna':''].filter(Boolean).join(' · '); setText('card-role',role);
+      const role=[data.isDelegate?'Delegado/a':'',data.isInternalCommission?'Comisión interna':'',data.isDirectiveCommission?'Comisión directiva':''].filter(Boolean).join(' · '); setText('card-role',role);
       setText('card-updated',data.updatedAt?`Actualizada ${new Date(data.updatedAt).toLocaleDateString('es-AR')}`:'');
       $('welcome').textContent=`Hola, ${(data.name||'').split(' ')[0]}`;
       const rows=[['Nombre',data.name],['DNI',data.dni],['Nº de afiliado',data.number],['Empresa',data.company],['Consultora',data.consultant],['Sector',data.sector],['Estado',data.status]];
