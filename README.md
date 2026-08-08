@@ -18,16 +18,16 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.22` — muestra en Mi SIGA el grupo familiar informado en el padrón: pareja
-e hijos, con nombre, DNI y edad.
+`1.2.23` — optimiza el arranque, la búsqueda del padrón y la caché de recursos
+de la PWA sin modificar las funciones disponibles.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.20
 - 1.2.21
 - 1.2.22
+- 1.2.23
 
 Los instaladores se encuentran en `installer/`.
 

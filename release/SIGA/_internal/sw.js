@@ -1,4 +1,4 @@
-const CACHE_NAME = 'siga-v1.2.22';
+const CACHE_NAME = 'siga-v1.2.23';
 const APP_SHELL = [
   './',
   './index.html',
@@ -24,15 +24,22 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-
+  const sameOrigin = event.request.url.startsWith(self.location.origin);
+  const staticAsset = sameOrigin && ['image', 'font'].includes(event.request.destination)
+    || sameOrigin && /\.(?:pdf|ico)$/i.test(new URL(event.request.url).pathname);
+  if (staticAsset) {
+    event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      return response;
+    })));
+    return;
+  }
   event.respondWith(fetch(event.request).then(response => {
-    if (event.request.url.startsWith(self.location.origin)) {
+    if (sameOrigin) {
       const copy = response.clone();
       caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
     }
     return response;
-  }).catch(() => caches.match(event.request).then(response => {
-    if (response) return response;
-    return event.request.mode === 'navigate' ? caches.match('./') : Response.error();
-  })));
+  }).catch(() => caches.match(event.request).then(response => response || (event.request.mode === 'navigate' ? caches.match('./') : Response.error()))));
 });

@@ -1,8 +1,8 @@
 {
-  "version": "1.2.22",
+  "version": "1.2.23",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "8E9B83CAB1D0ED25B5D47FFB3C4F4BC6316E13DD339B51AB327DD226C601D536",
+  "sha256": "FDD0EAB87A7366141A48F3977841C49287CB2AEBB88644AD961BD0055474CC01",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "0C802C45133706169305309A0D6E2F8D4104E9CA4F4A11B5C2ED8174828C494C",
-  "notes": "Mi SIGA agrega una sección para consultar la pareja y los hijos informados en el grupo familiar."
+  "packageSha256": "62FCA0FB348336F8B1BBF1F839D176F74DA5B5EA2C18609C91099C0B39F52A85",
+  "notes": "Optimización general de arranque, búsqueda, ordenamiento y caché para un funcionamiento más fluido."
 }
