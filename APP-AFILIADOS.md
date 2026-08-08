@@ -8,6 +8,10 @@ Después del primer ingreso, el afiliado puede activar el desbloqueo del
 dispositivo mediante WebAuthn. En Android, Chrome solicita la huella, el rostro
 o el PIN configurado en el teléfono. Mi SIGA conserva solamente el identificador
 público de esa credencial y nunca almacena la contraseña ni los datos biométricos.
+La aplicación pregunta si desea activarlo después del primer ingreso y, una vez
+configurado, intenta abrir automáticamente la verificación al iniciar. El botón
+de desbloqueo queda disponible como alternativa si Android impide el inicio
+automático.
 
 Aplicación publicada: https://siga-85bdd.web.app/
 

@@ -15,7 +15,7 @@
     .panel{background:rgba(255,255,255,.96);color:#0f172a;border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:24px;box-shadow:0 25px 60px rgba(0,0,0,.28)}h1{font-size:25px;margin:0 0 7px}.muted{color:#64748b;font-size:13px;line-height:1.5}.field{margin-top:18px}.field label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:7px}.field input{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:14px;background:#f8fafc;outline:none}.field input:focus{border-color:#10b981;box-shadow:0 0 0 3px #10b98122}.primary,.secondary,.danger{width:100%;border:0;border-radius:13px;padding:14px;font-weight:750;cursor:pointer}.primary{background:#059669;color:#fff;margin-top:20px}.primary:disabled{opacity:.6}.secondary{background:#e2e8f0;color:#334155}.danger{background:#fff1f2;color:#be123c}.message{min-height:20px;margin:12px 0 0;font-size:12px;color:#be123c}
     .topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.topline small{color:#94a3b8}.icon-btn{border:1px solid #334155;background:#0f172a;color:#cbd5e1;border-radius:11px;padding:9px 12px}.credential{aspect-ratio:1.72;border-radius:22px;padding:20px;background:linear-gradient(135deg,#111827,#064e3b);box-shadow:0 22px 45px #02061766;border:1px solid #ffffff1a;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}.credential:after{content:"SIGA";position:absolute;right:-10px;bottom:-25px;font-weight:900;font-size:82px;color:#fff;opacity:.035}.card-head,.card-foot{display:flex;justify-content:space-between;gap:10px;position:relative;z-index:1}.eyebrow{font-size:9px;color:#34d399;font-weight:800;letter-spacing:.12em}.org{font-size:11px;color:#cbd5e1}.badge{font-size:9px;color:#052e16;background:#34d399;border-radius:5px;padding:3px 7px;height:max-content;font-weight:900}.card-name{font-size:17px;font-weight:850;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-number{font-size:11px;color:#94a3b8;margin-top:3px}.role{font-size:9px;color:#fcd34d;margin-top:4px;font-weight:800;text-transform:uppercase}.card-foot{border-top:1px solid #ffffff18;padding-top:9px;font-size:10px;color:#94a3b8}.card-foot b{color:#e2e8f0}.status{margin-top:14px;display:flex;gap:8px}.pill{flex:1;background:#ffffff10;border:1px solid #ffffff12;border-radius:14px;padding:12px;font-size:11px;color:#94a3b8}.pill b{display:block;color:#f8fafc;margin-top:3px;font-size:13px}
     .tabs{position:fixed;z-index:10;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 28px),490px);display:flex;padding:7px;background:#0f172af2;border:1px solid #334155;border-radius:18px;box-shadow:0 15px 35px #0008}.tab{flex:1;border:0;background:transparent;color:#94a3b8;padding:10px 4px;border-radius:12px;font-size:11px;font-weight:700}.tab.active{background:#065f46;color:#d1fae5}.section-title{margin:0 0 15px;font-size:20px}.white-card{background:#fff;color:#0f172a;border-radius:20px;padding:20px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:12px 0;font-size:13px}.row:last-child{border:0}.row span{color:#64748b}.convention{width:100%;height:70vh;min-height:520px;border:0;border-radius:18px;background:#fff}.actions{display:grid;gap:10px;margin-top:16px}@media print{body{background:#fff}.shell>*:not(#credential-view),.tabs,.topline,.status{display:none!important}#credential-view{display:block!important}.credential{width:85.6mm;height:54mm;box-shadow:none;margin:0;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-    .app-version{text-align:center;color:#64748b;font-size:11px;margin:18px 0 0}.update-notice{position:fixed;z-index:20;left:50%;top:14px;transform:translateX(-50%);width:min(calc(100% - 28px),490px);padding:13px 16px;border-radius:14px;background:#d1fae5;color:#064e3b;box-shadow:0 12px 30px #0006;font-size:13px;font-weight:750;text-align:center}
+    .app-version{text-align:center;color:#64748b;font-size:11px;margin:18px 0 0}.update-notice{position:fixed;z-index:20;left:50%;top:14px;transform:translateX(-50%);width:min(calc(100% - 28px),490px);padding:13px 16px;border-radius:14px;background:#d1fae5;color:#064e3b;box-shadow:0 12px 30px #0006;font-size:13px;font-weight:750;text-align:center}.dialog-backdrop{position:fixed;z-index:30;inset:0;background:#020617bb;display:grid;place-items:center;padding:20px}.dialog{width:min(100%,420px);background:#fff;color:#0f172a;border-radius:22px;padding:24px;box-shadow:0 25px 70px #0009}.dialog h2{margin:0 0 9px;font-size:21px}.dialog .actions{grid-template-columns:1fr 1fr}.dialog .primary{margin:0}
   </style>
 </head>
 <body>
@@ -37,7 +37,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.2.20</p>
+      <p class="app-version">Versión 1.2.21</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -57,6 +57,10 @@
     </div>
   </main>
 
+  <div id="biometric-invite" class="dialog-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="biometric-invite-title">
+    <div class="dialog"><h2 id="biometric-invite-title">¿Querés usar la huella?</h2><p class="muted">En los próximos ingresos, Android podrá abrir automáticamente la huella, el rostro o el PIN para desbloquear Mi SIGA.</p><p id="biometric-invite-message" class="message"></p><div class="actions"><button id="biometric-invite-no" class="secondary" type="button">Ahora no</button><button id="biometric-invite-yes" class="primary" type="button">Sí, activar</button></div></div>
+  </div>
+
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, updatePassword } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
@@ -69,8 +73,8 @@
     const db = getFirestore(app);
     const $ = id => document.getElementById(id);
     const loginView = $('login-view'), appView = $('app-view');
-    let installPrompt = null;
-    const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked';
+    let installPrompt = null,automaticUnlockUid=null;
+    const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
 
     function supportsBiometrics(){return window.isSecureContext&&'PublicKeyCredential'in window&&'credentials'in navigator}
     function toBase64Url(buffer){return btoa(String.fromCharCode(...new Uint8Array(buffer))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
@@ -114,6 +118,11 @@
       $('login-message').textContent='';
       loadCredential(user);
       await updateBiometricUi(user);
+    }
+    async function offerBiometricSetup(user){
+      if(!user||getBiometricRecord()?.uid===user.uid||localStorage.getItem(INVITE_KEY_PREFIX+user.uid)||!await platformAuthenticatorAvailable())return;
+      $('biometric-invite-message').textContent='';
+      $('biometric-invite').classList.remove('hidden');
     }
 
     function isInstalled(){return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true}
@@ -166,13 +175,15 @@
         localStorage.setItem('siga_mobile_credential',JSON.stringify(data)); showCredential(data); loginView.classList.add('hidden'); appView.classList.remove('hidden');
       },()=>revokeCurrentSession('No se pudo verificar tu acceso. Revisá la conexión e intentá nuevamente.'));
     }
-    $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const password=$('password').value;const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';try{const result=await signInWithEmailAndPassword(auth,loginEmail(dni),password);sessionStorage.setItem(UNLOCK_KEY,result.user.uid);$('password').value='';loadCredential(result.user);await updateBiometricUi(result.user)}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{button.disabled=false;button.textContent='Ingresar'}});
+    $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const password=$('password').value;const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';try{const result=await signInWithEmailAndPassword(auth,loginEmail(dni),password);sessionStorage.setItem(UNLOCK_KEY,result.user.uid);$('password').value='';loadCredential(result.user);await updateBiometricUi(result.user);await offerBiometricSetup(result.user)}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{button.disabled=false;button.textContent='Ingresar'}});
     $('biometric-button').addEventListener('click',async()=>{const message=$('login-message');message.textContent='Confirmá tu identidad con Android…';try{await unlockWithBiometric(auth.currentUser)}catch(error){message.textContent=error?.name==='NotAllowedError'?'La verificación fue cancelada o no pudo completarse.':'No se pudo usar la autenticación del dispositivo. Ingresá con DNI y contraseña.'}});
     $('biometric-setup').addEventListener('click',async()=>{const status=$('biometric-status'),button=$('biometric-setup');button.disabled=true;status.textContent='Android solicitará tu huella, rostro o PIN…';try{await registerBiometric();status.textContent='Listo. El desbloqueo biométrico quedó activado en este dispositivo.'}catch(error){status.textContent=error?.name==='NotAllowedError'?'La configuración fue cancelada. Podés intentarlo nuevamente.':'No se pudo activar. Verificá que el teléfono tenga bloqueo de pantalla y usá Chrome.'}finally{button.disabled=false}});
+    $('biometric-invite-no').addEventListener('click',()=>{const user=auth.currentUser;if(user)localStorage.setItem(INVITE_KEY_PREFIX+user.uid,'no');$('biometric-invite').classList.add('hidden')});
+    $('biometric-invite-yes').addEventListener('click',async()=>{const user=auth.currentUser,button=$('biometric-invite-yes'),message=$('biometric-invite-message');button.disabled=true;message.style.color='#64748b';message.textContent='Android solicitará tu huella, rostro o PIN…';try{await registerBiometric();localStorage.setItem(INVITE_KEY_PREFIX+user.uid,'yes');$('biometric-invite').classList.add('hidden')}catch(error){message.style.color='#be123c';message.textContent=error?.name==='NotAllowedError'?'La configuración fue cancelada. Podés elegir Ahora no o volver a intentar.':'No se pudo activar. Verificá el bloqueo de pantalla y usá Chrome.'}finally{button.disabled=false}});
     async function handleAuthState(user){
       if(!user){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}sessionStorage.removeItem(UNLOCK_KEY);appView.classList.add('hidden');loginView.classList.remove('hidden');await updateBiometricUi(null);return}
       const record=getBiometricRecord(),mustUnlock=record?.uid===user.uid&&sessionStorage.getItem(UNLOCK_KEY)!==user.uid&&await platformAuthenticatorAvailable();
-      if(mustUnlock){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Sesión guardada. Desbloqueá con Android o ingresá tu DNI y contraseña.';await updateBiometricUi(user);return}
+      if(mustUnlock){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Abriendo la verificación de Android…';await updateBiometricUi(user);if(automaticUnlockUid!==user.uid){automaticUnlockUid=user.uid;try{await unlockWithBiometric(user);return}catch{$('login-message').textContent='No se pudo abrir automáticamente. Tocá el botón de huella o ingresá tu contraseña.'}}return}
       loadCredential(user);await updateBiometricUi(user);
     }
     onAuthStateChanged(auth,user=>{void handleAuthState(user)});

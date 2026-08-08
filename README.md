@@ -18,16 +18,16 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.20` — incorpora desbloqueo local mediante la autenticación nativa de
-Android (huella, rostro o PIN), manteniendo DNI y contraseña como alternativa.
+`1.2.21` — ofrece activar la biometría después del primer ingreso y abre
+automáticamente la verificación nativa de Android en los accesos posteriores.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.18
 - 1.2.19
 - 1.2.20
+- 1.2.21
 
 Los instaladores se encuentran en `installer/`.
 
