@@ -18,16 +18,16 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.18` — verifica nuevas versiones al iniciar, informa su disponibilidad y
-mantiene la instalación bajo confirmación del usuario.
+`1.2.19` — agrega acceso mediante credenciales protegidas por huella, rostro o
+PIN del dispositivo, manteniendo DNI y contraseña como alternativa.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.16
 - 1.2.17
 - 1.2.18
+- 1.2.19
 
 Los instaladores se encuentran en `installer/`.
 

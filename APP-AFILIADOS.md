@@ -4,6 +4,10 @@ La aplicación se abre desde `afiliado.html` y se puede instalar en Android,
 iPhone y computadoras como PWA. El afiliado ingresa con su DNI (sin puntos) y
 la contraseña inicial entregada por el sindicato.
 
+Después del primer ingreso, los navegadores compatibles permiten guardar la
+credencial en el gestor seguro del dispositivo. Los accesos posteriores pueden
+confirmarse con huella, rostro o PIN sin almacenar la contraseña en Mi SIGA.
+
 Aplicación publicada: https://siga-85bdd.web.app/
 
 ## Puesta en funcionamiento
@@ -31,6 +35,8 @@ Hosting fueron publicadas el 7 de agosto de 2026. Para entregar un acceso:
   de los afiliados que ya tengan acceso.
 - La aplicación conserva localmente la última credencial para consulta sin
   conexión. Al cerrar sesión se elimina esa copia del dispositivo.
+- La credencial de ingreso guardada pertenece al gestor seguro del navegador o
+  sistema operativo; Mi SIGA no puede leer biometría ni conservarla.
 
 ## Recuperación de acceso
 
