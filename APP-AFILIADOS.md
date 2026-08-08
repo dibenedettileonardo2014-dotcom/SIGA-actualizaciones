@@ -19,6 +19,10 @@ La sección **Familia** muestra exclusivamente el grupo familiar cargado en la
 ficha del afiliado: pareja e hijos, con nombre, DNI y edad. Los cambios se
 sincronizan al guardar la ficha desde SIGA.
 
+La aplicación de escritorio guarda cada cambio primero en la PC y mantiene una
+cola local. Cuando recupera conexión, la cola se publica en Firebase y las demás
+computadoras reciben el cambio mediante la sincronización en tiempo real.
+
 ## Puesta en funcionamiento
 
 La configuración de Authentication, las reglas de `firestore.rules` y Firebase
