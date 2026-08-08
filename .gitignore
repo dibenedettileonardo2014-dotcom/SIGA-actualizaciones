@@ -10,6 +10,7 @@ env/
 .venv/
 .tools/
 .firebase/
+hosting/SIGA-update.zip
 *.log
 .DS_Store
 Thumbs.db

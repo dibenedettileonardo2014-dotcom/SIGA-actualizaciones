@@ -18,15 +18,15 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.27` — hace obligatorios empresa y consultora, y agrega la función de
-miembro de comisión directiva a los afiliados.
+`1.2.28` — incorpora descargas alternativas y reintentos automáticos para que
+las actualizaciones de PC resistan cortes y conexiones lentas.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.25
 - 1.2.26
+- 1.2.27
 
 Los instaladores se encuentran en `installer/`.
 

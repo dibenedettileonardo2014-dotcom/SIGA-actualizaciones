@@ -14,15 +14,17 @@ import json
 import subprocess
 import sys
 import threading
+import time
 from urllib.request import Request, urlopen
 
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.2.27"
-UPDATE_MANIFEST_URL = (
+APP_VERSION = "1.2.28"
+UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
-    "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json"
+    "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
+    "https://siga-85bdd.web.app/version.json",
 )
 
 
@@ -62,19 +64,21 @@ def version_key(value: str) -> tuple[int, ...]:
 
 
 def fetch_update_manifest() -> dict | None:
-    try:
-        request = Request(
-            f"{UPDATE_MANIFEST_URL}?installed={APP_VERSION}",
-            headers={"User-Agent": f"SIGA/{APP_VERSION}"},
-        )
-        with urlopen(request, timeout=5) as response:
-            manifest = json.load(response)
-        required = {"version", "url", "sha256"}
-        if not required.issubset(manifest) or not isinstance(manifest["version"], str):
-            return None
-        return manifest
-    except (OSError, ValueError, json.JSONDecodeError):
-        return None
+    for manifest_url in UPDATE_MANIFEST_URLS:
+        for attempt in range(2):
+            try:
+                request = Request(
+                    f"{manifest_url}?installed={APP_VERSION}&attempt={attempt}",
+                    headers={"User-Agent": f"SIGA/{APP_VERSION}"},
+                )
+                with urlopen(request, timeout=20) as response:
+                    manifest = json.load(response)
+                required = {"version", "url", "sha256"}
+                if required.issubset(manifest) and isinstance(manifest["version"], str):
+                    return manifest
+            except (OSError, ValueError, json.JSONDecodeError):
+                time.sleep(1)
+    return None
 
 
 def install_update(manifest: dict) -> bool:
@@ -86,14 +90,37 @@ def install_update(manifest: dict) -> bool:
         package_url = manifest.get("packageUrl")
         package_hash = manifest.get("packageSha256")
         is_package_update = isinstance(package_url, str) and isinstance(package_hash, str)
-        download_url = package_url if is_package_update else manifest["url"]
+        configured_urls = manifest.get("packageUrls") if is_package_update else manifest.get("urls")
+        download_urls = [url for url in (configured_urls or []) if isinstance(url, str)]
+        primary_url = package_url if is_package_update else manifest["url"]
+        if primary_url not in download_urls:
+            download_urls.insert(0, primary_url)
         expected_hash = package_hash if is_package_update else manifest["sha256"]
-        request = Request(download_url, headers={"User-Agent": f"SIGA/{APP_VERSION}"})
-        with urlopen(request, timeout=30) as response:
-            payload = response.read()
-        if hashlib.sha256(payload).hexdigest().lower() != expected_hash.lower():
-            raise ValueError("La verificacion de integridad fallo.")
-        (update_package if is_package_update else legacy_replacement).write_bytes(payload)
+        destination = update_package if is_package_update else legacy_replacement
+        partial = destination.with_suffix(destination.suffix + ".part")
+        last_error = None
+        for download_url in download_urls:
+            for attempt in range(3):
+                try:
+                    digest = hashlib.sha256()
+                    request = Request(download_url, headers={"User-Agent": f"SIGA/{APP_VERSION}"})
+                    with urlopen(request, timeout=120) as response, partial.open("wb") as output:
+                        while chunk := response.read(1024 * 1024):
+                            output.write(chunk)
+                            digest.update(chunk)
+                    if digest.hexdigest().lower() != expected_hash.lower():
+                        raise ValueError("La verificacion de integridad fallo.")
+                    partial.replace(destination)
+                    last_error = None
+                    break
+                except (OSError, ValueError) as error:
+                    last_error = error
+                    partial.unlink(missing_ok=True)
+                    time.sleep(2 * (attempt + 1))
+            if last_error is None:
+                break
+        if last_error is not None:
+            raise last_error
         script = executable.with_name(f"{executable.stem}.update.cmd")
         if is_package_update:
             script_contents = (
