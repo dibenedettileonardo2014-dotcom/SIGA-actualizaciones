@@ -19,11 +19,25 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.2.24"
+APP_VERSION = "1.2.25"
 UPDATE_MANIFEST_URL = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json"
 )
+
+
+class LocalAppServer(ThreadingHTTPServer):
+    """Local-only server tuned for quick restarts and clean shutdowns."""
+
+    allow_reuse_address = True
+    daemon_threads = True
+
+
+class QuietRequestHandler(SimpleHTTPRequestHandler):
+    """Avoid a console/log bottleneck for every static asset."""
+
+    def log_message(self, format: str, *args: object) -> None:
+        pass
 
 
 def bundled_path() -> Path:
@@ -34,10 +48,10 @@ def bundled_path() -> Path:
 
 
 def start_server(web_root: Path) -> ThreadingHTTPServer:
-    handler = partial(SimpleHTTPRequestHandler, directory=str(web_root))
+    handler = partial(QuietRequestHandler, directory=str(web_root))
     # A fixed port keeps the browser origin stable, so localStorage survives
     # across launches and can be used as an offline backup.
-    server = ThreadingHTTPServer(("127.0.0.1", LOCAL_PORT), handler)
+    server = LocalAppServer(("127.0.0.1", LOCAL_PORT), handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server
 
@@ -163,6 +177,7 @@ def main() -> None:
         webview.start(gui="edgechromium")
     finally:
         server.shutdown()
+        server.server_close()
 
 
 if __name__ == "__main__":

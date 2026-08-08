@@ -600,7 +600,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                        <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.24</p>
+                        <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.25</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -621,7 +621,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.24</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.25</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -1134,8 +1134,8 @@ window.__firebase_config = {
             }
 
             try {
-                const affiliates = JSON.parse(localStorage.getItem('siga_affiliates_data') || '[]');
-                const payments = JSON.parse(localStorage.getItem('siga_payments_data') || '[]');
+                const affiliates = JSON.parse(localStorage.getItem(localDataKey('affiliates')) || '[]');
+                const payments = JSON.parse(localStorage.getItem(localDataKey('payments')) || '[]');
                 window.appState.affiliates = Array.isArray(affiliates) ? affiliates : [];
                 window.appState.payments = Array.isArray(payments) ? payments : [];
             } catch (error) {
@@ -1150,6 +1150,25 @@ window.__firebase_config = {
         // --- Respaldo local y sincronización diferida ---
         function pendingChangesKey() {
             return `siga_pending_changes_${window.appState.appId}`;
+        }
+
+        function localDataKey(type) {
+            return `siga_${type}_data_${window.appState.appId}`;
+        }
+
+        function migrateLegacyLocalData() {
+            try {
+                // The legacy copy belongs to the network selected on the last run.
+                for (const type of ['affiliates', 'payments']) {
+                    const scopedKey = localDataKey(type);
+                    const legacyKey = `siga_${type}_data`;
+                    if (localStorage.getItem(scopedKey) === null && localStorage.getItem(legacyKey) !== null) {
+                        localStorage.setItem(scopedKey, localStorage.getItem(legacyKey));
+                    }
+                }
+            } catch (error) {
+                console.error('No se pudo migrar la copia local anterior:', error);
+            }
         }
 
         function readPendingChanges() {
@@ -1366,8 +1385,13 @@ window.__firebase_config = {
         }
 
         function saveLocalData() {
-            localStorage.setItem('siga_affiliates_data', JSON.stringify(window.appState.affiliates));
-            localStorage.setItem('siga_payments_data', JSON.stringify(window.appState.payments));
+            try {
+                localStorage.setItem(localDataKey('affiliates'), JSON.stringify(window.appState.affiliates));
+                localStorage.setItem(localDataKey('payments'), JSON.stringify(window.appState.payments));
+            } catch (error) {
+                console.error('No se pudo actualizar la copia local:', error);
+                showToast('Almacenamiento lleno', 'No se pudo actualizar la copia local. Exporta un respaldo y libera espacio.', 'warning');
+            }
         }
 
         // --- STREAMING_CHUNK: Processing interface states... ---
@@ -1413,14 +1437,14 @@ window.__firebase_config = {
 
             window.appState.filteredAffiliates = window.appState.affiliates.filter(a => {
                 const matchQuery = !searchQuery || 
-                    a.name.toLowerCase().includes(searchQuery) ||
-                    a.dni.includes(searchQuery) ||
-                    (a.number && a.number.toLowerCase().includes(searchQuery)) ||
-                    (a.company && a.company.toLowerCase().includes(searchQuery)) ||
-                    (a.consultant && a.consultant.toLowerCase().includes(searchQuery));
+                    String(a.name || '').toLowerCase().includes(searchQuery) ||
+                    String(a.dni || '').includes(searchQuery) ||
+                    String(a.number || '').toLowerCase().includes(searchQuery) ||
+                    String(a.company || '').toLowerCase().includes(searchQuery) ||
+                    String(a.consultant || '').toLowerCase().includes(searchQuery);
 
                 const matchSector = !sectorVal || a.sector === sectorVal;
-                const matchPayment = !paymentVal || (a.hasPaid.toString() === paymentVal);
+                const matchPayment = !paymentVal || (String(Boolean(a.hasPaid)) === paymentVal);
                 const matchStatus = !statusVal || a.status === statusVal;
 
                 return matchQuery && matchSector && matchPayment && matchStatus;
@@ -1958,7 +1982,7 @@ window.__firebase_config = {
         // --- GRÁFICO SECTORES CON CHART.JS ---
         function renderSectorChart() {
             const ctx = document.getElementById('chartSectors');
-            if (!ctx) return;
+            if (!ctx || window.appState.currentTab !== 'dashboard' || typeof window.Chart !== 'function') return;
 
             const sectorsMap = {};
             window.appState.affiliates.forEach(a => {
@@ -2498,13 +2522,16 @@ window.__firebase_config = {
         // --- SISTEMAS DE RED Y RESPALDO ---
         window.applyNewNetworkID = function() {
             const inputVal = document.getElementById('config-network-id').value.trim();
-            if (!inputVal) {
+            if (!/^[A-Za-z0-9_-]{3,80}$/.test(inputVal)) {
                 showToast('Advertencia', 'Por favor ingresa un código de red válido.', 'warning');
                 return;
             }
 
             window.appState.appId = inputVal;
             localStorage.setItem('siga_custom_network_id', inputVal);
+            window.appState.affiliates = [];
+            window.appState.payments = [];
+            loadLocalFallback(false);
             
             showToast('Sincronizando', `Conectando con el Servidor de Red: ${inputVal}...`, 'info');
             
@@ -2562,7 +2589,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.24";
+        const APP_VERSION = "1.2.25";
 
         window.checkForUpdatesManual = async function() {
             const statusContainer = document.getElementById('update-status-container');
@@ -2883,6 +2910,7 @@ window.__firebase_config = {
         window.onload = function() {
             initPWAService();
             // Inicio local primero: la pantalla queda lista aun sin red.
+            migrateLegacyLocalData();
             loadLocalFallback(true);
             setupFirebase();
 

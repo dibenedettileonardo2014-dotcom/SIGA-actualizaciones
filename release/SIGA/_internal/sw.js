@@ -1,4 +1,4 @@
-const CACHE_NAME = 'siga-v1.2.24';
+const CACHE_NAME = 'siga-v1.2.25';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,8 +10,7 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
@@ -29,16 +28,17 @@ self.addEventListener('fetch', event => {
     || sameOrigin && /\.(?:pdf|ico)$/i.test(new URL(event.request.url).pathname);
   if (staticAsset) {
     event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+      if (!response.ok) return response;
       const copy = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)).catch(() => {});
       return response;
     })));
     return;
   }
   event.respondWith(fetch(event.request).then(response => {
-    if (sameOrigin) {
+    if (sameOrigin && response.ok) {
       const copy = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)).catch(() => {});
     }
     return response;
   }).catch(() => caches.match(event.request).then(response => response || (event.request.mode === 'navigate' ? caches.match('./') : Response.error()))));

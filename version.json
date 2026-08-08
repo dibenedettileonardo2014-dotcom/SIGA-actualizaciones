@@ -1,8 +1,8 @@
 {
-  "version": "1.2.24",
+  "version": "1.2.25",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "2C39C404FF7F25271634ABFCC1365CFCD56CE08E7FBB4715D3E80410536BD298",
+  "sha256": "723E7272F1DC0E05E4F379964F59230A18B3139D375AEB88F5B911C6E04EB230",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "8158BE524D0E91F496487169E1254155A329DA87C95E5E6DDE3A4898B70034B9",
-  "notes": "Guardado local inmediato con cola automática para compartir los cambios entre computadoras al recuperar conexión."
+  "packageSha256": "586EEE2B351F62A158AD00E4C0B7350103016D33C21A1CBDFF4BA749CEAD3713",
+  "notes": "Copias locales separadas por red, inicio sin conexión más robusto y mejoras de rendimiento en servidor, filtros, gráfico y caché."
 }
