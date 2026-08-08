@@ -1,4 +1,4 @@
-const CACHE_NAME = 'siga-v1.2.25';
+const CACHE_NAME = 'siga-v1.2.26';
 const APP_SHELL = [
   './',
   './index.html',
@@ -24,6 +24,14 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const sameOrigin = event.request.url.startsWith(self.location.origin);
+  if (sameOrigin && event.request.mode === 'navigate') {
+    event.respondWith(
+      caches.match(event.request)
+        .then(cached => cached || caches.match('./'))
+        .then(cached => cached || fetch(event.request))
+    );
+    return;
+  }
   const staticAsset = sameOrigin && ['image', 'font'].includes(event.request.destination)
     || sameOrigin && /\.(?:pdf|ico)$/i.test(new URL(event.request.url).pathname);
   if (staticAsset) {

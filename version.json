@@ -1,8 +1,8 @@
 {
-  "version": "1.2.25",
+  "version": "1.2.26",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "723E7272F1DC0E05E4F379964F59230A18B3139D375AEB88F5B911C6E04EB230",
+  "sha256": "8CEA0840D239578E1FF02B6B3D04DAFF56B25E7B66112AF5FFA9CE3BC1F2953E",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "586EEE2B351F62A158AD00E4C0B7350103016D33C21A1CBDFF4BA749CEAD3713",
-  "notes": "Copias locales separadas por red, inicio sin conexión más robusto y mejoras de rendimiento en servidor, filtros, gráfico y caché."
+  "packageSha256": "E03537A45126FAACE13409BFBB4E4811C4541B73EB8D1CAE290C76F87372685F",
+  "notes": "Inicio más rápido, importaciones masivas optimizadas, menos lecturas de red y apertura instantánea de la PWA desde caché."
 }

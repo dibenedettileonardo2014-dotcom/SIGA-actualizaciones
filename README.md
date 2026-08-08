@@ -18,16 +18,16 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.25` — separa las copias locales por red, mejora el funcionamiento sin
-conexión y optimiza el servidor, los filtros, el gráfico y la caché de la PWA.
+`1.2.26` — acelera el inicio y las importaciones masivas, evita lecturas de red
+repetidas y prioriza la caché local para abrir la PWA de forma instantánea.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.23
 - 1.2.24
 - 1.2.25
+- 1.2.26
 
 Los instaladores se encuentran en `installer/`.
 
