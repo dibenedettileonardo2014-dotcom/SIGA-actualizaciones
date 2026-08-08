@@ -1,8 +1,8 @@
 {
-  "version": "1.2.19",
+  "version": "1.2.20",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "91A1DD8EC978F515434BA3C7DEE78EF09745736B89B57CD98252BEA68D5E8B87",
+  "sha256": "F665F1F7C3B8E4B83D01642689F55D08518C2A316F0B9B6370740625EBF19FCC",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "FB0665FB44A10A3A3917DCF7A940DB764899BB1A8ECEDA85075859E4D4085690",
-  "notes": "Las actualizaciones se administran únicamente desde la solapa Actualizaciones, sin ventanas automáticas al iniciar."
+  "packageSha256": "8B1EF8B5F8E7037854EB3FA91F7D555025BE774D4C9B48C79EDEA6E926648B0B",
+  "notes": "Mi SIGA incorpora desbloqueo mediante la autenticación nativa de Android: huella, rostro o PIN."
 }

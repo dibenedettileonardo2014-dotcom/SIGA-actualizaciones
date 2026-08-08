@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.2.19"
+APP_VERSION = "1.2.20"
 UPDATE_MANIFEST_URL = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json"

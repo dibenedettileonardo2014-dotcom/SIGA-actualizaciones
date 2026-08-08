@@ -4,9 +4,10 @@ La aplicación se abre desde `afiliado.html` y se puede instalar en Android,
 iPhone y computadoras como PWA. El afiliado ingresa con su DNI (sin puntos) y
 la contraseña inicial entregada por el sindicato.
 
-Después del primer ingreso, los navegadores compatibles permiten guardar la
-credencial en el gestor seguro del dispositivo. Los accesos posteriores pueden
-confirmarse con huella, rostro o PIN sin almacenar la contraseña en Mi SIGA.
+Después del primer ingreso, el afiliado puede activar el desbloqueo del
+dispositivo mediante WebAuthn. En Android, Chrome solicita la huella, el rostro
+o el PIN configurado en el teléfono. Mi SIGA conserva solamente el identificador
+público de esa credencial y nunca almacena la contraseña ni los datos biométricos.
 
 Aplicación publicada: https://siga-85bdd.web.app/
 
@@ -35,8 +36,11 @@ Hosting fueron publicadas el 7 de agosto de 2026. Para entregar un acceso:
   de los afiliados que ya tengan acceso.
 - La aplicación conserva localmente la última credencial para consulta sin
   conexión. Al cerrar sesión se elimina esa copia del dispositivo.
-- La credencial de ingreso guardada pertenece al gestor seguro del navegador o
-  sistema operativo; Mi SIGA no puede leer biometría ni conservarla.
+- El desbloqueo del dispositivo protege una sesión de Firebase ya iniciada. Si
+  el afiliado cierra sesión, borra los datos de Chrome o cambia de teléfono,
+  debe volver a ingresar una vez con DNI y contraseña y activar WebAuthn.
+- Android verifica la huella, el rostro o el PIN dentro de su sistema seguro;
+  Mi SIGA no puede leer ni conservar esos datos.
 
 ## Recuperación de acceso
 
