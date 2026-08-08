@@ -1,8 +1,8 @@
 {
-  "version": "1.2.21",
+  "version": "1.2.22",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "AADFD996CEC28DCF55306BFF2D56029F394CAC9B4600E7E185A2B8E5A29424BE",
+  "sha256": "8E9B83CAB1D0ED25B5D47FFB3C4F4BC6316E13DD339B51AB327DD226C601D536",
   "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "F23030AEE5AE9056E5B845B6B226EB31F89F3972650361F0596F3D5EDA8D7931",
-  "notes": "Mi SIGA ofrece activar la huella después del primer ingreso y abre automáticamente la verificación de Android."
+  "packageSha256": "0C802C45133706169305309A0D6E2F8D4104E9CA4F4A11B5C2ED8174828C494C",
+  "notes": "Mi SIGA agrega una sección para consultar la pareja y los hijos informados en el grupo familiar."
 }

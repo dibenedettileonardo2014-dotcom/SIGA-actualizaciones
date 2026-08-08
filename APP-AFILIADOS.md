@@ -15,6 +15,10 @@ automático.
 
 Aplicación publicada: https://siga-85bdd.web.app/
 
+La sección **Familia** muestra exclusivamente el grupo familiar cargado en la
+ficha del afiliado: pareja e hijos, con nombre, DNI y edad. Los cambios se
+sincronizan al guardar la ficha desde SIGA.
+
 ## Puesta en funcionamiento
 
 La configuración de Authentication, las reglas de `firestore.rules` y Firebase

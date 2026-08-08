@@ -37,7 +37,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.2.21</p>
+      <p class="app-version">Versión 1.2.22</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -52,8 +52,9 @@
         <div class="actions"><button class="secondary" id="print-button">Imprimir / guardar credencial</button></div>
       </section>
       <section id="data-view" class="hidden white-card"><h2 class="section-title">Mis datos</h2><div id="data-list"></div><div class="actions"><button id="biometric-setup" class="secondary">Activar huella, rostro o PIN</button><p id="biometric-status" class="muted" style="margin:0;text-align:center"></p><button id="password-toggle" class="secondary">Cambiar contraseña</button><form id="password-form" class="hidden"><div class="field"><label for="new-password">Nueva contraseña</label><input id="new-password" type="password" minlength="8" autocomplete="new-password" required></div><button class="primary" type="submit">Guardar contraseña</button><p id="password-message" class="message"></p></form></div></section>
+      <section id="family-view" class="hidden white-card"><h2 class="section-title">Mi grupo familiar</h2><div id="family-list"></div></section>
       <section id="convention-view" class="hidden"><h2 class="section-title">Convenio Colectivo 77/89</h2><iframe class="convention" src="assets/convenio-77-89.pdf" title="Convenio Colectivo 77/89"></iframe></section>
-      <nav class="tabs" aria-label="Secciones"><button class="tab active" data-view="credential-view">Credencial</button><button class="tab" data-view="data-view">Mis datos</button><button class="tab" data-view="convention-view">Convenio</button></nav>
+      <nav class="tabs" aria-label="Secciones"><button class="tab active" data-view="credential-view">Credencial</button><button class="tab" data-view="data-view">Mis datos</button><button class="tab" data-view="family-view">Familia</button><button class="tab" data-view="convention-view">Convenio</button></nav>
     </div>
   </main>
 
@@ -160,6 +161,15 @@
       $('welcome').textContent=`Hola, ${(data.name||'').split(' ')[0]}`;
       const rows=[['Nombre',data.name],['DNI',data.dni],['Nº de afiliado',data.number],['Empresa',data.company],['Consultora',data.consultant],['Sector',data.sector],['Estado',data.status]];
       $('data-list').replaceChildren(...rows.map(([label,value])=>{const row=document.createElement('div');row.className='row';const a=document.createElement('span');a.textContent=label;const b=document.createElement('b');b.textContent=value||'—';row.append(a,b);return row}));
+      showFamily(data.familyGroup);
+    }
+    function showFamily(family={}){
+      const list=$('family-list'),partner=family?.partner,children=Array.isArray(family?.children)?family.children:[];
+      list.replaceChildren();
+      const addPerson=(relationship,person)=>{const row=document.createElement('div');row.className='row';const label=document.createElement('span');label.textContent=relationship;const details=document.createElement('b');const name=[person.firstName,person.lastName].filter(Boolean).join(' ')||'—';details.textContent=`${name} · DNI ${person.dni||'—'} · ${person.age||'—'} años`;row.append(label,details);list.appendChild(row)};
+      if(partner)addPerson('Pareja',partner);
+      children.forEach((child,index)=>addPerson(`Hijo/a ${index+1}`,child));
+      if(!partner&&!children.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='No hay familiares informados en el padrón.';list.appendChild(empty)}
     }
     let stopCredentialWatch=null;
     function revokeCurrentSession(message){
@@ -191,7 +201,7 @@
     $('print-button').addEventListener('click',()=>window.print());
     $('password-toggle').addEventListener('click',()=>$('password-form').classList.toggle('hidden'));
     $('password-form').addEventListener('submit',async event=>{event.preventDefault();const message=$('password-message');try{await updatePassword(auth.currentUser,$('new-password').value);message.style.color='#047857';message.textContent='Contraseña actualizada.';$('new-password').value=''}catch{message.textContent='Volvé a iniciar sesión e intentá nuevamente.'}});
-    document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('#credential-view,#data-view,#convention-view').forEach(view=>view.classList.add('hidden'));$(button.dataset.view).classList.remove('hidden');document.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===button))}));
+    document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('#credential-view,#data-view,#family-view,#convention-view').forEach(view=>view.classList.add('hidden'));$(button.dataset.view).classList.remove('hidden');document.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===button))}));
     updateInstallUi();
     void updateBiometricUi();
     if('serviceWorker'in navigator){

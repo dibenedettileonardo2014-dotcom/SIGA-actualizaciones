@@ -18,16 +18,16 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.21` — ofrece activar la biometría después del primer ingreso y abre
-automáticamente la verificación nativa de Android en los accesos posteriores.
+`1.2.22` — muestra en Mi SIGA el grupo familiar informado en el padrón: pareja
+e hijos, con nombre, DNI y edad.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.19
 - 1.2.20
 - 1.2.21
+- 1.2.22
 
 Los instaladores se encuentran en `installer/`.
 
