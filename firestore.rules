@@ -12,16 +12,10 @@ service cloud.firestore {
           || request.auth.token.email == 'operador@siga.com');
     }
 
-    // Compatibilidad con las terminales SIGA actuales. Las cuentas móviles
-    // usan contraseña y no pueden ingresar en esta rama administrativa.
-    function isDesktopSession() {
-      return signedIn()
-        && (isStaff()
-          || request.auth.token.firebase.sign_in_provider == 'anonymous');
-    }
-
+    // Solo las cuentas administrativas autorizadas pueden acceder al padrón.
+    // Las sesiones anónimas y las cuentas móviles quedan excluidas.
     match /artifacts/{appId}/public/data/{document=**} {
-      allow read, write: if isDesktopSession();
+      allow read, write: if isStaff();
     }
 
     match /artifacts/{appId}/mobile_credentials/{userId} {

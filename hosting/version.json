@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.43",
+    "version":  "1.2.44",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "D202852782ED5CB1F1350D94092B3BF254808AF1102EA3F87FCC91EEE812F302",
+    "sha256":  "C14618053462FBD50C40A93FCB66F0E4C9D5D702A705FD902DD52AB6DA8253F1",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "4562BB5E2226C72CF1EC3E419C35D6E2FEC6D92BDF10F2C748BE46799DF10EEF",
-    "notes":  "Limpia datos heredados para evitar cruces entre redes y elimina rutinas obsoletas.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.43.exe",
-    "installerSha256":  "270DCA9273F7DC5B032B1AAFE6718AADD09A0353AB939A555365F4F33C749EAA"
+    "packageSha256":  "C02C8BB8AB9B5D3A381478816D8F8D9FF61D80225B8244471D9F894D8C2F9ED1",
+    "notes":  "Exige una cuenta de administrador u operador en cada PC y bloquea el acceso anonimo al padron.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.44.exe",
+    "installerSha256":  "89BB9B23EEBA4D95D222AF087549E58F1F68CBF9182EE4E6A6EFFBB2282D021A"
 }
