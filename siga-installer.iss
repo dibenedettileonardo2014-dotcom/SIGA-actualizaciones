@@ -1,5 +1,5 @@
 #define MyAppName "SIGA"
-#define MyAppVersion "1.2.30"
+#define MyAppVersion "1.2.31"
 #define MyAppPublisher "Leonardo Di Benedetti"
 #define MyAppExeName "SIGA.exe"
 

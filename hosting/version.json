@@ -1,16 +1,16 @@
 {
-  "version": "1.2.30",
+  "version": "1.2.31",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "1C92C526C8B9E4EB96173DEF876DC0A8CA8E1A10964412631E91D3B1444396F0",
+  "sha256": "EE3A8928A766724924475F389FEC65DBCEC031AA835773250C2DB481F58EBA36",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "152BA5EF91936DDB97ED31D10A7468A267C95E77C9083057D900E2ECA379F8CB",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.30.exe",
-  "notes": "Nuevo buscador de afiliados con hijos por edades, panel optimizado y limpieza general del proyecto."
+  "packageSha256": "3A49473EA4F9444BCD0793796923FABF4B987DB1AB574939425DB0E4E8EBFC33",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.31.exe",
+  "notes": "Menos renderizados ocultos, desplegables bajo demanda, eliminación de código muerto y protección reforzada del contenido mostrado."
 }
