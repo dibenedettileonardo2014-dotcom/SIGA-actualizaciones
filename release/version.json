@@ -1,17 +1,17 @@
 {
-  "version": "1.2.36",
+  "version": "1.2.37",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "ED6D7CD81D3F901A70572A8CE5A057F8D69E1209836242C6DBD03B7FF073A048",
+  "sha256": "19CD39C02A2C40B5D5DC1B7A88D884D0B86BCE4A5882ADD4AF230715CD660907",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "E103C32941901637BAD1F68A7AC3C28693629DE019406A614DBC2C4453175ABC",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.36.exe",
-  "installerSha256": "F0CBC14A76733CAA1D2AE046BE07A3ADDC33485D838B28F4F272BE84F05FD7DC",
-  "notes": "Carga de afiliados mejorada con interruptor de consultora y aclaración obligatoria cuando corresponde."
+  "packageSha256": "24E8BC97C61F79633336DBA56D0687A10000E8D1B144FF4191661505039D1068",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.37.exe",
+  "installerSha256": "61283BA4A692E1FEEBC6E8C4A5E4B5EF8AF37DFBD32B7E339EDEE6E5A90C557A",
+  "notes": "Los Excel y PDF generados se guardan y abren automáticamente en la aplicación de escritorio."
 }
