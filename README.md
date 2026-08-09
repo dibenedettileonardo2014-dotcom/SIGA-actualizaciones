@@ -18,8 +18,8 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.44` — exige una cuenta administrativa u operativa en cada PC y bloquea
-por completo el acceso anónimo al padrón en Firestore.
+`1.2.45` — conserva de forma segura la sesión autorizada de cada PC para no
+volver a pedir la contraseña en cada inicio.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -29,6 +29,7 @@ Aplicación móvil: https://siga-85bdd.web.app/
 - 1.2.42
 - 1.2.43
 - 1.2.44
+- 1.2.45
 
 Los instaladores se encuentran en `installer/`.
 

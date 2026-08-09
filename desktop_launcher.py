@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.2.44"
+APP_VERSION = "1.2.45"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -51,6 +51,13 @@ def bundled_path() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys._MEIPASS)
     return Path(__file__).resolve().parent
+
+
+def webview_storage_path() -> Path:
+    """Return a stable per-user folder for the authenticated WebView session."""
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    base_folder = Path(local_app_data) if local_app_data else Path.home() / "AppData" / "Local"
+    return base_folder / "SIGA" / "WebViewProfile"
 
 
 def start_server(web_root: Path) -> ThreadingHTTPServer:
@@ -257,7 +264,11 @@ def main() -> None:
         maximized=True,
     )
     try:
-        webview.start(gui="edgechromium")
+        webview.start(
+            gui="edgechromium",
+            private_mode=False,
+            storage_path=str(webview_storage_path()),
+        )
     finally:
         server.shutdown()
         server.server_close()
