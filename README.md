@@ -18,15 +18,15 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.38` — guarda exportaciones en Documentos y refuerza la aplicación móvil
-como solo lectura, excepto el cambio de contraseña.
+`1.2.39` — corrige el guardado de exportaciones creando `Documentos\\SIGA`,
+usando escritura atómica y apertura nativa de Windows.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.37
 - 1.2.38
+- 1.2.39
 
 Los instaladores se encuentran en `installer/`.
 

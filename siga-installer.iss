@@ -1,5 +1,5 @@
 #define MyAppName "SIGA"
-#define MyAppVersion "1.2.38"
+#define MyAppVersion "1.2.39"
 #define MyAppPublisher "Leonardo Di Benedetti"
 #define MyAppExeName "SIGA.exe"
 
@@ -28,6 +28,10 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 [Files]
 Source: "release\SIGA\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "assets\siga-app-icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+
+[Dirs]
+Name: "{userdocs}\SIGA"
+Name: "{app}\Documentos"
 
 [InstallDelete]
 Type: files; Name: "{app}\_internal\afiliado.html"

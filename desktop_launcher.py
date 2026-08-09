@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.2.38"
+APP_VERSION = "1.2.39"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -213,11 +213,28 @@ class DesktopApi:
             documents_buffer = ctypes.create_unicode_buffer(260)
             result = ctypes.windll.shell32.SHGetFolderPathW(None, 5, None, 0, documents_buffer)
             documents = Path(documents_buffer.value) if result == 0 and documents_buffer.value else Path.home() / "Documents"
-            documents.mkdir(parents=True, exist_ok=True)
-            destination = documents / safe_name
-            destination.write_bytes(content)
-            os.startfile(destination)
-            return {"ok": True, "path": str(destination)}
+            local_documents = (Path(sys.executable).parent if getattr(sys, "frozen", False) else bundled_path()) / "Documentos"
+            destination = None
+            export_folder = None
+            last_error = None
+            for candidate in (documents / "SIGA", local_documents):
+                try:
+                    candidate.mkdir(parents=True, exist_ok=True)
+                    candidate_destination = candidate / safe_name
+                    temporary = candidate / f".{safe_name}.tmp"
+                    temporary.write_bytes(content)
+                    temporary.replace(candidate_destination)
+                    destination = candidate_destination
+                    export_folder = candidate
+                    break
+                except OSError as error:
+                    last_error = error
+            if destination is None or export_folder is None:
+                raise last_error or OSError("No hay una carpeta local disponible para la exportación.")
+            open_result = ctypes.windll.shell32.ShellExecuteW(None, "open", str(destination), None, str(export_folder), 1)
+            if open_result <= 32:
+                return {"ok": True, "opened": False, "path": str(destination), "error": "Windows no tiene una aplicación asociada para abrir este archivo."}
+            return {"ok": True, "opened": True, "path": str(destination)}
         except (OSError, ValueError) as error:
             return {"ok": False, "error": f"No se pudo guardar o abrir el archivo: {error}"}
 
