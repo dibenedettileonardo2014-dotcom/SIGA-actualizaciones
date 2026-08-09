@@ -1,15 +1,17 @@
 {
-    "version":  "1.2.41",
+    "version":  "1.2.42",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "BFBD9D4B61517D7F225111ED4BD1BA3380469E94DEB5883CF2C5DB035A0A7090",
+    "sha256":  "552509CF0F6C4451DE6BDAAC3A7FAB97F5296317CD0BE8C30539747603E1CC6B",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "67A75FB62DC7114CE253F2B2B171CB3673ADD9D843E100F6D3DBA74313A7CC93",
-    "notes":  "Instalacion movil segura: iconos PWA validados en Android y guia de instalacion para iPhone."
+    "packageSha256":  "B3BBB098834C439D280B46F24F9CC3C3FFBEAAD907E3BBA15B1F01CE910A0312",
+    "notes":  "Samsung Internet deriva la instalacion movil a Chrome para evitar el bloqueo de Play Protect.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.42.exe",
+    "installerSha256":  "49E88373649959F0F35EA46464DEBD9EF3D19F29CF690CA46AE8E394A0A6BFE6"
 }
