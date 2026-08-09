@@ -18,15 +18,15 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.31` — reduce renderizados ocultos, actualiza desplegables bajo demanda,
-elimina código muerto y refuerza la seguridad del contenido mostrado.
+`1.2.32` — reserva para el administrador el acceso directo a la gestión de
+cuentas de Firebase.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.30
 - 1.2.31
+- 1.2.32
 
 Los instaladores se encuentran en `installer/`.
 

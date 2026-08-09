@@ -1,16 +1,16 @@
 {
-  "version": "1.2.31",
+  "version": "1.2.32",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "EE3A8928A766724924475F389FEC65DBCEC031AA835773250C2DB481F58EBA36",
+  "sha256": "0958BD37ECD0E1AD69FCDE08680EEB948080FB5CCD63D58CE11911C09EA8BF00",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "3A49473EA4F9444BCD0793796923FABF4B987DB1AB574939425DB0E4E8EBFC33",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.31.exe",
-  "notes": "Menos renderizados ocultos, desplegables bajo demanda, eliminación de código muerto y protección reforzada del contenido mostrado."
+  "packageSha256": "D0766867B89439F71B0FABB77090DA4336D6CACC7072B9296A750475A81CF865",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.32.exe",
+  "notes": "La administración de cuentas de Firebase queda disponible exclusivamente para el rol Administrador."
 }
