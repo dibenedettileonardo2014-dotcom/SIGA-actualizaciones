@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.42",
+    "version":  "1.2.43",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "552509CF0F6C4451DE6BDAAC3A7FAB97F5296317CD0BE8C30539747603E1CC6B",
+    "sha256":  "D202852782ED5CB1F1350D94092B3BF254808AF1102EA3F87FCC91EEE812F302",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "B3BBB098834C439D280B46F24F9CC3C3FFBEAAD907E3BBA15B1F01CE910A0312",
-    "notes":  "Samsung Internet deriva la instalacion movil a Chrome para evitar el bloqueo de Play Protect.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.42.exe",
-    "installerSha256":  "49E88373649959F0F35EA46464DEBD9EF3D19F29CF690CA46AE8E394A0A6BFE6"
+    "packageSha256":  "4562BB5E2226C72CF1EC3E419C35D6E2FEC6D92BDF10F2C748BE46799DF10EEF",
+    "notes":  "Limpia datos heredados para evitar cruces entre redes y elimina rutinas obsoletas.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.43.exe",
+    "installerSha256":  "270DCA9273F7DC5B032B1AAFE6718AADD09A0353AB939A555365F4F33C749EAA"
 }

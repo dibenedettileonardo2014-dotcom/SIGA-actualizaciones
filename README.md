@@ -18,8 +18,8 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.42` — evita el instalador incompatible de Samsung Internet y deriva la
-instalación Android a Google Chrome para que Play Protect no la bloquee.
+`1.2.43` — elimina rutinas y datos heredados que podían contaminar una red
+nueva, y corrige metadatos obsoletos de actualización e instalación.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -27,6 +27,7 @@ Aplicación móvil: https://siga-85bdd.web.app/
 
 - 1.2.41
 - 1.2.42
+- 1.2.43
 
 Los instaladores se encuentran en `installer/`.
 

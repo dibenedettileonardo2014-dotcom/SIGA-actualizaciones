@@ -648,7 +648,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                        <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.40</p>
+                        <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.43</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -669,11 +669,11 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.40</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.43</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
-                                            <span id="new-version-text" class="font-bold text-amber-800">v1.2.15</span>
+                                            <span id="new-version-text" class="font-bold text-amber-800">—</span>
                                         </div>
                                         <p id="update-notes" class="text-xs text-amber-700 bg-white/50 p-2 rounded mb-3 border border-amber-100">Cargando descripción...</p>
                                     </div>
@@ -1058,7 +1058,7 @@
     <!-- Módulos de Firebase y Script Principal de Aplicación -->
     <script type="module">
         import { initializeApp, getApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         // --- Estado Global de la Aplicación ---
@@ -1090,8 +1090,6 @@
             admin: 'administrador@siga.com',
             operador: 'operador@siga.com'
         };
-/* STREAMING_CHUNK:Corrigiendo formato JSON de configuración... */
-/* STREAMING_CHUNK:Corrigiendo IDs de Firebase... */
 window.__firebase_config = {
     "apiKey": "AIzaSyC5-_AUlTMIGmv0oRUXeRUCaO79NNHFBY0",
     "authDomain": "siga-85bdd.firebaseapp.com",
@@ -1126,9 +1124,6 @@ window.__firebase_config = {
                     // continúan en segundo plano para no demorar el inicio.
                     setupRealtimeSync();
                     void flushPendingChanges();
-                    void removeLegacyDemoAffiliates().catch(error => {
-                        console.error('No se pudo completar la limpieza heredada:', error);
-                    });
                 }
             } catch (error) {
                 console.error('Error al inicializar Firebase:', error);
@@ -1137,8 +1132,6 @@ window.__firebase_config = {
                 loadLocalFallback(false);
             }
         }
-
-        // --- STREAMING_CHUNK: Handling Real-time Synchronization... ---
 
         // Sincronización en Tiempo Real de Red (Cumpliendo reglas estrictas de Firestore)
         function setupRealtimeSync() {
@@ -1230,6 +1223,9 @@ window.__firebase_config = {
                     if (localStorage.getItem(scopedKey) === null && localStorage.getItem(legacyKey) !== null) {
                         localStorage.setItem(scopedKey, localStorage.getItem(legacyKey));
                     }
+                    // Prevent the old unscoped copy from leaking into a
+                    // different network selected on a later run.
+                    localStorage.removeItem(legacyKey);
                 }
             } catch (error) {
                 console.error('No se pudo migrar la copia local anterior:', error);
@@ -1286,28 +1282,6 @@ window.__firebase_config = {
             } else {
                 await setDoc(docRef, change.data);
             }
-        }
-
-        // Removes only the exact legacy demo records, never user-created affiliates.
-        async function removeLegacyDemoAffiliates() {
-            const cleanupKey = `siga_legacy_cleanup_${window.appState.appId}`;
-            if (localStorage.getItem(cleanupKey) === 'done') return;
-            const legacyDemoAffiliates = {
-                '1': 'Laura Beatriz Giménez',
-                '2': 'Carlos Javier Montes',
-                '3': 'Nélida Esther Gómez',
-                '4': 'Facundo Andrés López',
-                '5': 'Mariela Sofía Pereyra'
-            };
-
-            await Promise.all(Object.entries(legacyDemoAffiliates).map(async ([id, name]) => {
-                const ref = doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'afiliados', id);
-                const snapshot = await getDoc(ref);
-                if (snapshot.exists() && snapshot.data().name === name) {
-                    await deleteDoc(ref);
-                }
-            }));
-            localStorage.setItem(cleanupKey, 'done');
         }
 
         async function flushPendingChanges() {
@@ -1478,8 +1452,6 @@ window.__firebase_config = {
             }
         }
 
-        // --- STREAMING_CHUNK: Processing interface states... ---
-
         // --- Procesamiento de Estados, Gráficos y Renderizado ---
         function processStateChange() {
             // Actualizar sectores únicos
@@ -1642,8 +1614,6 @@ window.__firebase_config = {
                 tbody.appendChild(tr);
             });
         }
-
-        // --- STREAMING_CHUNK: Managing Role Permissions dynamically... ---
 
         // --- GESTIÓN DE ROLES (RBAC) ---
         window.openChangeRoleModal = function() {
@@ -2033,8 +2003,6 @@ window.__firebase_config = {
             renderAffiliatesTable();
         };
 
-        // --- STREAMING_CHUNK: Setting up statistics dashboards... ---
-
         // --- RENDERIZADO DE DASHBOARD Y MÉTRICAS ---
         const schoolLevels = { Inicial: age => age >= 0 && age <= 5, Primaria: age => age >= 6 && age <= 12, Secundaria: age => age >= 13 && age <= 17 };
         let familyAgeSearchTimer = null;
@@ -2395,8 +2363,6 @@ window.__firebase_config = {
                 window.generateCredential(selectedCredential.value);
             }
         }
-
-        // --- STREAMING_CHUNK: Registering Payments and Credential printing... ---
 
         // --- CONTROL DE PAGOS Y CUOTAS ---
         window.registerPayment = async function() {
@@ -2849,8 +2815,6 @@ window.__firebase_config = {
             `);
         };
 
-        // --- STREAMING_CHUNK: Managing Backup Systems and Network Configuration... ---
-
         // --- SISTEMAS DE RED Y RESPALDO ---
         window.applyNewNetworkID = function() {
             const inputVal = document.getElementById('config-network-id').value.trim();
@@ -2921,7 +2885,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.40";
+        const APP_VERSION = "1.2.43";
 
         window.checkForUpdatesManual = async function() {
             const statusContainer = document.getElementById('update-status-container');
