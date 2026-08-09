@@ -18,15 +18,15 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.37` — guarda y abre automáticamente los Excel y PDF generados desde la
-aplicación de escritorio.
+`1.2.38` — guarda exportaciones en Documentos y refuerza la aplicación móvil
+como solo lectura, excepto el cambio de contraseña.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.36
 - 1.2.37
+- 1.2.38
 
 Los instaladores se encuentran en `installer/`.
 

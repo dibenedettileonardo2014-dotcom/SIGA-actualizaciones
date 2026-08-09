@@ -1,17 +1,17 @@
 {
-  "version": "1.2.37",
+  "version": "1.2.38",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "19CD39C02A2C40B5D5DC1B7A88D884D0B86BCE4A5882ADD4AF230715CD660907",
+  "sha256": "DA231CF90A57A287A4B8554836D1DD7FAD885F1125AFB16DAC84322606D69CD1",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "24E8BC97C61F79633336DBA56D0687A10000E8D1B144FF4191661505039D1068",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.37.exe",
-  "installerSha256": "61283BA4A692E1FEEBC6E8C4A5E4B5EF8AF37DFBD32B7E339EDEE6E5A90C557A",
-  "notes": "Los Excel y PDF generados se guardan y abren automáticamente en la aplicación de escritorio."
+  "packageSha256": "A66EF470737440F28BA3C9A8F1D9EDB5B0967CDB6133D19ECE3C1CB7B7078210",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.38.exe",
+  "installerSha256": "CAD7FF9C09FC3A3B52916C2ADC02BEF126FB7A7706D46F65614F541FF129574D",
+  "notes": "Exportaciones guardadas en Documentos y aplicación móvil en modo solo lectura excepto contraseña."
 }
