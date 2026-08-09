@@ -1,8 +1,17 @@
 {
-  "version": "1.2.26",
+  "version": "1.2.35",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "sha256": "8CEA0840D239578E1FF02B6B3D04DAFF56B25E7B66112AF5FFA9CE3BC1F2953E",
-  "packageUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip",
-  "packageSha256": "E03537A45126FAACE13409BFBB4E4811C4541B73EB8D1CAE290C76F87372685F",
-  "notes": "Inicio más rápido, importaciones masivas optimizadas, menos lecturas de red y apertura instantánea de la PWA desde caché."
+  "urls": [
+    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
+  ],
+  "sha256": "8E6CB4D8D02CFC3AB2EB9BF960F2CED076CD0CD7C769F60F4C9432ADBE503C92",
+  "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
+  "packageUrls": [
+    "https://siga-85bdd.web.app/SIGA-update.zip",
+    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
+  ],
+  "packageSha256": "A1B2E1455CBC5F532DD3A8F9BEBF5BDC746F1169AB393F6B4C90AEDF4405D2CF",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.35.exe",
+  "installerSha256": "7A0DAA3A1D243A8EE1260E18435BE1A2B0644C9BAE1960B9853A93DD0227C938",
+  "notes": "Niveles escolares con edad automática, filtros combinables y listados de entrega en Excel, PDF e impresión."
 }
