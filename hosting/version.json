@@ -1,16 +1,16 @@
 {
-  "version": "1.2.32",
+  "version": "1.2.33",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "0958BD37ECD0E1AD69FCDE08680EEB948080FB5CCD63D58CE11911C09EA8BF00",
+  "sha256": "4B1CBF81B7E40CAFFA0974BBF42F33111C4039570C569467BAEB480FD7E7254E",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "D0766867B89439F71B0FABB77090DA4336D6CACC7072B9296A750475A81CF865",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.32.exe",
-  "notes": "La administración de cuentas de Firebase queda disponible exclusivamente para el rol Administrador."
+  "packageSha256": "7E58915E2394CAF3AA28A7A6FDF7C1BD402DC56F023CF29BDCFE000946498AA3",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.33.exe",
+  "notes": "La aplicación móvil identifica a LGDB como su desarrolladora."
 }
