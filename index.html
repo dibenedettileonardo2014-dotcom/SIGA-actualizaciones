@@ -284,6 +284,47 @@
                         </div>
                     </div>
 
+                    <!-- Consulta de afiliados con hijos -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 flex flex-col xl:flex-row xl:items-end justify-between gap-4">
+                            <div>
+                                <h4 class="font-bold text-slate-800">Afiliados con hijos por edad</h4>
+                                <p class="text-xs text-slate-500 mt-1">Los límites de 6 y 12 años se asignan al tramo menor para evitar conteos duplicados.</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                                <div class="relative sm:w-72">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
+                                    <input id="family-age-search" type="search" oninput="scheduleFamilyAgeSearch()" class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl py-3 pl-9 pr-3 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Buscar afiliado, hijo o DNI">
+                                </div>
+                                <select id="family-age-range" onchange="renderFamilyAgeSearch()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-3 py-3 focus:ring-emerald-500 focus:border-emerald-500">
+                                    <option value="all">Todas las edades</option>
+                                    <option value="0-6">0 a 6 años</option>
+                                    <option value="6-12">Más de 6 a 12 años</option>
+                                    <option value="12-18">Más de 12 a 18 años</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 p-6 pb-4">
+                            <button type="button" onclick="selectFamilyAgeRange('all')" class="family-age-card text-left rounded-xl border border-slate-200 bg-slate-50 p-4 hover:border-emerald-300 transition-colors" data-range="all">
+                                <p class="text-[11px] font-bold uppercase text-slate-500">Con hijos 0–18</p><p id="family-count-all" class="text-2xl font-extrabold text-slate-800 mt-1">0</p><p id="children-count-all" class="text-[11px] text-slate-500">0 hijos</p>
+                            </button>
+                            <button type="button" onclick="selectFamilyAgeRange('0-6')" class="family-age-card text-left rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 hover:border-emerald-400 transition-colors" data-range="0-6">
+                                <p class="text-[11px] font-bold uppercase text-emerald-700">0 a 6 años</p><p id="family-count-0-6" class="text-2xl font-extrabold text-emerald-700 mt-1">0</p><p id="children-count-0-6" class="text-[11px] text-emerald-700/70">0 hijos</p>
+                            </button>
+                            <button type="button" onclick="selectFamilyAgeRange('6-12')" class="family-age-card text-left rounded-xl border border-blue-200 bg-blue-50/60 p-4 hover:border-blue-400 transition-colors" data-range="6-12">
+                                <p class="text-[11px] font-bold uppercase text-blue-700">Más de 6 a 12</p><p id="family-count-6-12" class="text-2xl font-extrabold text-blue-700 mt-1">0</p><p id="children-count-6-12" class="text-[11px] text-blue-700/70">0 hijos</p>
+                            </button>
+                            <button type="button" onclick="selectFamilyAgeRange('12-18')" class="family-age-card text-left rounded-xl border border-violet-200 bg-violet-50/60 p-4 hover:border-violet-400 transition-colors" data-range="12-18">
+                                <p class="text-[11px] font-bold uppercase text-violet-700">Más de 12 a 18</p><p id="family-count-12-18" class="text-2xl font-extrabold text-violet-700 mt-1">0</p><p id="children-count-12-18" class="text-[11px] text-violet-700/70">0 hijos</p>
+                            </button>
+                        </div>
+                        <div class="px-6 pb-6">
+                            <p id="family-age-result-summary" class="text-xs font-semibold text-slate-500 mb-3"></p>
+                            <div id="family-age-results" class="grid grid-cols-1 lg:grid-cols-2 gap-3"></div>
+                            <p id="family-age-empty" class="hidden text-sm text-slate-400 text-center py-6">No se encontraron afiliados con hijos para esta búsqueda.</p>
+                        </div>
+                    </div>
+
                     <!-- Afiliados Recientes -->
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -600,7 +641,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                        <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.29</p>
+                        <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.30</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -621,7 +662,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.29</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.30</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -1443,8 +1484,10 @@ window.__firebase_config = {
 
             populateDropdowns();
             applyFilters();
-            renderDashboardStats();
-            renderSectorChart();
+            if (window.appState.currentTab === 'dashboard') {
+                renderDashboardStats();
+                renderSectorChart();
+            }
         }
 
         // --- Sistema de Búsqueda Flexible y Unificada ---
@@ -1934,6 +1977,82 @@ window.__firebase_config = {
         // --- STREAMING_CHUNK: Setting up statistics dashboards... ---
 
         // --- RENDERIZADO DE DASHBOARD Y MÉTRICAS ---
+        const familyAgeRanges = {
+            '0-6': age => age >= 0 && age <= 6,
+            '6-12': age => age > 6 && age <= 12,
+            '12-18': age => age > 12 && age <= 18,
+            all: age => age >= 0 && age <= 18
+        };
+        let familyAgeSearchTimer = null;
+
+        function getAffiliateChildren(affiliate) {
+            const children = Array.isArray(affiliate.familyGroup?.children) ? affiliate.familyGroup.children : [];
+            return children.filter(child => Number.isFinite(Number(child.age))).map(child => ({ ...child, age: Number(child.age) }));
+        }
+
+        window.scheduleFamilyAgeSearch = function() {
+            clearTimeout(familyAgeSearchTimer);
+            familyAgeSearchTimer = setTimeout(renderFamilyAgeSearch, 120);
+        };
+
+        window.selectFamilyAgeRange = function(range) {
+            document.getElementById('family-age-range').value = range;
+            renderFamilyAgeSearch();
+        };
+
+        window.renderFamilyAgeSearch = function() {
+            const range = document.getElementById('family-age-range')?.value || 'all';
+            const inRange = familyAgeRanges[range] || familyAgeRanges.all;
+            const query = (document.getElementById('family-age-search')?.value || '').trim().toLowerCase();
+            const results = [];
+            window.appState.affiliates.forEach(affiliate => {
+                const children = getAffiliateChildren(affiliate).filter(child => inRange(child.age));
+                if (!children.length) return;
+                const affiliateText = `${affiliate.name || ''} ${affiliate.dni || ''} ${affiliate.number || ''}`.toLowerCase();
+                const matchingChildren = query ? children.filter(child => `${child.firstName || ''} ${child.lastName || ''} ${child.dni || ''} ${child.age}`.toLowerCase().includes(query)) : children;
+                if (query && !affiliateText.includes(query) && !matchingChildren.length) return;
+                results.push({ affiliate, children: query && !affiliateText.includes(query) ? matchingChildren : children });
+            });
+            results.sort((left, right) => String(left.affiliate.name || '').localeCompare(String(right.affiliate.name || ''), 'es'));
+            const totalChildren = results.reduce((sum, item) => sum + item.children.length, 0);
+            const summary = document.getElementById('family-age-result-summary');
+            summary.textContent = `${results.length} afiliado${results.length === 1 ? '' : 's'} · ${totalChildren} hijo${totalChildren === 1 ? '' : 's'}`;
+            const container = document.getElementById('family-age-results');
+            const empty = document.getElementById('family-age-empty');
+            container.innerHTML = '';
+            empty.classList.toggle('hidden', results.length > 0);
+            results.slice(0, 50).forEach(({ affiliate, children }) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'text-left rounded-xl border border-slate-200 p-4 hover:border-emerald-300 hover:bg-emerald-50/30 transition-colors';
+                item.addEventListener('click', () => { switchTab('afiliados'); editAffiliate(affiliate.id); });
+                const childDetails = children.map(child => `${escapePrintHtml(`${child.firstName || ''} ${child.lastName || ''}`.trim() || 'Sin nombre')} · ${child.age} años`).join('<br>');
+                item.innerHTML = `<div class="flex items-start justify-between gap-3"><div><p class="font-bold text-sm text-slate-800">${escapePrintHtml(affiliate.name || 'Sin nombre')}</p><p class="text-[11px] text-slate-500">DNI ${escapePrintHtml(affiliate.dni || '-')} · ${children.length} hijo${children.length === 1 ? '' : 's'}</p></div><i class="fa-solid fa-chevron-right text-slate-300 mt-1"></i></div><p class="text-xs text-slate-600 mt-2 leading-5">${childDetails}</p>`;
+                container.appendChild(item);
+            });
+            if (results.length > 50) summary.textContent += ' · mostrando los primeros 50';
+            document.querySelectorAll('.family-age-card').forEach(card => {
+                card.classList.toggle('ring-2', card.dataset.range === range);
+                card.classList.toggle('ring-emerald-400', card.dataset.range === range);
+            });
+        };
+
+        function renderFamilyAgeStats() {
+            ['0-6', '6-12', '12-18', 'all'].forEach(range => {
+                const inRange = familyAgeRanges[range];
+                let affiliateCount = 0;
+                let childCount = 0;
+                window.appState.affiliates.forEach(affiliate => {
+                    const matching = getAffiliateChildren(affiliate).filter(child => inRange(child.age));
+                    if (matching.length) affiliateCount += 1;
+                    childCount += matching.length;
+                });
+                document.getElementById(`family-count-${range}`).textContent = affiliateCount;
+                document.getElementById(`children-count-${range}`).textContent = `${childCount} hijo${childCount === 1 ? '' : 's'}`;
+            });
+            renderFamilyAgeSearch();
+        }
+
         function renderDashboardStats() {
             const list = window.appState.affiliates;
             const total = list.length;
@@ -1971,6 +2090,7 @@ window.__firebase_config = {
             document.getElementById('bar-active').style.width = `${actPct}%`;
             document.getElementById('bar-retired').style.width = `${retPct}%`;
             document.getElementById('bar-inactive').style.width = `${inactPct}%`;
+            renderFamilyAgeStats();
 
             // Tabla de ingresos recientes
             const recentList = document.getElementById('recent-affiliates-list');
@@ -2618,7 +2738,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.29";
+        const APP_VERSION = "1.2.30";
 
         window.checkForUpdatesManual = async function() {
             const statusContainer = document.getElementById('update-status-container');
@@ -2870,6 +2990,7 @@ window.__firebase_config = {
             document.getElementById('sidebar-overlay').classList.add('hidden');
 
             if (tabId === 'dashboard') {
+                renderDashboardStats();
                 renderSectorChart();
             }
             if (tabId === 'pagos' && typeof window.subscribePaymentsRealtime === 'function') {

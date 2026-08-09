@@ -18,16 +18,16 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.29` — descarga las actualizaciones en una carpeta temporal y solicita
-permisos de Windows cuando la instalación se encuentra en una carpeta protegida.
+`1.2.30` — agrega consulta y conteo de afiliados con hijos por rangos de edad,
+optimiza el panel principal y limpia archivos temporales del proyecto.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.25
 - 1.2.26
 - 1.2.29
+- 1.2.30
 
 Los instaladores se encuentran en `installer/`.
 

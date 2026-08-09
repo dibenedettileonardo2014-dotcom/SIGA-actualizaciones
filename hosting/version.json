@@ -1,16 +1,16 @@
 {
-  "version": "1.2.29",
+  "version": "1.2.30",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "24CBDD911FE2718A78775D6B3FFDE85500385BDC72C6C35E0A62F4B3B2E2CD32",
+  "sha256": "1C92C526C8B9E4EB96173DEF876DC0A8CA8E1A10964412631E91D3B1444396F0",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "A62C90DF8C920A7EC6D3451B72F59466D56DB7993A9B604C81DE71DFC9350D9F",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.29.exe",
-  "notes": "Actualización desde carpeta temporal, elevación de permisos cuando Windows la requiere y paquete liviano con servidores alternativos."
+  "packageSha256": "152BA5EF91936DDB97ED31D10A7468A267C95E77C9083057D900E2ECA379F8CB",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.30.exe",
+  "notes": "Nuevo buscador de afiliados con hijos por edades, panel optimizado y limpieza general del proyecto."
 }
