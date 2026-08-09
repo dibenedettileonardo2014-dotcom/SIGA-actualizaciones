@@ -18,16 +18,16 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.40` — actualiza automáticamente Mi SIGA al abrir o volver a la app,
-prioriza contenido en línea vigente y reduce archivos innecesarios del paquete.
+`1.2.41` — corrige la instalación segura de Mi SIGA en Android e incorpora
+una guía de instalación específica para iPhone.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.38
 - 1.2.39
 - 1.2.40
+- 1.2.41
 
 Los instaladores se encuentran en `installer/`.
 

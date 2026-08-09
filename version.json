@@ -1,17 +1,15 @@
 {
-  "version": "1.2.40",
-  "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
-  "urls": [
-    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
-  ],
-  "sha256": "EAA0C8BC157676E788F913C91293B577E090138F7EC88C448B37F20CA18C5E8A",
-  "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
-  "packageUrls": [
-    "https://siga-85bdd.web.app/SIGA-update.zip",
-    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
-  ],
-  "packageSha256": "3A60809BFB23797B6A9A2719CCFBFCAE411A360969036DFB2CCC5967900BAA9E",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.40.exe",
-  "installerSha256": "2CEBABCD3D653918A38960A7CD9386DF157DE6F61E71586A56F88E04AEA2E09E",
-  "notes": "Mi SIGA se actualiza automáticamente al abrir o volver a la aplicación y el paquete x64 elimina archivos innecesarios."
+    "version":  "1.2.41",
+    "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
+    "urls":  [
+                 "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
+             ],
+    "sha256":  "BFBD9D4B61517D7F225111ED4BD1BA3380469E94DEB5883CF2C5DB035A0A7090",
+    "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
+    "packageUrls":  [
+                        "https://siga-85bdd.web.app/SIGA-update.zip",
+                        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
+                    ],
+    "packageSha256":  "67A75FB62DC7114CE253F2B2B171CB3673ADD9D843E100F6D3DBA74313A7CC93",
+    "notes":  "Instalacion movil segura: iconos PWA validados en Android y guia de instalacion para iPhone."
 }
