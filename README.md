@@ -8,7 +8,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 - `afiliado.html`: fuente de la PWA para afiliados.
 - `assets/`: iconos, logotipo y Convenio Colectivo 77/89.
 - `hosting/`: contenido publicado en Firebase Hosting.
-- `installer/`: únicamente los tres instaladores más recientes.
+- `installer/`: únicamente los dos instaladores más recientes.
 - `release/SIGA/`: compilación vigente usada para generar el instalador.
 - `_internal/`, `SIGA.exe` y `SIGA-update.zip`: paquete portable vigente y
   actualización automática.
@@ -25,9 +25,6 @@ Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.41
-- 1.2.42
-- 1.2.43
 - 1.2.44
 - 1.2.45
 

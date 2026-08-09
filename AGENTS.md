@@ -14,3 +14,10 @@ Todo cambio funcional aprobado debe entregarse en las dos aplicaciones y en todo
 8. Verificar el manifiesto remoto y el despliegue móvil antes de informar que el trabajo terminó.
 
 El usuario autoriza este flujo habitual de compilación y publicación después de cada cambio y versión nueva. Si una herramienta solicita una confirmación de seguridad obligatoria, se debe pedir igualmente.
+
+## Conservación de versiones
+
+Mantener siempre únicamente las dos versiones más recientes de SIGA y sus
+instaladores en el estado vigente del proyecto. Al publicar una versión nueva,
+eliminar los instaladores anteriores que excedan ese límite. Las versiones
+retiradas permanecen recuperables desde el historial de Git.
