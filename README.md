@@ -18,15 +18,15 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.33` — incorpora la identificación de LGDB como desarrolladora de la
-aplicación móvil.
+`1.2.34` — reduce el paquete y el consumo de recursos separando los componentes
+de escritorio y móvil, y conserva únicamente las dos versiones más recientes.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.32
 - 1.2.33
+- 1.2.34
 
 Los instaladores se encuentran en `installer/`.
 

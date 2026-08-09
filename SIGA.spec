@@ -7,20 +7,39 @@ a = Analysis(
     binaries=[],
     datas=[
         ('index.html', '.'),
-        ('manifest.json', '.'),
-        ('sw.js', '.'),
-        ('afiliado.html', '.'),
-        ('afiliado-manifest.json', '.'),
-        ('assets', 'assets'),
+        ('assets/logo-sindicato.png', 'assets'),
+        ('assets/convenio-77-89.pdf', 'assets'),
+        ('assets/convenio-77-89.txt', 'assets'),
     ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        'webview.platforms.android',
+        'webview.platforms.cef',
+        'webview.platforms.cocoa',
+        'webview.platforms.gtk',
+        'webview.platforms.qt',
+    ],
     noarchive=False,
-    optimize=0,
+    optimize=2,
 )
+
+# The desktop build is x64/WebView2-only. PyWebView's generic hook also adds
+# Android, x86, ARM64, legacy-MSHTML and documentation files that SIGA cannot
+# load on this target.
+unused_runtime_files = {
+    'pythonnet\\runtime\\Python.Runtime.xml',
+    'setuptools\\_vendor\\jaraco\\text\\Lorem ipsum.txt',
+    'webview\\lib\\pywebview-android.jar',
+    'webview\\lib\\WebBrowserInterop.x64.dll',
+    'webview\\lib\\WebBrowserInterop.x86.dll',
+    'webview\\lib\\runtimes\\win-arm64\\native\\WebView2Loader.dll',
+    'webview\\lib\\runtimes\\win-x86\\native\\WebView2Loader.dll',
+}
+a.datas = [entry for entry in a.datas if entry[0] not in unused_runtime_files]
+a.binaries = [entry for entry in a.binaries if entry[0] not in unused_runtime_files]
 pyz = PYZ(a.pure)
 
 exe = EXE(

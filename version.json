@@ -1,16 +1,16 @@
 {
-  "version": "1.2.33",
+  "version": "1.2.34",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "4B1CBF81B7E40CAFFA0974BBF42F33111C4039570C569467BAEB480FD7E7254E",
+  "sha256": "A7A7F333D5EB1EAB51D9CE4D9B1FBB5B8AEB3F8C4D61ED6032E1843E5A957559",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "7E58915E2394CAF3AA28A7A6FDF7C1BD402DC56F023CF29BDCFE000946498AA3",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.33.exe",
-  "notes": "La aplicación móvil identifica a LGDB como su desarrolladora."
+  "packageSha256": "2C685FC3417DADCF1B2EE6F24A3B2EA74BB74D3A8D7DFB0E51BA46BC6A35D9DF",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.34.exe",
+  "notes": "Escritorio y móvil optimizados; paquete de actualización reducido y copias históricas limitadas a las dos más recientes."
 }
