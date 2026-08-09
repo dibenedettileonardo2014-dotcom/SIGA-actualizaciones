@@ -1,17 +1,17 @@
 {
-  "version": "1.2.35",
+  "version": "1.2.36",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "8E6CB4D8D02CFC3AB2EB9BF960F2CED076CD0CD7C769F60F4C9432ADBE503C92",
+  "sha256": "ED6D7CD81D3F901A70572A8CE5A057F8D69E1209836242C6DBD03B7FF073A048",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "A1B2E1455CBC5F532DD3A8F9BEBF5BDC746F1169AB393F6B4C90AEDF4405D2CF",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.35.exe",
-  "installerSha256": "7A0DAA3A1D243A8EE1260E18435BE1A2B0644C9BAE1960B9853A93DD0227C938",
-  "notes": "Niveles escolares con edad automática, filtros combinables y listados de entrega en Excel, PDF e impresión."
+  "packageSha256": "E103C32941901637BAD1F68A7AC3C28693629DE019406A614DBC2C4453175ABC",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.36.exe",
+  "installerSha256": "F0CBC14A76733CAA1D2AE046BE07A3ADDC33485D838B28F4F272BE84F05FD7DC",
+  "notes": "Carga de afiliados mejorada con interruptor de consultora y aclaración obligatoria cuando corresponde."
 }

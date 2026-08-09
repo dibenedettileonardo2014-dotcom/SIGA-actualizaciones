@@ -18,15 +18,15 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.35` — agrega niveles escolares, edad automática por fecha de nacimiento y
-listados de entrega filtrables con exportación Excel e impresión/PDF.
+`1.2.36` — mejora la carga de afiliados con un interruptor de consultora y pide
+la aclaración únicamente cuando corresponde.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.34
 - 1.2.35
+- 1.2.36
 
 Los instaladores se encuentran en `installer/`.
 
