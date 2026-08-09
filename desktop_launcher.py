@@ -13,6 +13,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from urllib.request import Request, urlopen
@@ -20,7 +21,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.2.28"
+APP_VERSION = "1.2.29"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -84,8 +85,10 @@ def fetch_update_manifest() -> dict | None:
 def install_update(manifest: dict) -> bool:
     """Download a verified package and schedule its installation after exit."""
     executable = Path(sys.executable)
-    update_package = executable.with_name(f"{executable.stem}.update.zip")
-    legacy_replacement = executable.with_name(f"{executable.stem}.update.exe")
+    temp_folder = Path(tempfile.gettempdir()) / "SIGA-updater"
+    temp_folder.mkdir(parents=True, exist_ok=True)
+    update_package = temp_folder / f"{executable.stem}.update.zip"
+    legacy_replacement = temp_folder / f"{executable.stem}.update.exe"
     try:
         package_url = manifest.get("packageUrl")
         package_hash = manifest.get("packageSha256")
@@ -121,7 +124,7 @@ def install_update(manifest: dict) -> bool:
                 break
         if last_error is not None:
             raise last_error
-        script = executable.with_name(f"{executable.stem}.update.cmd")
+        script = temp_folder / f"{executable.stem}.update.cmd"
         if is_package_update:
             script_contents = (
                 "@echo off\nsetlocal\n"
@@ -146,10 +149,24 @@ def install_update(manifest: dict) -> bool:
                 "start \"\" \"%TARGET%\"\ndel \"%~f0\"\n"
             )
         script.write_text(script_contents, encoding="utf-8")
-        subprocess.Popen(
-            ["cmd.exe", "/d", "/c", str(script)],
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
+        permission_probe = executable.parent / ".siga-update-permission"
+        requires_elevation = False
+        try:
+            permission_probe.write_text("ok", encoding="ascii")
+            permission_probe.unlink(missing_ok=True)
+        except OSError:
+            requires_elevation = True
+        if requires_elevation:
+            result = ctypes.windll.shell32.ShellExecuteW(
+                None, "runas", "cmd.exe", f'/d /c "{script}"', None, 0
+            )
+            if result <= 32:
+                raise OSError("Windows no autorizo la instalacion de la actualizacion.")
+        else:
+            subprocess.Popen(
+                ["cmd.exe", "/d", "/c", str(script)],
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
         return True
     except (OSError, ValueError):
         update_package.unlink(missing_ok=True)
