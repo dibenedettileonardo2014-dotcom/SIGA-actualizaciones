@@ -10,6 +10,6 @@
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "06B87D20CC22B61FB6DB2CE3A4A5E7B5F71AC65F9469FB82234F69FE11228568",
-  "notes": "Actualizador más confiable con descarga alternativa, reintentos automáticos y mayor tolerancia a conexiones lentas."
+  "packageSha256": "8FA8683679E551C182BF112A594C04C67FA23DA19E52267772643A0663DF68A5",
+  "notes": "Paquete liviano, descarga alternativa y reintentos automáticos para conexiones lentas."
 }
