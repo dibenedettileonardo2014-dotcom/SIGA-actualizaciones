@@ -18,8 +18,8 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.39` — corrige el guardado de exportaciones creando `Documentos\\SIGA`,
-usando escritura atómica y apertura nativa de Windows.
+`1.2.40` — actualiza automáticamente Mi SIGA al abrir o volver a la app,
+prioriza contenido en línea vigente y reduce archivos innecesarios del paquete.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -27,6 +27,7 @@ Aplicación móvil: https://siga-85bdd.web.app/
 
 - 1.2.38
 - 1.2.39
+- 1.2.40
 
 Los instaladores se encuentran en `installer/`.
 

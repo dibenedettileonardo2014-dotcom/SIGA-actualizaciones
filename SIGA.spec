@@ -37,6 +37,7 @@ unused_runtime_files = {
     'webview\\lib\\WebBrowserInterop.x86.dll',
     'webview\\lib\\runtimes\\win-arm64\\native\\WebView2Loader.dll',
     'webview\\lib\\runtimes\\win-x86\\native\\WebView2Loader.dll',
+    'clr_loader\\ffi\\dlls\\x86\\ClrLoader.dll',
 }
 a.datas = [entry for entry in a.datas if entry[0] not in unused_runtime_files]
 a.binaries = [entry for entry in a.binaries if entry[0] not in unused_runtime_files]

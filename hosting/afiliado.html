@@ -38,7 +38,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.2.39</p>
+      <p class="app-version">Versión 1.2.40</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -216,7 +216,22 @@
         $('update-notice').classList.remove('hidden');
         setTimeout(()=>window.location.reload(),700);
       });
-      navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(registration=>registration.update()).catch(()=>{});
+      const activateWaitingWorker=registration=>{
+        if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
+      };
+      navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(registration=>{
+        activateWaitingWorker(registration);
+        registration.addEventListener('updatefound',()=>{
+          const worker=registration.installing;
+          worker?.addEventListener('statechange',()=>{
+            if(worker.state==='installed'&&navigator.serviceWorker.controller)worker.postMessage({type:'SKIP_WAITING'});
+          });
+        });
+        const checkForUpdate=()=>registration.update().then(()=>activateWaitingWorker(registration)).catch(()=>{});
+        void checkForUpdate();
+        document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void checkForUpdate()});
+        window.addEventListener('pageshow',()=>void checkForUpdate());
+      }).catch(()=>{});
     }
   </script>
 </body>

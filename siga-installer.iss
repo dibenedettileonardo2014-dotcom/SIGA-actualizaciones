@@ -1,5 +1,5 @@
 #define MyAppName "SIGA"
-#define MyAppVersion "1.2.39"
+#define MyAppVersion "1.2.40"
 #define MyAppPublisher "Leonardo Di Benedetti"
 #define MyAppExeName "SIGA.exe"
 
@@ -30,10 +30,10 @@ Source: "release\SIGA\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 Source: "assets\siga-app-icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
-Name: "{userdocs}\SIGA"
 Name: "{app}\Documentos"
 
 [InstallDelete]
+Type: filesandordirs; Name: "{app}\_internal\clr_loader\ffi\dlls\x86"
 Type: files; Name: "{app}\_internal\afiliado.html"
 Type: files; Name: "{app}\_internal\afiliado-manifest.json"
 Type: files; Name: "{app}\_internal\manifest.json"

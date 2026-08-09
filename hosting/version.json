@@ -1,17 +1,17 @@
 {
-  "version": "1.2.39",
+  "version": "1.2.40",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "AEFA4D9968B717A0E9D6FAD640D4014F96A407232B87D4732FFDDAB4BF5AF19B",
+  "sha256": "EAA0C8BC157676E788F913C91293B577E090138F7EC88C448B37F20CA18C5E8A",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": [
     "https://siga-85bdd.web.app/SIGA-update.zip",
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
   ],
-  "packageSha256": "87BD605A39AA16602161C5F476F6966ECE77C56FD199EB9155C393D0ACC3F5B4",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.39.exe",
-  "installerSha256": "9B676F069D772C06E754FE4ECEF77BAC2107541E4006533BB1415F8AEEEE61A7",
-  "notes": "Corrige la exportación creando Documentos\\SIGA, guardando de forma atómica y abriendo con Windows."
+  "packageSha256": "3A60809BFB23797B6A9A2719CCFBFCAE411A360969036DFB2CCC5967900BAA9E",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.40.exe",
+  "installerSha256": "2CEBABCD3D653918A38960A7CD9386DF157DE6F61E71586A56F88E04AEA2E09E",
+  "notes": "Mi SIGA se actualiza automáticamente al abrir o volver a la aplicación y el paquete x64 elimina archivos innecesarios."
 }
