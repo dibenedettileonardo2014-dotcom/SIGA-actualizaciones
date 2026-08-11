@@ -43,7 +43,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.2.46</p>
+      <p class="app-version">Versión 1.2.47</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -207,6 +207,19 @@
       localStorage.removeItem('siga_mobile_credential'); appView.classList.add('hidden'); loginView.classList.remove('hidden');
       $('login-message').textContent=message; signOut(auth).catch(()=>{});
     }
+    function handleCredentialWatchError(error,user){
+      console.error('No se pudo actualizar la credencial:',error);
+      if(error?.code==='permission-denied'||error?.code==='unauthenticated'){
+        revokeCurrentSession('No se pudo verificar tu acceso. Volvé a iniciar sesión.');
+        return;
+      }
+      if(!appView.classList.contains('hidden')){
+        $('welcome').textContent='Sin conexión · reintentando sincronización';
+        return;
+      }
+      $('login-message').textContent='No hay conexión y todavía no existe una credencial guardada en este dispositivo.';
+      appView.classList.add('hidden');loginView.classList.remove('hidden');
+    }
     function loadCredential(user){
       if(stopCredentialWatch)stopCredentialWatch();
       stopCredentialWatch=onSnapshot(doc(db,'artifacts',networkId,'mobile_credentials',user.uid),snapshot=>{
@@ -214,7 +227,7 @@
         const data=snapshot.data();
         if(data.enabled===false)return revokeCurrentSession('Tu acceso está bloqueado. Comunicate con el sindicato.');
         localStorage.setItem('siga_mobile_credential',JSON.stringify(data)); showCredential(data); loginView.classList.add('hidden'); appView.classList.remove('hidden');
-      },()=>revokeCurrentSession('No se pudo verificar tu acceso. Revisá la conexión e intentá nuevamente.'));
+      },error=>handleCredentialWatchError(error,user));
     }
     $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const password=$('password').value;const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';try{const result=await signInWithEmailAndPassword(auth,loginEmail(dni),password);sessionStorage.setItem(UNLOCK_KEY,result.user.uid);$('password').value='';loadCredential(result.user);await updateBiometricUi(result.user);await offerBiometricSetup(result.user)}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{button.disabled=false;button.textContent='Ingresar'}});
     $('biometric-button').addEventListener('click',async()=>{const message=$('login-message');message.textContent='Confirmá tu identidad con Android…';try{await unlockWithBiometric(auth.currentUser)}catch(error){message.textContent=error?.name==='NotAllowedError'?'La verificación fue cancelada o no pudo completarse.':'No se pudo usar la autenticación del dispositivo. Ingresá con DNI y contraseña.'}});
@@ -231,7 +244,7 @@
     $('logout-button').addEventListener('click',async()=>{localStorage.removeItem('siga_mobile_credential');sessionStorage.removeItem(UNLOCK_KEY);await signOut(auth)});
     $('print-button').addEventListener('click',()=>window.print());
     $('password-toggle').addEventListener('click',()=>$('password-form').classList.toggle('hidden'));
-    $('password-form').addEventListener('submit',async event=>{event.preventDefault();const message=$('password-message');try{await updatePassword(auth.currentUser,$('new-password').value);message.style.color='#047857';message.textContent='Contraseña actualizada.';$('new-password').value=''}catch{message.textContent='Volvé a iniciar sesión e intentá nuevamente.'}});
+    $('password-form').addEventListener('submit',async event=>{event.preventDefault();const message=$('password-message'),button=event.submitter;if(button?.disabled)return;if(button)button.disabled=true;try{await updatePassword(auth.currentUser,$('new-password').value);message.style.color='#047857';message.textContent='Contraseña actualizada.';$('new-password').value=''}catch{message.style.color='#be123c';message.textContent='Volvé a iniciar sesión e intentá nuevamente.'}finally{if(button)button.disabled=false}});
     document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('#credential-view,#data-view,#family-view,#convention-view').forEach(view=>view.classList.add('hidden'));$(button.dataset.view).classList.remove('hidden');document.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===button))}));
     updateInstallUi();
     void updateBiometricUi();

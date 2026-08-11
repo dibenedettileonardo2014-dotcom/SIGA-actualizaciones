@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.46",
+    "version":  "1.2.47",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "A287389004536DA9615FEBB2E66F31C652EB4628182A2790EDF4C21635A1D729",
+    "sha256":  "B20BC7B221A79E27DC87FA0E6C5E4359565DB039DE77A8679A715EF3EDD93433",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "442B244F363CEC2CE8EAFFA039E010D2A1F1B623650179D723F840F4F6589537",
-    "notes":  "Guarda en mayusculas los datos textuales de fichas de afiliacion y pagos.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.46.exe",
-    "installerSha256":  "9076B6E420172414E1FB8C8DCEA6EC5C91CAAA6A000E7381432362965BAF7050"
+    "packageSha256":  "3963032C9550202081F178BD210EB053774AE48DFD3C8527704A8790F55ADB9D",
+    "notes":  "Refuerza validaciones, sincronizacion, seguridad y tolerancia a fallas.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.47.exe",
+    "installerSha256":  "123BB5E85130B4AE89C145C0D94801F5F1B34A348DA02C65A3C01DFECBEB3A43"
 }

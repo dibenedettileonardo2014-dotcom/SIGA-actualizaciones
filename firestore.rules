@@ -12,10 +12,43 @@ service cloud.firestore {
           || request.auth.token.email == 'operador@siga.com');
     }
 
+    function validAffiliate(affiliateId) {
+      return request.resource.data.keys().hasAll(['id', 'name', 'number', 'dni', 'status'])
+        && request.resource.data.id == affiliateId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.number is string
+        && request.resource.data.number.size() > 0
+        && request.resource.data.number.size() <= 80
+        && request.resource.data.dni is string
+        && request.resource.data.dni.matches('^[0-9 .-]{7,15}$')
+        && request.resource.data.status in ['Activo', 'Jubilado', 'Inactivo'];
+    }
+
+    function validPayment(paymentId, appId) {
+      return request.resource.data.keys().hasAll(['id', 'affiliateId', 'name', 'period', 'amount', 'timestamp'])
+        && request.resource.data.id == paymentId
+        && request.resource.data.affiliateId is string
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.period is string
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.timestamp is string
+        && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId));
+    }
+
     // Solo las cuentas administrativas autorizadas pueden acceder al padrón.
     // Las sesiones anónimas y las cuentas móviles quedan excluidas.
-    match /artifacts/{appId}/public/data/{document=**} {
-      allow read, write: if isStaff();
+    match /artifacts/{appId}/public/data/afiliados/{affiliateId} {
+      allow read, delete: if isStaff();
+      allow create, update: if isStaff() && validAffiliate(affiliateId);
+    }
+
+    match /artifacts/{appId}/public/data/pagos/{paymentId} {
+      allow read, delete: if isStaff();
+      allow create, update: if isStaff() && validPayment(paymentId, appId);
     }
 
     match /artifacts/{appId}/mobile_credentials/{userId} {

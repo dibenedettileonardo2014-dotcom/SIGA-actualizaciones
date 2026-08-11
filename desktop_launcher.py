@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.2.46"
+APP_VERSION = "1.2.47"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -71,7 +71,31 @@ def start_server(web_root: Path) -> ThreadingHTTPServer:
 
 def version_key(value: str) -> tuple[int, ...]:
     """Compare dotted numeric versions without requiring an extra package."""
+    if not re.fullmatch(r"\d+(?:\.\d+){1,3}", value.strip()):
+        raise ValueError("Formato de versión inválido.")
     return tuple(int(part) for part in value.strip().split("."))
+
+
+def valid_update_manifest(manifest: object) -> bool:
+    """Reject incomplete or unsafe update metadata before downloading files."""
+    if not isinstance(manifest, dict):
+        return False
+    if not isinstance(manifest.get("version"), str):
+        return False
+    try:
+        version_key(manifest["version"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    for url_key, hash_key in (("url", "sha256"), ("packageUrl", "packageSha256")):
+        url = manifest.get(url_key)
+        digest = manifest.get(hash_key)
+        if url is None and digest is None and url_key == "packageUrl":
+            continue
+        if not isinstance(url, str) or not url.startswith("https://"):
+            return False
+        if not isinstance(digest, str) or not re.fullmatch(r"[A-Fa-f0-9]{64}", digest):
+            return False
+    return True
 
 
 def fetch_update_manifest() -> dict | None:
@@ -84,8 +108,7 @@ def fetch_update_manifest() -> dict | None:
                 )
                 with urlopen(request, timeout=20) as response:
                     manifest = json.load(response)
-                required = {"version", "url", "sha256"}
-                if required.issubset(manifest) and isinstance(manifest["version"], str):
+                if valid_update_manifest(manifest):
                     return manifest
             except (OSError, ValueError, json.JSONDecodeError):
                 time.sleep(1)
@@ -252,7 +275,16 @@ class DesktopApi:
 
 
 def main() -> None:
-    server = start_server(bundled_path())
+    try:
+        server = start_server(bundled_path())
+    except OSError:
+        ctypes.windll.user32.MessageBoxW(
+            None,
+            "SIGA ya está abierta o el puerto local está ocupado. Cerrá la otra instancia y volvé a intentar.",
+            "SIGA",
+            0x30,
+        )
+        return
     host, port = server.server_address
     window = webview.create_window(
         "SIGA - Sistema de Gestión Sindical",

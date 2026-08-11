@@ -571,7 +571,7 @@
                                     <input id="mobile-initial-password" type="password" minlength="8" autocomplete="new-password" placeholder="Contraseña inicial (mínimo 8 caracteres)" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500">
                                     <p class="text-[11px] text-slate-500">La contraseña solo puede asignarse al crear el acceso y nunca puede visualizarse. En el plan gratuito, un olvido se resuelve recreando manualmente la cuenta desde Firebase Authentication.</p>
                                     <div class="flex gap-2">
-                                        <button onclick="createMobileAccess()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-all">
+                                        <button id="mobile-access-create" onclick="createMobileAccess()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-all">
                                             <i class="fa-solid fa-mobile-screen-button mr-1"></i> Crear acceso inicial
                                         </button>
                                         <button id="mobile-access-toggle" onclick="toggleMobileAccess()" class="hidden px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl text-xs transition-all">Bloquear</button>
@@ -648,7 +648,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.46</p>
+                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.47</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -669,7 +669,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.46</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.47</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -1176,6 +1176,9 @@ window.__firebase_config = {
                 processStateChange();
             }, (error) => {
                 console.error("Error de permisos / sincronización Firestore:", error);
+                const status = document.getElementById('cloud-sync-status');
+                status.className = 'flex items-center gap-1 text-rose-500 font-semibold';
+                status.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Red no disponible';
                 showToast('Red Restringida', 'Verifica el código de red o permisos.', 'error');
             });
 
@@ -1196,7 +1199,10 @@ window.__firebase_config = {
                 renderPaymentsList();
             }, (error) => {
                 console.error("Error sincronizando pagos:", error);
-                    paymentsRealtimeSubscribed = false;
+                paymentsRealtimeSubscribed = false;
+                const status = document.getElementById('cloud-sync-status');
+                status.className = 'flex items-center gap-1 text-amber-500 font-semibold';
+                status.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pagos en copia local';
                 });
             };
         }
@@ -1283,13 +1289,18 @@ window.__firebase_config = {
 
         function queuePendingChanges(changes) {
             if (!changes.length) return;
-            const changedKeys = new Set(changes.map(change => `${change.collection}\u0000${change.id}`));
-            const pending = readPendingChanges().filter(item =>
-                !changedKeys.has(`${item.collection}\u0000${item.id}`)
-            );
-            pending.push(...changes);
-            localStorage.setItem(pendingChangesKey(), JSON.stringify(pending));
-            showPendingSyncStatus();
+            try {
+                const changedKeys = new Set(changes.map(change => `${change.collection}\u0000${change.id}`));
+                const pending = readPendingChanges().filter(item =>
+                    !changedKeys.has(`${item.collection}\u0000${item.id}`)
+                );
+                pending.push(...changes);
+                localStorage.setItem(pendingChangesKey(), JSON.stringify(pending));
+                showPendingSyncStatus();
+            } catch (error) {
+                console.error('No se pudo guardar la cola de sincronización:', error);
+                showToast('Sincronización local', 'El cambio quedó visible, pero no pudo agregarse a la cola de red. Liberá espacio y volvé a guardarlo.', 'error');
+            }
         }
 
         async function sendChangeToFirestore(change) {
@@ -1414,13 +1425,26 @@ window.__firebase_config = {
 
         function attachmentLinksHtml(attachments = []) {
             if (!attachments.length) return '<span class="text-[11px] text-slate-400">Sin archivos adjuntos.</span>';
-            return attachments.map(file => file.url
-                ? `<a href="${file.url}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-[11px] font-semibold text-slate-600 hover:text-emerald-700"><i class="fa-solid fa-paperclip"></i>${file.name}</a>`
-                : `<button type="button" onclick="openLocalAttachment('${file.id}')" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-[11px] font-semibold text-slate-600 hover:text-emerald-700"><i class="fa-solid fa-paperclip"></i>${file.name} <span class="text-slate-400">(local)</span></button>`).join('');
+            return attachments.map(file => {
+                const name = escapePrintHtml(file?.name || 'Archivo');
+                const id = escapePrintHtml(file?.id || '');
+                let safeUrl = '';
+                try {
+                    const parsed = new URL(file?.url || '', window.location.href);
+                    if (['https:', 'http:'].includes(parsed.protocol)) safeUrl = escapePrintHtml(parsed.href);
+                } catch {}
+                return safeUrl
+                    ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-[11px] font-semibold text-slate-600 hover:text-emerald-700"><i class="fa-solid fa-paperclip"></i>${name}</a>`
+                    : `<button type="button" data-attachment-id="${id}" class="local-attachment-link inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-[11px] font-semibold text-slate-600 hover:text-emerald-700"><i class="fa-solid fa-paperclip"></i>${name} <span class="text-slate-400">(local)</span></button>`;
+            }).join('');
         }
 
         function renderAffiliateAttachments(attachments = []) {
-            document.getElementById('affiliate-existing-attachments').innerHTML = attachmentLinksHtml(attachments);
+            const container = document.getElementById('affiliate-existing-attachments');
+            container.innerHTML = attachmentLinksHtml(attachments);
+            container.querySelectorAll('.local-attachment-link').forEach(button => {
+                button.addEventListener('click', () => openLocalAttachment(button.dataset.attachmentId));
+            });
         }
 
         function saveAffiliateLocally(affiliate) {
@@ -1786,6 +1810,18 @@ window.__firebase_config = {
             return String(value ?? '').trim().toLocaleUpperCase('es-AR');
         }
 
+        function normalizedDni(value) {
+            return String(value ?? '').replace(/\D/g, '');
+        }
+
+        function findDuplicateAffiliate(id, dni, number) {
+            const normalizedNumber = uppercaseText(number);
+            return window.appState.affiliates.find(item => item.id !== id && (
+                normalizedDni(item.dni) === normalizedDni(dni)
+                || uppercaseText(item.number) === normalizedNumber
+            ));
+        }
+
         function enableUppercaseEntry(input) {
             if (!input || input.dataset.uppercaseEnabled) return;
             input.dataset.uppercaseEnabled = 'true';
@@ -1943,9 +1979,23 @@ window.__firebase_config = {
             event.preventDefault();
             if (window.appState.currentUserRole === 'lector') return;
 
+            const submitButton = event.submitter || event.currentTarget.querySelector('[type="submit"]');
+            if (submitButton?.dataset.busy === 'true') return;
+
             const id = document.getElementById('form-id').value || crypto.randomUUID();
             const existing = window.appState.affiliates.find(a => a.id === id);
             const submittedDni = document.getElementById('form-dni').value.trim();
+            const submittedNumber = document.getElementById('form-number').value;
+            if (!/^\d{7,9}$/.test(normalizedDni(submittedDni))) {
+                showToast('DNI inválido', 'Ingresá un DNI de 7 a 9 dígitos.', 'warning');
+                return;
+            }
+            const duplicate = findDuplicateAffiliate(id, submittedDni, submittedNumber);
+            if (duplicate) {
+                const field = normalizedDni(duplicate.dni) === normalizedDni(submittedDni) ? 'DNI' : 'número de afiliado';
+                showToast('Registro duplicado', `Ya existe un afiliado con ese ${field}.`, 'warning');
+                return;
+            }
             if (existing?.mobileAccess?.uid && submittedDni.replace(/\D/g, '') !== String(existing.dni || '').replace(/\D/g, '')) {
                 showToast('DNI vinculado', 'No se puede cambiar el DNI mientras el afiliado tenga una cuenta móvil activa.', 'warning');
                 return;
@@ -1957,16 +2007,24 @@ window.__firebase_config = {
             }
             let newAttachments;
             try {
+                if (submitButton) {
+                    submitButton.dataset.busy = 'true';
+                    submitButton.disabled = true;
+                }
                 newAttachments = await uploadAttachments(document.getElementById('form-affiliate-attachments').files, 'afiliados', id);
             } catch (error) {
+                if (submitButton) {
+                    submitButton.dataset.busy = 'false';
+                    submitButton.disabled = false;
+                }
                 showToast('Adjuntos no guardados', error.message || 'No se pudieron subir los archivos.', 'error');
                 return;
             }
             const affiliate = {
                 id,
                 name: uppercaseText(document.getElementById('form-name').value),
-                number: uppercaseText(document.getElementById('form-number').value),
-                dni: submittedDni,
+                number: uppercaseText(submittedNumber),
+                dni: normalizedDni(submittedDni),
                 birthdate: document.getElementById('form-birthdate').value,
                 affiliationDate: document.getElementById('form-affiliation-date').value,
                 company: uppercaseText(document.getElementById('form-company').value),
@@ -1994,6 +2052,10 @@ window.__firebase_config = {
             }
             closeAffiliateModal();
             showToast('Afiliado guardado', 'Los datos se actualizaron correctamente.', 'success');
+            if (submitButton) {
+                submitButton.dataset.busy = 'false';
+                submitButton.disabled = false;
+            }
         };
 
         window.editAffiliate = function(id) {
@@ -2435,6 +2497,9 @@ window.__firebase_config = {
         window.registerPayment = async function() {
             if (window.appState.currentUserRole === 'lector') return;
 
+            const button = document.getElementById('btn-submit-payment');
+            if (button.dataset.busy === 'true') return;
+
             const affiliateId = document.getElementById('payment-affiliate-select').value;
             const month = document.getElementById('payment-month').value;
             const year = document.getElementById('payment-year').value;
@@ -2455,8 +2520,12 @@ window.__firebase_config = {
             const paymentId = crypto.randomUUID();
             let attachments;
             try {
+                button.dataset.busy = 'true';
+                button.disabled = true;
                 attachments = await uploadAttachments(document.getElementById('payment-attachments').files, 'pagos', paymentId);
             } catch (error) {
+                button.dataset.busy = 'false';
+                button.disabled = false;
                 showToast('Adjuntos no guardados', error.message || 'No se pudieron subir los archivos.', 'error');
                 return;
             }
@@ -2480,6 +2549,8 @@ window.__firebase_config = {
             showToast('Pago Registrado', `Cobro para ${affiliate.name} guardado correctamente en red.`, 'success');
             document.getElementById('payment-amount').value = '';
             document.getElementById('payment-attachments').value = '';
+            button.dataset.busy = 'false';
+            button.disabled = false;
         };
 
         function renderPaymentsList() {
@@ -2620,6 +2691,8 @@ window.__firebase_config = {
         window.createMobileAccess = async function() {
             const affiliateId = document.getElementById('card-affiliate-select').value;
             const passwordInput = document.getElementById('mobile-initial-password');
+            const actionButton = document.getElementById('mobile-access-create');
+            if (actionButton.disabled) return;
             const affiliate = window.appState.affiliates.find(item => item.id === affiliateId);
             if (!affiliate) return showToast('Acceso móvil', 'Seleccioná un afiliado.', 'warning');
             if (!canManageMobileAccess()) {
@@ -2631,6 +2704,7 @@ window.__firebase_config = {
             if ((passwordInput.value || '').length < 8) {
                 return showToast('Contraseña débil', 'La contraseña inicial debe tener al menos 8 caracteres.', 'warning');
             }
+            actionButton.disabled = true;
             if (affiliate.mobileAccess?.uid) {
                 try {
                     await syncMobileCredential(affiliate);
@@ -2639,6 +2713,8 @@ window.__firebase_config = {
                 } catch (error) {
                     console.error(error);
                     showToast('Acceso móvil', 'No se pudo reparar la credencial existente.', 'error');
+                } finally {
+                    actionButton.disabled = false;
                 }
                 return;
             }
@@ -2663,18 +2739,22 @@ window.__firebase_config = {
                 showToast('Acceso móvil', message, 'error');
             } finally {
                 if (secondaryApp) await deleteApp(secondaryApp).catch(() => {});
+                actionButton.disabled = false;
             }
         };
 
         window.toggleMobileAccess = async function() {
             const affiliateId = document.getElementById('card-affiliate-select').value;
             const affiliate = window.appState.affiliates.find(item => item.id === affiliateId);
+            const actionButton = document.getElementById('mobile-access-toggle');
+            if (actionButton.disabled) return;
             if (!affiliate?.mobileAccess?.uid) return;
             if (!canManageMobileAccess()) {
                 return showToast('Acceso restringido', 'Autorizá el rol Administrador u Operador con su contraseña.', 'warning');
             }
             const updated = { ...affiliate, mobileAccess: { ...affiliate.mobileAccess, enabled: affiliate.mobileAccess.enabled === false } };
             try {
+                actionButton.disabled = true;
                 await commitToDatabase(updated);
                 await syncMobileCredential(updated);
                 renderMobileAccessStatus(updated);
@@ -2682,6 +2762,8 @@ window.__firebase_config = {
             } catch (error) {
                 console.error(error);
                 showToast('Acceso móvil', 'No se pudo actualizar el acceso.', 'error');
+            } finally {
+                actionButton.disabled = false;
             }
         };
 
@@ -2952,7 +3034,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.46";
+        const APP_VERSION = "1.2.47";
 
         window.checkForUpdatesManual = async function() {
             const statusContainer = document.getElementById('update-status-container');
@@ -3080,18 +3162,45 @@ window.__firebase_config = {
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (Array.isArray(imported)) {
-                        const validItems = imported.filter(item => item && item.name && item.dni).map(item => ({
-                            ...item,
-                            id: item.id || crypto.randomUUID(),
-                            createdAt: item.createdAt || new Date().toISOString()
-                        }));
+                        const seenDnis = new Map(window.appState.affiliates.map(item => [normalizedDni(item.dni), item.id]));
+                        const seenNumbers = new Map(window.appState.affiliates.map(item => [uppercaseText(item.number), item.id]));
+                        const validItems = [];
+                        let rejected = 0;
+                        for (const item of imported) {
+                            const dni = normalizedDni(item?.dni);
+                            const number = uppercaseText(item?.number);
+                            const candidateId = typeof item?.id === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(item.id) ? item.id : crypto.randomUUID();
+                            if (!item || !uppercaseText(item.name) || !/^\d{7,9}$/.test(dni) || !number
+                                || (seenDnis.has(dni) && seenDnis.get(dni) !== candidateId)
+                                || (seenNumbers.has(number) && seenNumbers.get(number) !== candidateId)) {
+                                rejected += 1;
+                                continue;
+                            }
+                            seenDnis.set(dni, candidateId);
+                            seenNumbers.set(number, candidateId);
+                            validItems.push({
+                                ...item,
+                                id: candidateId,
+                                name: uppercaseText(item.name), number, dni,
+                                company: uppercaseText(item.company), consultant: uppercaseText(item.consultant),
+                                sector: uppercaseText(item.sector), address: uppercaseText(item.address),
+                                attachments: Array.isArray(item.attachments) ? item.attachments : [],
+                                familyGroup: item.familyGroup && typeof item.familyGroup === 'object' ? item.familyGroup : { partner: null, children: [] },
+                                createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString()
+                            });
+                        }
+                        if (!validItems.length) {
+                            showToast('Sin registros válidos', 'El respaldo no contiene afiliados nuevos y válidos para importar.', 'warning');
+                            event.target.value = '';
+                            return;
+                        }
                         const merged = new Map(window.appState.affiliates.map(item => [item.id, item]));
                         validItems.forEach(item => merged.set(item.id, item));
                         window.appState.affiliates = [...merged.values()];
                         saveLocalData();
                         processStateChange();
                         syncChanges(validItems.map(item => ({ type: 'set', collection: 'afiliados', id: item.id, data: item })));
-                        showToast('Restauración', 'Padrón de afiliados importado y sincronizado.', 'success');
+                        showToast('Restauración', `${validItems.length} afiliado(s) importado(s).${rejected ? ` ${rejected} registro(s) inválido(s) o duplicado(s) fueron omitidos.` : ''}`, 'success');
                         event.target.value = '';
                     } else {
                         showToast('Error de Archivo', 'El formato de respaldo es inválido.', 'error');
@@ -3115,6 +3224,9 @@ window.__firebase_config = {
                 if (window.appState.firebaseEnabled) {
                     for (const a of window.appState.affiliates) {
                         await removeFromDatabase(a.id);
+                    }
+                    for (const payment of [...window.appState.payments]) {
+                        await removePaymentFromDatabase(payment.id);
                     }
                 } else {
                     window.appState.affiliates = [];
