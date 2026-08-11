@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.45",
+    "version":  "1.2.46",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "071DAB425B6E6816FFA436ACE87D17D1C95E06371DC4B6907EDFD16AC7A60E1F",
+    "sha256":  "A287389004536DA9615FEBB2E66F31C652EB4628182A2790EDF4C21635A1D729",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "39AD0B876C90484BE662BDBC59502406B23B6C406BF09449D68B02F652AA22D5",
-    "notes":  "Conserva de forma segura la sesion autorizada para no pedir la contrasena en cada inicio.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.45.exe",
-    "installerSha256":  "D5E35B1D80536013F1DA13D2BD4CA9E03EC7D829DC1CC40F6FF2D783298FCCF6"
+    "packageSha256":  "442B244F363CEC2CE8EAFFA039E010D2A1F1B623650179D723F840F4F6589537",
+    "notes":  "Guarda en mayusculas los datos textuales de fichas de afiliacion y pagos.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.46.exe",
+    "installerSha256":  "9076B6E420172414E1FB8C8DCEA6EC5C91CAAA6A000E7381432362965BAF7050"
 }

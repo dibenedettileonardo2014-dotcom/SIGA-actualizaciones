@@ -648,7 +648,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                        <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.45</p>
+                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.46</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -669,7 +669,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.45</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.46</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -1782,6 +1782,32 @@ window.__firebase_config = {
         };
 
         // --- GESTIÓN DE AFILIADOS (CRUD) ---
+        function uppercaseText(value) {
+            return String(value ?? '').trim().toLocaleUpperCase('es-AR');
+        }
+
+        function enableUppercaseEntry(input) {
+            if (!input || input.dataset.uppercaseEnabled) return;
+            input.dataset.uppercaseEnabled = 'true';
+            input.classList.add('uppercase');
+            input.addEventListener('input', () => {
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                input.value = input.value.toLocaleUpperCase('es-AR');
+                if (start !== null && end !== null) input.setSelectionRange(start, end);
+            });
+        }
+
+        function enableAffiliateUppercaseFields() {
+            [
+                'form-name', 'form-number', 'form-company', 'form-consultant',
+                'form-sector', 'form-address', 'form-partner-first-name',
+                'form-partner-last-name'
+            ].forEach(id => enableUppercaseEntry(document.getElementById(id)));
+        }
+
+        enableAffiliateUppercaseFields();
+
         window.switchAffiliateFormTab = function(tab) {
             const personal = tab === 'personal';
             document.getElementById('affiliate-panel-personal').classList.toggle('hidden', !personal);
@@ -1822,6 +1848,8 @@ window.__firebase_config = {
                 updateFamilyChildrenEmptyState();
             });
             document.getElementById('family-children-list').appendChild(row);
+            enableUppercaseEntry(row.querySelector('[data-family-field="firstName"]'));
+            enableUppercaseEntry(row.querySelector('[data-family-field="lastName"]'));
             updateFamilyChildrenEmptyState();
         };
 
@@ -1841,8 +1869,8 @@ window.__firebase_config = {
 
         function readFamilyGroup() {
             const partner = {
-                firstName: document.getElementById('form-partner-first-name').value.trim(),
-                lastName: document.getElementById('form-partner-last-name').value.trim(),
+                firstName: uppercaseText(document.getElementById('form-partner-first-name').value),
+                lastName: uppercaseText(document.getElementById('form-partner-last-name').value),
                 dni: document.getElementById('form-partner-dni').value.trim(),
                 birthdate: document.getElementById('form-partner-birthdate').value,
                 age: document.getElementById('form-partner-age').value
@@ -1853,8 +1881,8 @@ window.__firebase_config = {
                 return null;
             }
             const children = Array.from(document.querySelectorAll('.family-child')).map(row => ({
-                firstName: row.querySelector('[data-family-field="firstName"]').value.trim(),
-                lastName: row.querySelector('[data-family-field="lastName"]').value.trim(),
+                firstName: uppercaseText(row.querySelector('[data-family-field="firstName"]').value),
+                lastName: uppercaseText(row.querySelector('[data-family-field="lastName"]').value),
                 dni: row.querySelector('[data-family-field="dni"]').value.trim(),
                 birthdate: row.querySelector('[data-family-field="birthdate"]').value,
                 age: row.querySelector('[data-family-field="age"]').value
@@ -1897,6 +1925,7 @@ window.__firebase_config = {
             }
             document.getElementById('modal-title').textContent = 'Agregar Nuevo Afiliado';
             document.getElementById('affiliate-form').reset();
+            enableAffiliateUppercaseFields();
             document.getElementById('form-id').value = '';
             document.getElementById('form-affiliation-date').value = new Date().toISOString().slice(0, 10);
             toggleConsultantInput(false);
@@ -1935,17 +1964,17 @@ window.__firebase_config = {
             }
             const affiliate = {
                 id,
-                name: document.getElementById('form-name').value.trim(),
-                number: document.getElementById('form-number').value.trim(),
+                name: uppercaseText(document.getElementById('form-name').value),
+                number: uppercaseText(document.getElementById('form-number').value),
                 dni: submittedDni,
                 birthdate: document.getElementById('form-birthdate').value,
                 affiliationDate: document.getElementById('form-affiliation-date').value,
-                company: document.getElementById('form-company').value.trim(),
-                consultant: document.getElementById('form-consultant').value.trim(),
-                sector: document.getElementById('form-sector').value.trim(),
+                company: uppercaseText(document.getElementById('form-company').value),
+                consultant: uppercaseText(document.getElementById('form-consultant').value),
+                sector: uppercaseText(document.getElementById('form-sector').value),
                 phone: document.getElementById('form-phone').value.trim(),
                 email: document.getElementById('form-email').value.trim(),
-                address: document.getElementById('form-address').value.trim(),
+                address: uppercaseText(document.getElementById('form-address').value),
                 status: document.getElementById('form-status').value,
                 hasPaid: document.getElementById('form-hasPaid').checked,
                 isDelegate: document.getElementById('form-is-delegate').checked,
@@ -2439,8 +2468,8 @@ window.__firebase_config = {
             const paymentObj = {
                 id: paymentId,
                 affiliateId: affiliateId,
-                name: affiliate.name,
-                period: `${month} ${year}`,
+                name: uppercaseText(affiliate.name),
+                period: uppercaseText(`${month} ${year}`),
                 amount: parseFloat(amount),
                 attachments,
                 date: new Date().toLocaleDateString('es-ES', {hour: '2-digit', minute:'2-digit'}),
@@ -2923,7 +2952,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.45";
+        const APP_VERSION = "1.2.46";
 
         window.checkForUpdatesManual = async function() {
             const statusContainer = document.getElementById('update-status-container');

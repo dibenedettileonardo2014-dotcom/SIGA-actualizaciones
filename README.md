@@ -18,15 +18,15 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.45` — conserva de forma segura la sesión autorizada de cada PC para no
-volver a pedir la contraseña en cada inicio.
+`1.2.46` — guarda en mayúsculas los datos textuales cargados en fichas de
+afiliación y registros de pago.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
 ## Versiones conservadas
 
-- 1.2.44
 - 1.2.45
+- 1.2.46
 
 Los instaladores se encuentran en `installer/`.
 
