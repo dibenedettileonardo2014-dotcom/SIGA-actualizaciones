@@ -18,8 +18,8 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.48` — evita duplicados simultáneos entre varias PC mediante transacciones
-y reservas determinísticas de DNI y legajo compatibles con Firebase Spark.
+`1.2.49` — incorpora control de revisiones para impedir sobreescrituras
+silenciosas entre PC y preserva de forma consistente los accesos móviles.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -29,8 +29,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.2.47
 - 1.2.48
+- 1.2.49
 
 Los instaladores se encuentran en `installer/`.
 

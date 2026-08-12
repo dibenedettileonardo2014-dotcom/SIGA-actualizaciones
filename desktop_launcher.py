@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.2.48"
+APP_VERSION = "1.2.49"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -94,6 +94,10 @@ def valid_update_manifest(manifest: object) -> bool:
         if not isinstance(url, str) or not url.startswith("https://"):
             return False
         if not isinstance(digest, str) or not re.fullmatch(r"[A-Fa-f0-9]{64}", digest):
+            return False
+    for list_key in ("urls", "packageUrls"):
+        urls = manifest.get(list_key, [])
+        if not isinstance(urls, list) or any(not isinstance(url, str) or not url.startswith("https://") for url in urls):
             return False
     return True
 

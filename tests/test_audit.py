@@ -24,14 +24,14 @@ class IdCollector(HTMLParser):
 
 class LauncherTests(unittest.TestCase):
     def test_version_validation(self):
-        self.assertEqual(desktop_launcher.version_key("1.2.48"), (1, 2, 48))
+        self.assertEqual(desktop_launcher.version_key("1.2.49"), (1, 2, 49))
         for invalid in ("", "1", "1.2.beta", "1.2.3.4.5"):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 desktop_launcher.version_key(invalid)
 
     def test_update_manifest_requires_https_and_sha256(self):
         valid = {
-            "version": "1.2.48",
+            "version": "1.2.49",
             "url": "https://example.test/SIGA.exe",
             "sha256": "A" * 64,
             "packageUrl": "https://example.test/SIGA.zip",
@@ -40,9 +40,19 @@ class LauncherTests(unittest.TestCase):
         self.assertTrue(desktop_launcher.valid_update_manifest(valid))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "url": "http://example.test/SIGA.exe"}))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "sha256": "bad"}))
+        self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "urls": ["http://example.test/SIGA.exe"]}))
 
 
 class ApplicationSourceTests(unittest.TestCase):
+    def test_mobile_shell_assets_exist(self):
+        service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
+        shell_match = re.search(r"const APP_SHELL = \[([\s\S]*?)\];", service_worker)
+        self.assertIsNotNone(shell_match)
+        paths = re.findall(r"'\./([^']*)'", shell_match.group(1))
+        for relative in paths:
+            target = ROOT / "hosting" / (relative or "index.html")
+            self.assertTrue(target.exists(), str(target))
+
     def test_module_javascript_parses(self):
         for filename in ("index.html", "afiliado.html"):
             html = (ROOT / filename).read_text(encoding="utf-8")
@@ -74,11 +84,15 @@ class ApplicationSourceTests(unittest.TestCase):
             "runTransaction",
             "uniqueAffiliateKey",
             "unique_affiliates",
+            "revision-conflict",
+            "clientMutationId",
+            "mobileAccess: existing?.mobileAccess",
         ):
             self.assertIn(marker, desktop_html)
         self.assertIn("handleCredentialWatchError", mobile_html)
         self.assertIn("validAffiliate", rules)
         self.assertIn("validPayment", rules)
+        self.assertIn("request.resource.data.revision == resource.data.revision + 1", rules)
 
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))

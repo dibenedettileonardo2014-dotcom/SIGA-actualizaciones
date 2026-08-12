@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.48",
+    "version":  "1.2.49",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "099B136ED1F7B1148D6409671A045080C893573A8084B3C6C63FA53E108411FA",
+    "sha256":  "8F7C6B1D3C0AD06E66B445241722002B98CF8D3D85D779A6B1CDDE774B72793F",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "3CBE39B207FB5520896CBCB20D836B06C0F326941CA8CA8F54101554449DE950",
-    "notes":  "Evita duplicados simultaneos entre PC con transacciones compatibles con Spark.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.48.exe",
-    "installerSha256":  "3F5BDBB37DF457A1D731DA9B04CC8CCE51ED5B24389FA0D6A1423DD92842E227"
+    "packageSha256":  "6BAD8485F86816903984441D481C9E2C3ED4961E9612EBE95ED06AE807508D62",
+    "notes":  "Evita sobreescrituras simultaneas y preserva accesos moviles con control de revisiones.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.49.exe",
+    "installerSha256":  "517E1997EDA06D096FA576715360DC2C00D971121FDD8763B9725DAF1D56C13B"
 }

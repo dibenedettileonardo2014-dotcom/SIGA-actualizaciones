@@ -13,7 +13,7 @@ service cloud.firestore {
     }
 
     function validAffiliate(affiliateId, appId) {
-      return request.resource.data.keys().hasAll(['id', 'name', 'number', 'dni', 'status', 'uniqueDniKey', 'uniqueNumberKey'])
+      return request.resource.data.keys().hasAll(['id', 'name', 'number', 'dni', 'status', 'uniqueDniKey', 'uniqueNumberKey', 'revision', 'clientMutationId'])
         && request.resource.data.id == affiliateId
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
@@ -28,6 +28,11 @@ service cloud.firestore {
         && request.resource.data.uniqueDniKey.matches('^dni_[A-Za-z0-9_-]+$')
         && request.resource.data.uniqueNumberKey is string
         && request.resource.data.uniqueNumberKey.matches('^number_[A-Za-z0-9_-]+$')
+        && request.resource.data.revision is int
+        && request.resource.data.revision > 0
+        && request.resource.data.clientMutationId is string
+        && request.resource.data.clientMutationId.size() >= 16
+        && request.resource.data.clientMutationId.size() <= 80
         && getAfter(/databases/$(database)/documents/artifacts/$(appId)/public/unique_affiliates/$(request.resource.data.uniqueDniKey)).data.affiliateId == affiliateId
         && getAfter(/databases/$(database)/documents/artifacts/$(appId)/public/unique_affiliates/$(request.resource.data.uniqueNumberKey)).data.affiliateId == affiliateId;
     }
@@ -49,7 +54,13 @@ service cloud.firestore {
     // Las sesiones anónimas y las cuentas móviles quedan excluidas.
     match /artifacts/{appId}/public/data/afiliados/{affiliateId} {
       allow read, delete: if isStaff();
-      allow create, update: if isStaff() && validAffiliate(affiliateId, appId);
+      allow create: if isStaff()
+        && validAffiliate(affiliateId, appId)
+        && request.resource.data.revision == 1;
+      allow update: if isStaff()
+        && validAffiliate(affiliateId, appId)
+        && ((!resource.data.keys().hasAll(['revision']) && request.resource.data.revision == 1)
+          || (resource.data.revision is int && request.resource.data.revision == resource.data.revision + 1));
     }
 
     match /artifacts/{appId}/public/data/pagos/{paymentId} {

@@ -648,7 +648,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.48</p>
+                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.49</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -669,7 +669,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.48</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.49</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -1276,11 +1276,15 @@ window.__firebase_config = {
         }
 
         function showPendingSyncStatus() {
-            const pendingCount = readPendingChanges().length;
+            const pending = readPendingChanges();
+            const pendingCount = pending.length;
             if (!pendingCount) return;
+            const conflictCount = pending.filter(change => change.conflict).length;
             const status = document.getElementById('cloud-sync-status');
-            status.className = 'flex items-center gap-1 text-amber-500 font-semibold';
-            status.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Guardado local · ${pendingCount} pendiente${pendingCount === 1 ? '' : 's'}`;
+            status.className = `flex items-center gap-1 font-semibold ${conflictCount ? 'text-rose-500' : 'text-amber-500'}`;
+            status.innerHTML = conflictCount
+                ? `<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> ${conflictCount} conflicto${conflictCount === 1 ? '' : 's'} por revisar`
+                : `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Guardado local · ${pendingCount} pendiente${pendingCount === 1 ? '' : 's'}`;
         }
 
         function queuePendingChange(change) {
@@ -1304,10 +1308,15 @@ window.__firebase_config = {
         }
 
         async function sendChangeToFirestore(change) {
+            if (change.collection === 'mobile_credentials') {
+                const credentialRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'mobile_credentials', change.id);
+                if (change.type === 'delete') await deleteDoc(credentialRef);
+                else await setDoc(credentialRef, change.data);
+                return;
+            }
             const docRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', change.collection, change.id);
             if (change.collection === 'afiliados') {
-                await sendAffiliateTransaction(change, docRef);
-                return;
+                return sendAffiliateTransaction(change, docRef);
             }
             if (change.type === 'delete') {
                 await deleteDoc(docRef);
@@ -1328,9 +1337,21 @@ window.__firebase_config = {
         }
 
         async function sendAffiliateTransaction(change, affiliateRef) {
-            await runTransaction(window.appState.db, async transaction => {
+            return runTransaction(window.appState.db, async transaction => {
                 const currentSnapshot = await transaction.get(affiliateRef);
                 const current = currentSnapshot.exists() ? currentSnapshot.data() : null;
+                const currentRevision = Number(current?.revision) || 0;
+                const expectedRevision = Number(change.data?.revision) || 0;
+                if (current && change.data?.clientMutationId && current.clientMutationId === change.data.clientMutationId) {
+                    return current;
+                }
+                const continuesOwnMutation = current && change.data?.parentMutationId === current.clientMutationId;
+                if (current && currentRevision !== expectedRevision && !continuesOwnMutation) {
+                    const error = new Error('La ficha cambió en otra PC. Revisá los datos mostrados y guardala nuevamente para confirmar tus cambios.');
+                    error.code = 'revision-conflict';
+                    error.currentRevision = currentRevision;
+                    throw error;
+                }
                 const currentKeys = current ? [
                     current.uniqueDniKey || uniqueAffiliateKey('dni', current.dni),
                     current.uniqueNumberKey || uniqueAffiliateKey('number', current.number)
@@ -1345,7 +1366,7 @@ window.__firebase_config = {
                         if (snapshot.exists() && snapshot.data().affiliateId === change.id) transaction.delete(ref);
                     });
                     transaction.delete(affiliateRef);
-                    return;
+                    return null;
                 }
 
                 const uniqueDniKey = uniqueAffiliateKey('dni', change.data.dni);
@@ -1366,7 +1387,7 @@ window.__firebase_config = {
                     }
                 }
 
-                const data = { ...change.data, uniqueDniKey, uniqueNumberKey };
+                const data = { ...change.data, uniqueDniKey, uniqueNumberKey, revision: currentRevision + 1 };
                 transaction.set(affiliateRef, data);
                 for (const key of newKeys) {
                     const { ref, snapshot } = reservations.get(key);
@@ -1378,6 +1399,7 @@ window.__firebase_config = {
                     const { ref, snapshot } = reservations.get(key);
                     if (snapshot.exists() && snapshot.data().affiliateId === change.id) transaction.delete(ref);
                 }
+                return data;
             });
         }
 
@@ -1387,16 +1409,40 @@ window.__firebase_config = {
             const pending = readPendingChanges();
             const remaining = [];
             let changesAddedDuringSync = [];
+            let localStateChanged = false;
             try {
                 for (const change of pending) {
+                    if (change.conflict) {
+                        remaining.push(change);
+                        continue;
+                    }
                     try {
-                        await sendChangeToFirestore(change);
+                        const syncedData = await sendChangeToFirestore(change);
+                        if (change.collection === 'afiliados' && change.type === 'set' && syncedData) {
+                            const localIndex = window.appState.affiliates.findIndex(item => item.id === change.id && item.clientMutationId === change.data.clientMutationId);
+                            if (localIndex >= 0) {
+                                window.appState.affiliates[localIndex] = syncedData;
+                                localStateChanged = true;
+                            }
+                            syncMobileCredential(syncedData);
+                        }
                     } catch (error) {
                         console.error('Error al sincronizar cambio pendiente:', error);
                         if (error?.code === 'already-exists') {
                             showToast('Conflicto entre computadoras', error.message, 'error');
+                            remaining.push({ ...change, conflict: true });
+                        } else if (error?.code === 'revision-conflict') {
+                            const rebasedChange = { ...change, conflict: true, data: { ...change.data, revision: error.currentRevision } };
+                            remaining.push(rebasedChange);
+                            const localItem = window.appState.affiliates.find(item => item.id === change.id && item.clientMutationId === change.data?.clientMutationId);
+                            if (localItem) {
+                                localItem.revision = error.currentRevision;
+                                localStateChanged = true;
+                            }
+                            showToast('Edición simultánea detectada', error.message, 'warning');
+                        } else {
+                            remaining.push(change);
                         }
-                        remaining.push(change);
                     }
                 }
                 changesAddedDuringSync = readPendingChanges()
@@ -1407,6 +1453,10 @@ window.__firebase_config = {
                     .reverse();
                 if (finalPending.length) localStorage.setItem(pendingChangesKey(), JSON.stringify(finalPending));
                 else localStorage.removeItem(pendingChangesKey());
+                if (localStateChanged) {
+                    saveLocalData();
+                    processStateChange();
+                }
             } finally {
                 isFlushingPendingChanges = false;
             }
@@ -1528,15 +1578,31 @@ window.__firebase_config = {
         }
 
         async function commitToDatabase(affiliate) {
-            saveAffiliateLocally(affiliate);
-            await syncChange({ type: 'set', collection: 'afiliados', id: affiliate.id, data: affiliate });
+            const prepared = {
+                ...affiliate,
+                revision: Number(affiliate.revision) || 0,
+                parentMutationId: affiliate.clientMutationId || null,
+                clientMutationId: crypto.randomUUID(),
+                lastModifiedAt: new Date().toISOString()
+            };
+            saveAffiliateLocally(prepared);
+            syncChange({ type: 'set', collection: 'afiliados', id: prepared.id, data: prepared });
+            return prepared;
         }
 
         async function removeFromDatabase(id) {
+            const existing = window.appState.affiliates.find(a => a.id === id);
             window.appState.affiliates = window.appState.affiliates.filter(a => a.id !== id);
             saveLocalData();
             processStateChange();
-            await syncChange({ type: 'delete', collection: 'afiliados', id });
+            syncChange({
+                type: 'delete', collection: 'afiliados', id,
+                data: {
+                    revision: Number(existing?.revision) || 0,
+                    parentMutationId: existing?.clientMutationId || null,
+                    clientMutationId: crypto.randomUUID()
+                }
+            });
         }
 
         async function commitPaymentToDatabase(payment) {
@@ -1861,6 +1927,7 @@ window.__firebase_config = {
 
         // --- MODAL DE CONFIRMACIÓN (Alternativa a confirm()) ---
         window.customConfirm = function(title, message) {
+            if (confirmPromiseResolver) return Promise.resolve(false);
             document.getElementById('confirm-title').textContent = title;
             document.getElementById('confirm-message').textContent = message;
             document.getElementById('confirm-modal').classList.remove('hidden');
@@ -1979,24 +2046,24 @@ window.__firebase_config = {
             const partner = {
                 firstName: uppercaseText(document.getElementById('form-partner-first-name').value),
                 lastName: uppercaseText(document.getElementById('form-partner-last-name').value),
-                dni: document.getElementById('form-partner-dni').value.trim(),
+                dni: normalizedDni(document.getElementById('form-partner-dni').value),
                 birthdate: document.getElementById('form-partner-birthdate').value,
                 age: document.getElementById('form-partner-age').value
             };
             const partnerValues = Object.values(partner);
-            if (partnerValues.some(Boolean) && (!partner.firstName || !partner.lastName || !partner.dni || (!partner.birthdate && partner.age === ''))) {
-                showToast('Datos incompletos', 'Completa nombre, apellido, DNI y edad de la pareja.', 'warning');
+            if (partnerValues.some(Boolean) && (!partner.firstName || !partner.lastName || !/^\d{7,9}$/.test(partner.dni) || (!partner.birthdate && partner.age === ''))) {
+                showToast('Datos incompletos', 'Completa nombre, apellido, DNI válido y edad de la pareja.', 'warning');
                 return null;
             }
             const children = Array.from(document.querySelectorAll('.family-child')).map(row => ({
                 firstName: uppercaseText(row.querySelector('[data-family-field="firstName"]').value),
                 lastName: uppercaseText(row.querySelector('[data-family-field="lastName"]').value),
-                dni: row.querySelector('[data-family-field="dni"]').value.trim(),
+                dni: normalizedDni(row.querySelector('[data-family-field="dni"]').value),
                 birthdate: row.querySelector('[data-family-field="birthdate"]').value,
                 age: row.querySelector('[data-family-field="age"]').value
             }));
-            if (children.some(child => !child.firstName || !child.lastName || !child.dni || (!child.birthdate && child.age === ''))) {
-                showToast('Datos incompletos', 'Completa nombre, apellido, DNI y edad de cada hijo.', 'warning');
+            if (children.some(child => !child.firstName || !child.lastName || !/^\d{7,9}$/.test(child.dni) || (!child.birthdate && child.age === ''))) {
+                showToast('Datos incompletos', 'Completa nombre, apellido, DNI válido y edad de cada hijo.', 'warning');
                 return null;
             }
             return { partner: partnerValues.some(Boolean) ? { ...partner, age: Number(partner.age) } : null, children: children.map(child => ({ ...child, age: Number(child.age) })) };
@@ -2112,18 +2179,14 @@ window.__firebase_config = {
                 isDirectiveCommission: document.getElementById('form-is-directive-commission').checked,
                 familyGroup,
                 attachments: [...(existing?.attachments || []), ...newAttachments],
+                mobileAccess: existing?.mobileAccess || null,
+                revision: Number(existing?.revision) || 0,
                 createdAt: existing?.createdAt || new Date().toISOString()
             };
 
             await commitToDatabase(affiliate);
-            try {
-                await syncMobileCredential(affiliate);
-            } catch (error) {
-                console.error('No se pudo sincronizar la credencial móvil:', error);
-                showToast('Credencial móvil', 'Los datos se guardaron, pero la app móvil no pudo sincronizarse.', 'warning');
-            }
             closeAffiliateModal();
-            showToast('Afiliado guardado', 'Los datos se actualizaron correctamente.', 'success');
+            showToast('Afiliado guardado', 'Los datos quedaron guardados en esta PC y enviados a sincronización.', 'success');
             if (submitButton) {
                 submitButton.dataset.busy = 'false';
                 submitButton.disabled = false;
@@ -2585,6 +2648,14 @@ window.__firebase_config = {
                 showToast('Advertencia', 'Por favor ingresa un monto válido.', 'warning');
                 return;
             }
+            if (!/^\d{4}$/.test(year) || Number(year) < 1900 || Number(year) > 2100) {
+                showToast('Año inválido', 'Ingresá un año entre 1900 y 2100.', 'warning');
+                return;
+            }
+            if (!Number.isFinite(Number(amount)) || Number(amount) > 1000000000000) {
+                showToast('Monto inválido', 'El monto ingresado está fuera del rango permitido.', 'warning');
+                return;
+            }
 
             let affiliate = window.appState.affiliates.find(a => a.id === affiliateId);
             if (!affiliate) return;
@@ -2750,10 +2821,14 @@ window.__firebase_config = {
             toggle.classList.remove('hidden');
         }
 
-        async function syncMobileCredential(affiliate) {
-            if (!affiliate?.mobileAccess?.uid || !window.appState.firebaseEnabled) return;
-            const credentialRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'mobile_credentials', affiliate.mobileAccess.uid);
-            await setDoc(credentialRef, mobileCredentialData(affiliate, affiliate.mobileAccess.enabled !== false));
+        function syncMobileCredential(affiliate) {
+            if (!affiliate?.mobileAccess?.uid) return;
+            syncChange({
+                type: 'set',
+                collection: 'mobile_credentials',
+                id: affiliate.mobileAccess.uid,
+                data: mobileCredentialData(affiliate, affiliate.mobileAccess.enabled !== false)
+            });
         }
 
         function canManageMobileAccess() {
@@ -2801,7 +2876,6 @@ window.__firebase_config = {
                 await signOut(secondaryAuth);
                 const updated = { ...affiliate, mobileAccess: { uid: credential.user.uid, enabled: true, createdAt: new Date().toISOString() } };
                 await commitToDatabase(updated);
-                await syncMobileCredential(updated);
                 passwordInput.value = '';
                 renderMobileAccessStatus(updated);
                 showToast('Acceso creado', `Ya puede ingresar con su DNI ${affiliate.dni}.`, 'success');
@@ -2830,7 +2904,6 @@ window.__firebase_config = {
             try {
                 actionButton.disabled = true;
                 await commitToDatabase(updated);
-                await syncMobileCredential(updated);
                 renderMobileAccessStatus(updated);
                 showToast('Acceso actualizado', updated.mobileAccess.enabled ? 'La cuenta fue habilitada.' : 'La cuenta fue bloqueada.', 'success');
             } catch (error) {
@@ -3077,6 +3150,7 @@ window.__firebase_config = {
             }
             
             const headers = ["Legajo/Nro", "Nombre", "DNI", "Fecha Nacimiento", "Fecha Afiliacion", "Empresa", "Consultora", "Sector", "Telefono", "Email", "Direccion", "Estado", "Al Dia"];
+            const safeSpreadsheetCell = value => /^[=+\-@]/.test(String(value ?? '').trimStart()) ? `'${value}` : value;
             const rows = window.appState.affiliates.map(a => [
                 a.number || '',
                 a.name,
@@ -3091,7 +3165,7 @@ window.__firebase_config = {
                 a.address || '',
                 a.status,
                 a.hasPaid ? 'SI' : 'NO'
-            ]);
+            ].map(safeSpreadsheetCell));
 
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF"
                 + [headers.join(";"), ...rows.map(e => e.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(";"))].join("\n");
@@ -3108,11 +3182,9 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.48";
+        const APP_VERSION = "1.2.49";
 
         window.checkForUpdatesManual = async function() {
-            const statusContainer = document.getElementById('update-status-container');
-            
             // Mostrar que está verificando
             document.getElementById('update-checking').classList.remove('hidden');
             document.getElementById('update-unavailable').classList.add('hidden');
@@ -3206,7 +3278,7 @@ window.__firebase_config = {
             return 0;
         }
 
-        // La verificación automática está deshabilitada; este bloque no se registra.
+        // Verificación automática liviana al iniciar; solo descarga el manifiesto.
         const checkForUpdatesOnStartup = () => {
             setTimeout(() => {
                 fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
@@ -3260,6 +3332,10 @@ window.__firebase_config = {
                                 sector: uppercaseText(item.sector), address: uppercaseText(item.address),
                                 attachments: Array.isArray(item.attachments) ? item.attachments : [],
                                 familyGroup: item.familyGroup && typeof item.familyGroup === 'object' ? item.familyGroup : { partner: null, children: [] },
+                                revision: Number(item.revision) || 0,
+                                parentMutationId: item.clientMutationId || null,
+                                clientMutationId: crypto.randomUUID(),
+                                lastModifiedAt: new Date().toISOString(),
                                 createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString()
                             });
                         }
