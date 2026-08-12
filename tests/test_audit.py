@@ -24,14 +24,14 @@ class IdCollector(HTMLParser):
 
 class LauncherTests(unittest.TestCase):
     def test_version_validation(self):
-        self.assertEqual(desktop_launcher.version_key("1.2.47"), (1, 2, 47))
+        self.assertEqual(desktop_launcher.version_key("1.2.48"), (1, 2, 48))
         for invalid in ("", "1", "1.2.beta", "1.2.3.4.5"):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 desktop_launcher.version_key(invalid)
 
     def test_update_manifest_requires_https_and_sha256(self):
         valid = {
-            "version": "1.2.47",
+            "version": "1.2.48",
             "url": "https://example.test/SIGA.exe",
             "sha256": "A" * 64,
             "packageUrl": "https://example.test/SIGA.zip",
@@ -71,6 +71,9 @@ class ApplicationSourceTests(unittest.TestCase):
             "normalizedDni",
             "local-attachment-link",
             "button.dataset.busy",
+            "runTransaction",
+            "uniqueAffiliateKey",
+            "unique_affiliates",
         ):
             self.assertIn(marker, desktop_html)
         self.assertIn("handleCredentialWatchError", mobile_html)

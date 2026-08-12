@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.47",
+    "version":  "1.2.48",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "B20BC7B221A79E27DC87FA0E6C5E4359565DB039DE77A8679A715EF3EDD93433",
+    "sha256":  "099B136ED1F7B1148D6409671A045080C893573A8084B3C6C63FA53E108411FA",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "3963032C9550202081F178BD210EB053774AE48DFD3C8527704A8790F55ADB9D",
-    "notes":  "Refuerza validaciones, sincronizacion, seguridad y tolerancia a fallas.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.47.exe",
-    "installerSha256":  "123BB5E85130B4AE89C145C0D94801F5F1B34A348DA02C65A3C01DFECBEB3A43"
+    "packageSha256":  "3CBE39B207FB5520896CBCB20D836B06C0F326941CA8CA8F54101554449DE950",
+    "notes":  "Evita duplicados simultaneos entre PC con transacciones compatibles con Spark.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.48.exe",
+    "installerSha256":  "3F5BDBB37DF457A1D731DA9B04CC8CCE51ED5B24389FA0D6A1423DD92842E227"
 }

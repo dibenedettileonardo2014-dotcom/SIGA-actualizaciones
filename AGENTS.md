@@ -21,3 +21,12 @@ Mantener siempre únicamente las dos versiones más recientes de SIGA y sus
 instaladores en el estado vigente del proyecto. Al publicar una versión nueva,
 eliminar los instaladores anteriores que excedan ese límite. Las versiones
 retiradas permanecen recuperables desde el historial de Git.
+
+## Costo operativo obligatorio
+
+SIGA debe permanecer compatible con Firebase Spark y mantener costo operativo
+$0. No incorporar Cloud Functions, servicios que requieran Blaze, facturación,
+tarjeta, APIs pagas ni almacenamiento remoto de adjuntos. Antes de agregar una
+dependencia o servicio, verificar que funcione íntegramente en Spark. Priorizar
+Firestore, Authentication por correo, Hosting, reglas y transacciones cliente
+dentro de sus cuotas gratuitas, minimizando lecturas, escrituras y transferencia.

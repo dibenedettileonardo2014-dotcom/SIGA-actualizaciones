@@ -648,7 +648,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.47</p>
+                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.48</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -669,7 +669,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.47</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.48</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -1058,7 +1058,7 @@
     <!-- Módulos de Firebase y Script Principal de Aplicación -->
     <script type="module">
         import { initializeApp, getApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         // --- Estado Global de la Aplicación ---
@@ -1305,11 +1305,80 @@ window.__firebase_config = {
 
         async function sendChangeToFirestore(change) {
             const docRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', change.collection, change.id);
+            if (change.collection === 'afiliados') {
+                await sendAffiliateTransaction(change, docRef);
+                return;
+            }
             if (change.type === 'delete') {
                 await deleteDoc(docRef);
             } else {
                 await setDoc(docRef, change.data);
             }
+        }
+
+        function uniqueAffiliateKey(type, value) {
+            const normalized = type === 'dni' ? normalizedDni(value) : uppercaseText(value);
+            const bytes = new TextEncoder().encode(normalized);
+            const encoded = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+            return `${type}_${encoded}`;
+        }
+
+        function uniqueAffiliateRef(key) {
+            return doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'unique_affiliates', key);
+        }
+
+        async function sendAffiliateTransaction(change, affiliateRef) {
+            await runTransaction(window.appState.db, async transaction => {
+                const currentSnapshot = await transaction.get(affiliateRef);
+                const current = currentSnapshot.exists() ? currentSnapshot.data() : null;
+                const currentKeys = current ? [
+                    current.uniqueDniKey || uniqueAffiliateKey('dni', current.dni),
+                    current.uniqueNumberKey || uniqueAffiliateKey('number', current.number)
+                ] : [];
+
+                if (change.type === 'delete') {
+                    const currentReservations = [];
+                    for (const key of currentKeys) {
+                        currentReservations.push({ key, ref: uniqueAffiliateRef(key), snapshot: await transaction.get(uniqueAffiliateRef(key)) });
+                    }
+                    currentReservations.forEach(({ ref, snapshot }) => {
+                        if (snapshot.exists() && snapshot.data().affiliateId === change.id) transaction.delete(ref);
+                    });
+                    transaction.delete(affiliateRef);
+                    return;
+                }
+
+                const uniqueDniKey = uniqueAffiliateKey('dni', change.data.dni);
+                const uniqueNumberKey = uniqueAffiliateKey('number', change.data.number);
+                const newKeys = [uniqueDniKey, uniqueNumberKey];
+                const keysToRead = [...new Set([...currentKeys, ...newKeys])];
+                const reservations = new Map();
+                for (const key of keysToRead) {
+                    const ref = uniqueAffiliateRef(key);
+                    reservations.set(key, { ref, snapshot: await transaction.get(ref) });
+                }
+                for (const key of newKeys) {
+                    const reservation = reservations.get(key).snapshot;
+                    if (reservation.exists() && reservation.data().affiliateId !== change.id) {
+                        const error = new Error(key === uniqueDniKey ? 'El DNI ya está registrado en otra PC.' : 'El número de afiliado ya está registrado en otra PC.');
+                        error.code = 'already-exists';
+                        throw error;
+                    }
+                }
+
+                const data = { ...change.data, uniqueDniKey, uniqueNumberKey };
+                transaction.set(affiliateRef, data);
+                for (const key of newKeys) {
+                    const { ref, snapshot } = reservations.get(key);
+                    if (!snapshot.exists() || snapshot.data().affiliateId !== change.id) {
+                        transaction.set(ref, { affiliateId: change.id, type: key === uniqueDniKey ? 'dni' : 'number' });
+                    }
+                }
+                for (const key of currentKeys.filter(key => !newKeys.includes(key))) {
+                    const { ref, snapshot } = reservations.get(key);
+                    if (snapshot.exists() && snapshot.data().affiliateId === change.id) transaction.delete(ref);
+                }
+            });
         }
 
         async function flushPendingChanges() {
@@ -1324,6 +1393,9 @@ window.__firebase_config = {
                         await sendChangeToFirestore(change);
                     } catch (error) {
                         console.error('Error al sincronizar cambio pendiente:', error);
+                        if (error?.code === 'already-exists') {
+                            showToast('Conflicto entre computadoras', error.message, 'error');
+                        }
                         remaining.push(change);
                     }
                 }
@@ -2514,7 +2586,7 @@ window.__firebase_config = {
                 return;
             }
 
-            const affiliate = window.appState.affiliates.find(a => a.id === affiliateId);
+            let affiliate = window.appState.affiliates.find(a => a.id === affiliateId);
             if (!affiliate) return;
 
             const paymentId = crypto.randomUUID();
@@ -2530,9 +2602,11 @@ window.__firebase_config = {
                 return;
             }
 
-            // Actualizar estado de cuota
-            affiliate.hasPaid = true;
-            await commitToDatabase(affiliate);
+            // Evitar una escritura extra si la ficha ya estaba marcada al día.
+            if (!affiliate.hasPaid) {
+                affiliate = { ...affiliate, hasPaid: true };
+                await commitToDatabase(affiliate);
+            }
 
             const paymentObj = {
                 id: paymentId,
@@ -3034,7 +3108,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.47";
+        const APP_VERSION = "1.2.48";
 
         window.checkForUpdatesManual = async function() {
             const statusContainer = document.getElementById('update-status-container');
