@@ -18,8 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.51` — “Versión Cósmica”: sincronización incremental, búsquedas indexadas,
-caché de cálculos, carga diferida y renderizado optimizado para padrones grandes.
+`1.2.52` — incorpora la firma visual LGDB de manera uniforme en SIGA y Mi SIGA.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -29,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.2.50
 - 1.2.51
+- 1.2.52
 
 Los instaladores se encuentran en `installer/`.
 

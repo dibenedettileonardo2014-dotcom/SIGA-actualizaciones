@@ -94,6 +94,15 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("validPayment", rules)
         self.assertIn("request.resource.data.revision == resource.data.revision + 1", rules)
 
+    def test_lgdb_signature_is_consistent(self):
+        for filename in ("index.html", "afiliado.html"):
+            html = (ROOT / filename).read_text(encoding="utf-8")
+            self.assertIn('class="lgdb-signature', html)
+            self.assertIn(">LGDB</span>", html)
+        desktop_html = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Desarrollado por <span", desktop_html)
+        self.assertIn("Creado en 2026", desktop_html)
+
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")

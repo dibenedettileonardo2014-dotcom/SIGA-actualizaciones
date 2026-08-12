@@ -1,6 +1,6 @@
 #define MyAppName "SIGA"
-#define MyAppVersion "1.2.51"
-#define MyAppPublisher "Leonardo Di Benedetti"
+#define MyAppVersion "1.2.52"
+#define MyAppPublisher "LGDB"
 #define MyAppExeName "SIGA.exe"
 
 [Setup]

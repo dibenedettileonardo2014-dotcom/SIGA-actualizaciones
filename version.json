@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.51",
+    "version":  "1.2.52",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "940BFB254E6A225CE7B2429EA379D7CA5E177D94AD7B94D96CC863E1273B9142",
+    "sha256":  "22A31B4C3A593B68E9BFBE130FD1698CA4955F69759FFDC2A461DFC637E5256A",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "9264AE0F596D0151D1D789DB9160CB52D701EC0FC65B2651532DFD860CD0BF12",
-    "notes":  "Versión Cósmica: sincronización incremental, búsquedas indexadas, caché de estadísticas y carga diferida para padrones grandes.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.51.exe",
-    "installerSha256":  "A8983C9FDF4FCA47D3BEA0F264FF15CB5E202E5B429AD85A0C84E509E327449C"
+    "packageSha256":  "7AE590E3F4E131086EADFCBDE30E285ED98604A5B71143C5D0E7849EF4E4E654",
+    "notes":  "Firma visual LGDB uniforme en SIGA y Mi SIGA.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.52.exe",
+    "installerSha256":  "6B3919B0E8ED5BE585D792456BA2ACC90BD20BC4B7D9316C5A28F1F0AFCEC984"
 }
