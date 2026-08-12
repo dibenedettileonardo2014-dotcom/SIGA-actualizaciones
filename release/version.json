@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.45",
+    "version":  "1.2.51",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "071DAB425B6E6816FFA436ACE87D17D1C95E06371DC4B6907EDFD16AC7A60E1F",
+    "sha256":  "940BFB254E6A225CE7B2429EA379D7CA5E177D94AD7B94D96CC863E1273B9142",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "39AD0B876C90484BE662BDBC59502406B23B6C406BF09449D68B02F652AA22D5",
-    "notes":  "Conserva de forma segura la sesion autorizada para no pedir la contrasena en cada inicio.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.45.exe",
-    "installerSha256":  "D5E35B1D80536013F1DA13D2BD4CA9E03EC7D829DC1CC40F6FF2D783298FCCF6"
+    "packageSha256":  "9264AE0F596D0151D1D789DB9160CB52D701EC0FC65B2651532DFD860CD0BF12",
+    "notes":  "Versión Cósmica: sincronización incremental, búsquedas indexadas, caché de estadísticas y carga diferida para padrones grandes.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.51.exe",
+    "installerSha256":  "A8983C9FDF4FCA47D3BEA0F264FF15CB5E202E5B429AD85A0C84E509E327449C"
 }

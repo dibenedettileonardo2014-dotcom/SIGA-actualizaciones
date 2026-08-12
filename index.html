@@ -18,10 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js para Estadísticas -->
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS para generar archivos .xlsx reales -->
-    <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+    <!-- Los generadores de exportaciones se cargan bajo demanda. -->
     <meta name="theme-color" content="#10b981">
     <style>
         body {
@@ -652,7 +649,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.50</p>
+                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.51</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -673,7 +670,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.50</span>
+                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.51</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -733,7 +730,7 @@
                             <p class="font-semibold text-slate-700">© 2026 Leonardo Di Benedetti. Todos los derechos reservados.</p>
                             <p>Sistema creado en 2026. Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                        <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.2.50</p>
+                        <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.2.51 · Versión Cósmica</p>
                     </section>
                 </div>
 
@@ -1109,6 +1106,15 @@
         let unsubscribeAffiliates = null;
         let unsubscribePayments = null;
         let paymentsRealtimeSubscribed = false;
+        let affiliatesById = new Map();
+        let paymentsById = new Map();
+        let affiliatesSnapshotReady = false;
+        let paymentsSnapshotReady = false;
+        let stateRevision = 0;
+        let derivedState = null;
+        let localSaveTimer = null;
+        let dropdownRevision = -1;
+        let localPaymentsLoaded = false;
         let isFlushingPendingChanges = false;
         let authenticationRequired = false;
         const roleAuthEmails = {
@@ -1176,6 +1182,10 @@ window.__firebase_config = {
 
         // Sincronización en Tiempo Real de Red (Cumpliendo reglas estrictas de Firestore)
         function setupRealtimeSync() {
+            affiliatesSnapshotReady = false;
+            affiliatesById.clear();
+            paymentsSnapshotReady = false;
+            paymentsById.clear();
             // Cancelar suscripciones previas si cambian de ID de red
             if (unsubscribeAffiliates) unsubscribeAffiliates();
             if (unsubscribePayments) {
@@ -1190,12 +1200,16 @@ window.__firebase_config = {
 
             // Suscribirse a Afiliados
             unsubscribeAffiliates = onSnapshot(affiliatesColRef, (snapshot) => {
-                const loaded = [];
-                snapshot.forEach((doc) => {
-                    loaded.push({ id: doc.id, ...doc.data() });
-                });
-                
-                window.appState.affiliates = mergePendingChanges('afiliados', loaded);
+                if (!affiliatesSnapshotReady) {
+                    affiliatesById = new Map(snapshot.docs.map(item => [item.id, { id: item.id, ...item.data() }]));
+                    affiliatesSnapshotReady = true;
+                } else {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'removed') affiliatesById.delete(change.doc.id);
+                        else affiliatesById.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
+                    });
+                }
+                window.appState.affiliates = mergePendingChanges('afiliados', Array.from(affiliatesById.values()));
                 saveLocalData();
                 processStateChange();
             }, (error) => {
@@ -1210,14 +1224,20 @@ window.__firebase_config = {
             // Así el inicio del padrón no espera una segunda colección.
             window.subscribePaymentsRealtime = function() {
                 if (paymentsRealtimeSubscribed) return;
+                loadLocalPayments();
                 paymentsRealtimeSubscribed = true;
                 unsubscribePayments = onSnapshot(paymentsColRef, (snapshot) => {
-                const loadedPayments = [];
-                snapshot.forEach((doc) => {
-                    loadedPayments.push({ id: doc.id, ...doc.data() });
-                });
+                if (!paymentsSnapshotReady) {
+                    paymentsById = new Map(snapshot.docs.map(item => [item.id, { id: item.id, ...item.data() }]));
+                    paymentsSnapshotReady = true;
+                } else {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'removed') paymentsById.delete(change.doc.id);
+                        else paymentsById.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
+                    });
+                }
                 // Ordenar localmente (Regla 2: Sin queries complejas en Firestore)
-                window.appState.payments = mergePendingChanges('pagos', loadedPayments)
+                window.appState.payments = mergePendingChanges('pagos', Array.from(paymentsById.values()))
                     .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
                 saveLocalData();
                 renderPaymentsList();
@@ -1240,16 +1260,26 @@ window.__firebase_config = {
 
             try {
                 const affiliates = JSON.parse(localStorage.getItem(localDataKey('affiliates')) || '[]');
-                const payments = JSON.parse(localStorage.getItem(localDataKey('payments')) || '[]');
                 window.appState.affiliates = Array.isArray(affiliates) ? affiliates : [];
-                window.appState.payments = Array.isArray(payments) ? payments : [];
             } catch (error) {
                 console.error('No se pudo leer la copia local:', error);
                 window.appState.affiliates = [];
-                window.appState.payments = [];
             }
             
             processStateChange();
+        }
+
+        function loadLocalPayments() {
+            if (localPaymentsLoaded) return;
+            localPaymentsLoaded = true;
+            try {
+                const payments = JSON.parse(localStorage.getItem(localDataKey('payments')) || '[]');
+                window.appState.payments = Array.isArray(payments) ? payments : [];
+            } catch (error) {
+                console.error('No se pudo leer la copia local de pagos:', error);
+                window.appState.payments = [];
+            }
+            window.appState.payments.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
         }
 
         // --- Respaldo local y sincronización diferida ---
@@ -1646,9 +1676,17 @@ window.__firebase_config = {
         }
 
         function saveLocalData() {
+            clearTimeout(localSaveTimer);
+            localSaveTimer = setTimeout(persistLocalData, 120);
+        }
+
+        function persistLocalData() {
+            localSaveTimer = null;
             try {
                 localStorage.setItem(localDataKey('affiliates'), JSON.stringify(window.appState.affiliates));
-                localStorage.setItem(localDataKey('payments'), JSON.stringify(window.appState.payments));
+                if (localPaymentsLoaded) {
+                    localStorage.setItem(localDataKey('payments'), JSON.stringify(window.appState.payments));
+                }
             } catch (error) {
                 console.error('No se pudo actualizar la copia local:', error);
                 showToast('Almacenamiento lleno', 'No se pudo actualizar la copia local. Exporta un respaldo y libera espacio.', 'warning');
@@ -1657,6 +1695,8 @@ window.__firebase_config = {
 
         // --- Procesamiento de Estados, Gráficos y Renderizado ---
         function processStateChange() {
+            stateRevision += 1;
+            derivedState = null;
             // Actualizar sectores únicos
             window.appState.sectors.clear();
             window.appState.affiliates.forEach(a => {
@@ -1699,12 +1739,12 @@ window.__firebase_config = {
             const statusVal = document.getElementById('filter-status').value;
 
             window.appState.filteredAffiliates = window.appState.affiliates.filter(a => {
-                const matchQuery = !searchQuery || 
-                    String(a.name || '').toLowerCase().includes(searchQuery) ||
-                    String(a.dni || '').includes(searchQuery) ||
-                    String(a.number || '').toLowerCase().includes(searchQuery) ||
-                    String(a.company || '').toLowerCase().includes(searchQuery) ||
-                    String(a.consultant || '').toLowerCase().includes(searchQuery);
+                if (!a.__searchText) Object.defineProperty(a, '__searchText', {
+                    value: [a.name, a.dni, a.number, a.company, a.consultant]
+                        .map(value => String(value || '').toLowerCase()).join('\u0000'),
+                    configurable: true
+                });
+                const matchQuery = !searchQuery || a.__searchText.includes(searchQuery);
 
                 const matchSector = !sectorVal || a.sector === sectorVal;
                 const matchPayment = !paymentVal || (String(Boolean(a.hasPaid)) === paymentVal);
@@ -2410,6 +2450,20 @@ window.__firebase_config = {
             return `${parts.join('_').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_-]+/g, '_')}.${extension}`;
         }
 
+        const optionalScriptLoads = new Map();
+        function loadOptionalScript(src) {
+            if (optionalScriptLoads.has(src)) return optionalScriptLoads.get(src);
+            const promise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error('No se pudo cargar el componente de exportación.'));
+                document.head.appendChild(script);
+            });
+            optionalScriptLoads.set(src, promise);
+            return promise;
+        }
+
         async function saveAndOpenExport(filename, contentBase64, browserFallback) {
             if (window.pywebview?.api?.save_and_open_file) {
                 const result = await window.pywebview.api.save_and_open_file(filename, contentBase64);
@@ -2423,7 +2477,14 @@ window.__firebase_config = {
 
         window.exportSchoolExcel = async function() {
             if (!currentSchoolResults.length) return showToast('Sin datos', 'No hay hijos para exportar con los filtros activos.', 'warning');
-            if (!window.XLSX) return showToast('Excel no disponible', 'No se pudo cargar el generador de Excel. Verifica la conexión e intenta nuevamente.', 'error');
+            try {
+                if (!window.XLSX) {
+                    showToast('Preparando Excel', 'Cargando el generador por primera vez…', 'info');
+                    await loadOptionalScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+                }
+            } catch (error) {
+                return showToast('Excel no disponible', error.message, 'error');
+            }
             const rows = currentSchoolResults.map(({ child, affiliate, level, companyLabel }) => ({
                 Hijo: `${child.lastName || ''}, ${child.firstName || ''}`, 'Fecha de nacimiento': formatFamilyBirthdate(child.birthdate), Edad: child.age, Nivel: level,
                 'Afiliado titular': affiliate.name || '', DNI: affiliate.dni || '', 'Número de afiliado': affiliate.number || '', 'Compañía / Consultora': companyLabel, Parentesco: 'Hijo/a'
@@ -2445,7 +2506,17 @@ window.__firebase_config = {
 
         window.generateSchoolPdf = async function() {
             if (!currentSchoolResults.length) return showToast('Sin datos', 'No hay hijos para generar con los filtros activos.', 'warning');
-            if (!window.jspdf?.jsPDF) return showToast('PDF no disponible', 'No se pudo cargar el generador de PDF.', 'error');
+            try {
+                if (!window.jspdf?.jsPDF) {
+                    showToast('Preparando PDF', 'Cargando el generador por primera vez…', 'info');
+                    await loadOptionalScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js');
+                }
+                if (!window.jspdf.jsPDF.API.autoTable) {
+                    await loadOptionalScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js');
+                }
+            } catch (error) {
+                return showToast('PDF no disponible', error.message, 'error');
+            }
             const level = document.getElementById('family-age-range').selectedOptions[0].textContent;
             const company = document.getElementById('family-company-filter').selectedOptions[0].textContent;
             const filename = schoolExportName('pdf');
@@ -2492,15 +2563,32 @@ window.__firebase_config = {
             printHtmlDocument(`<!doctype html><html><head><title>${schoolExportName('pdf')}</title><style>@page{size:A4 landscape;margin:9mm 7mm 12mm}body{font-family:Arial,sans-serif;color:#1e293b;margin:0}h1{font-size:20px;margin:0 0 6px}.meta{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;font-size:11px;margin-bottom:10px}.meta span{border-bottom:1px solid #64748b;padding:4px}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:7.5px}thead{display:table-header-group}th,td{border:1px solid #94a3b8;padding:4px 3px;vertical-align:middle;overflow-wrap:anywhere}th{background:#e2e8f0}.manual{height:25px}.signature{width:9%;height:25px}tr{break-inside:avoid}footer{position:fixed;bottom:-8mm;right:0;font-size:8px;color:#64748b}.page:after{content:counter(page)}</style></head><body><h1>Listado de entrega</h1><div class="meta"><span><b>Nivel:</b> ${escapePrintHtml(level)}</span><span><b>Compañía / Consultora:</b> ${escapePrintHtml(company)}</span><span><b>Cantidad total:</b> ${currentSchoolResults.length}</span><span><b>Fecha:</b> ${new Date().toLocaleDateString('es-AR')}</span></div><table><thead><tr><th>N.º</th><th>Apellido y nombre del hijo</th><th>Edad</th><th>Fecha de nacimiento</th><th>Nivel escolar</th><th>Afiliado titular</th><th>DNI del afiliado</th><th>Compañía / Consultora</th><th>Retiró</th><th>DNI de quien retira</th><th>Firma</th><th>Fecha de entrega</th></tr></thead><tbody>${rows}</tbody></table><footer>Página <span class="page"></span></footer></body></html>`);
         };
 
+        function getDerivedState() {
+            if (derivedState?.revision === stateRevision) return derivedState;
+            const list = window.appState.affiliates;
+            const cutoff = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            const result = { revision: stateRevision, paid: 0, active: 0, retired: 0, newJoiners: 0, sectors: {}, sortedByName: [], recent: [] };
+            list.forEach(a => {
+                if (a.hasPaid) result.paid += 1;
+                if (a.status === 'Activo') result.active += 1;
+                else if (a.status === 'Jubilado') result.retired += 1;
+                if (a.createdAt && new Date(a.createdAt).getTime() > cutoff) result.newJoiners += 1;
+                const sector = a.sector || 'No Definido';
+                result.sectors[sector] = (result.sectors[sector] || 0) + 1;
+            });
+            result.sortedByName = [...list].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'es'));
+            result.recent = [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5);
+            derivedState = result;
+            return result;
+        }
+
         function renderDashboardStats() {
             const list = window.appState.affiliates;
+            const metrics = getDerivedState();
             const total = list.length;
-            const paid = list.filter(a => a.hasPaid).length;
+            const paid = metrics.paid;
             const unpaid = total - paid;
-            
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            const newJoiners = list.filter(a => a.createdAt && new Date(a.createdAt) > thirtyDaysAgo).length;
+            const newJoiners = metrics.newJoiners;
 
             document.getElementById('stat-total').textContent = total;
             document.getElementById('stat-paid').textContent = paid;
@@ -2514,8 +2602,8 @@ window.__firebase_config = {
             document.getElementById('stat-unpaid-pct').textContent = `${unpaidPct}% requiere atención`;
 
             // Estados del padrón
-            const active = list.filter(a => a.status === 'Activo').length;
-            const retired = list.filter(a => a.status === 'Jubilado').length;
+            const active = metrics.active;
+            const retired = metrics.retired;
             const inactive = total - active - retired;
 
             const actPct = total > 0 ? Math.round((active / total) * 100) : 0;
@@ -2535,7 +2623,7 @@ window.__firebase_config = {
             const recentList = document.getElementById('recent-affiliates-list');
             recentList.innerHTML = '';
             
-            const sortedRecent = [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5);
+            const sortedRecent = metrics.recent;
             
             if (sortedRecent.length === 0) {
                 recentList.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-xs text-slate-400">Sin afiliados registrados actualmente.</td></tr>`;
@@ -2571,20 +2659,19 @@ window.__firebase_config = {
             const ctx = document.getElementById('chartSectors');
             if (!ctx || window.appState.currentTab !== 'dashboard' || typeof window.Chart !== 'function') return;
 
-            const sectorsMap = {};
-            window.appState.affiliates.forEach(a => {
-                const sector = a.sector || 'No Definido';
-                sectorsMap[sector] = (sectorsMap[sector] || 0) + 1;
-            });
+            const sectorsMap = getDerivedState().sectors;
 
             const labels = Object.keys(sectorsMap);
             const data = Object.values(sectorsMap);
 
-            if (sectorChartInstance) {
-                sectorChartInstance.destroy();
-            }
-
             if (labels.length === 0) return;
+
+            if (sectorChartInstance) {
+                sectorChartInstance.data.labels = labels;
+                sectorChartInstance.data.datasets[0].data = data;
+                sectorChartInstance.update('none');
+                return;
+            }
 
             sectorChartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -2628,18 +2715,22 @@ window.__firebase_config = {
                 document.getElementById('card-affiliate-select')
             ];
 
-            const sorted = [...window.appState.affiliates].sort((a, b) => a.name.localeCompare(b.name));
+            if (dropdownRevision === stateRevision) return;
+            dropdownRevision = stateRevision;
+            const sorted = getDerivedState().sortedByName;
             selects.forEach(select => {
                 if (!select) return;
                 const prevValue = select.value;
                 select.innerHTML = '<option value="">-- Seleccionar un Afiliado --</option>';
                 
+                const fragment = document.createDocumentFragment();
                 sorted.forEach(a => {
                     const opt = document.createElement('option');
                     opt.value = a.id;
                     opt.textContent = `${a.name} (Legajo: ${a.number || 'S/N'})`;
-                    select.appendChild(opt);
+                    fragment.appendChild(opt);
                 });
+                select.appendChild(fragment);
 
                 select.value = prevValue;
             });
@@ -3206,7 +3297,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.50";
+        const APP_VERSION = "1.2.51";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
