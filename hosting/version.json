@@ -1,17 +1,17 @@
 {
-    "version":  "1.2.49",
+    "version":  "1.2.50",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "8F7C6B1D3C0AD06E66B445241722002B98CF8D3D85D779A6B1CDDE774B72793F",
+    "sha256":  "923B920B0308350BDEBAE0C8D97EE5E3D9A1FD3432DC9AF1EF697FE6B0A84DB6",
     "packageUrl":  "https://siga-85bdd.web.app/SIGA-update.zip",
     "packageUrls":  [
                         "https://siga-85bdd.web.app/SIGA-update.zip",
                         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"
                     ],
-    "packageSha256":  "6BAD8485F86816903984441D481C9E2C3ED4961E9612EBE95ED06AE807508D62",
-    "notes":  "Evita sobreescrituras simultaneas y preserva accesos moviles con control de revisiones.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.49.exe",
-    "installerSha256":  "517E1997EDA06D096FA576715360DC2C00D971121FDD8763B9725DAF1D56C13B"
+    "packageSha256":  "70D3B7138C6D8E92E111984704593B2B2D38FBDF3DC41D33F4DDF4DD9AA6B28A",
+    "notes":  "Identificación permanente, año de creación y reserva de derechos en SIGA de escritorio y Mi SIGA.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.2.50.exe",
+    "installerSha256":  "0293A500CDCF035B4F2267CB375E5D71A20671663D12F34BE01E2E68CC14BDF3"
 }

@@ -18,8 +18,8 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.2.49` — incorpora control de revisiones para impedir sobreescrituras
-silenciosas entre PC y preserva de forma consistente los accesos móviles.
+`1.2.50` — incorpora la identificación permanente, el año de creación y la
+reserva de derechos de SIGA en las aplicaciones de escritorio y móvil.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -29,8 +29,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.2.48
 - 1.2.49
+- 1.2.50
 
 Los instaladores se encuentran en `installer/`.
 
