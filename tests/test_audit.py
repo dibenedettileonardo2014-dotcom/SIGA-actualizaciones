@@ -118,6 +118,18 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertIn(marker, mobile)
         self.assertIn("const MOBILE_READ_ONLY=false", mobile)
 
+    def test_mobile_password_change_ui_is_removed(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        for removed_marker in ("Cambiar contraseña", "password-toggle", "password-form", "new-password", "updatePassword"):
+            self.assertNotIn(removed_marker, mobile)
+        self.assertIn("signInWithEmailAndPassword", mobile)
+        self.assertIn('type="password"', mobile)
+
+    def test_mobile_notice_watchers_are_reused_and_stopped(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        self.assertIn("watchedNoticesUid===user.uid&&stopNoticesWatch&&stopReadsWatch", mobile)
+        self.assertGreaterEqual(mobile.count("stopNoticeWatches()"), 4)
+
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")

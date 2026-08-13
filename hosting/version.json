@@ -1,12 +1,12 @@
 {
-  "version": "1.3.5",
+  "version": "1.3.6",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
-  "sha256": "3D2C9D62D6657FA84959C400F85F9B52172613DF79A1F684B4DBE8E6D3765CED",
+  "sha256": "E508EBF499568EE1D3BB34EA5FCF8BA8CF34475DDF6B7E89886E21D6B443F6D6",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": ["https://siga-85bdd.web.app/SIGA-update.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"],
-  "packageSha256": "C3C2EE5E373F3020ED38AF5B2650F2E424E32B0C2026ECD18B152FDB8A3F3E5B",
-  "notes": "Acceso biométrico automático al abrir SIGA móvil, con reactivación segura tras inactividad y alternativa por contraseña.",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.5.exe",
-  "installerSha256": "E3284FEFCDEFD1721ABDFA2D964A9F8900F64ECEBCF6D1F9333C4D52532C7465"
+  "packageSha256": "8AC9AD1C7215938A19AB59AE3877017F5E010945FF958E895B4227C9C21B7BFA",
+  "notes": "Auditoría integral, menor consumo de Firebase móvil y retiro de Cambiar contraseña de la interfaz del afiliado.",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.6.exe",
+  "installerSha256": "A7B87F237F8F8FE0FB5FF6137A7AF51FF5DF83D6646CE894BDEA8EB47793BD33"
 }

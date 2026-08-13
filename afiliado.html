@@ -44,7 +44,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.3.5</p>
+      <p class="app-version">Versión 1.3.6</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -58,7 +58,7 @@
         <div class="status"><div class="pill">Estado<b id="affiliate-status">—</b></div><div class="pill">Cuota informada<b id="payment-status">—</b></div></div>
         <div class="actions"><button class="secondary" id="print-button">Imprimir / guardar credencial</button></div>
       </section>
-      <section id="family-view" class="hidden white-card"><h2 class="section-title">Grupo Familiar</h2><p class="muted">Datos registrados en el padrón de SIGA.</p><h3 class="subsection-title" style="border:0;padding-top:0">Datos del afiliado</h3><div id="data-list"></div><h3 class="subsection-title">Integrantes del Grupo Familiar</h3><div id="family-list"></div><div class="actions"><button id="biometric-setup" class="secondary hidden" type="button">Activar huella, rostro o PIN</button><p id="biometric-status" class="muted hidden" style="margin:0;text-align:center"></p><button id="password-toggle" class="secondary">Cambiar contraseña</button><form id="password-form" class="hidden"><div class="field"><label for="new-password">Nueva contraseña</label><input id="new-password" type="password" minlength="8" autocomplete="new-password" required></div><button class="primary" type="submit">Guardar contraseña</button><p id="password-message" class="message"></p></form></div></section>
+      <section id="family-view" class="hidden white-card"><h2 class="section-title">Grupo Familiar</h2><p class="muted">Datos registrados en el padrón de SIGA.</p><h3 class="subsection-title" style="border:0;padding-top:0">Datos del afiliado</h3><div id="data-list"></div><h3 class="subsection-title">Integrantes del Grupo Familiar</h3><div id="family-list"></div><div class="actions"><button id="biometric-setup" class="secondary hidden" type="button">Activar huella, rostro o PIN</button><p id="biometric-status" class="muted hidden" style="margin:0;text-align:center"></p></div></section>
       <section id="notices-view" class="hidden"><h2 class="section-title">Comunicados</h2><p id="notices-status" class="muted">Cargando comunicados…</p><div id="notices-list" class="notice-list"></div><button id="notices-more" class="secondary load-more hidden" type="button">Mostrar más</button></section>
       <section id="convention-view" class="hidden"><h2 class="section-title">Convenio Colectivo 77/89</h2><iframe class="convention" src="assets/convenio-77-89.pdf" title="Convenio Colectivo 77/89"></iframe></section>
       <nav class="tabs" aria-label="Secciones"><button class="tab active" data-view="credential-view">Credencial</button><button class="tab" data-view="family-view">Grupo familiar</button><button class="tab" data-view="notices-view">Comunicados <span id="notices-badge" class="tab-badge hidden"></span></button><button class="tab" data-view="convention-view">Convenio</button></nav>
@@ -82,7 +82,7 @@
   </div>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, updatePassword } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
     import { getFirestore, collection, doc, getDocs, onSnapshot, query, setDoc, where } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
     const firebaseConfig = {apiKey:'AIzaSyC5-_AUlTMIGmv0oRUXeRUCaO79NNHFBY0',authDomain:'siga-85bdd.firebaseapp.com',projectId:'siga-85bdd',storageBucket:'siga-85bdd.firebasestorage.app',messagingSenderId:'1065738174061',appId:'1:1065738174061:web:7f62a435474bb4cbce4964'};
@@ -217,7 +217,8 @@
       $('login-message').textContent=message; signOut(auth).catch(()=>{});
     }
     const NOTICE_PAGE_SIZE=20;
-    let notices=[],readNoticeIds=new Set(),visibleNotices=NOTICE_PAGE_SIZE,stopNoticesWatch=null,stopReadsWatch=null;
+    let notices=[],readNoticeIds=new Set(),visibleNotices=NOTICE_PAGE_SIZE,stopNoticesWatch=null,stopReadsWatch=null,watchedNoticesUid=null;
+    function stopNoticeWatches(){stopNoticesWatch?.();stopReadsWatch?.();stopNoticesWatch=null;stopReadsWatch=null;watchedNoticesUid=null}
     function noticeDate(value){const date=new Date(value||0);return Number.isNaN(date.getTime())?'—':date.toLocaleDateString('es-AR')}
     function updateNoticeBadge(){const unread=notices.filter(item=>!readNoticeIds.has(item.id)).length,badge=$('notices-badge');badge.textContent=String(unread);badge.classList.toggle('hidden',unread===0)}
     async function loadNoticeFile(noticeId,kind,mimeType){
@@ -244,7 +245,9 @@
       $('notices-more').classList.toggle('hidden',visibleNotices>=sorted.length);updateNoticeBadge();
     }
     function watchNotices(user){
-      stopNoticesWatch?.();stopReadsWatch?.();visibleNotices=NOTICE_PAGE_SIZE;
+      if(watchedNoticesUid===user.uid&&stopNoticesWatch&&stopReadsWatch)return;
+      stopNoticeWatches();visibleNotices=NOTICE_PAGE_SIZE;
+      watchedNoticesUid=user.uid;
       stopNoticesWatch=onSnapshot(collection(db,'artifacts',networkId,'public','data','comunicados'),snapshot=>{notices=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.published!==false);renderNotices()},()=>{$('notices-status').textContent='Sin conexión. Se mostrará la copia disponible cuando vuelva la red.'});
       stopReadsWatch=onSnapshot(collection(db,'artifacts',networkId,'mobile_reads',user.uid,'items'),snapshot=>{readNoticeIds=new Set(snapshot.docs.map(item=>item.id));renderNotices()},()=>{});
     }
@@ -276,22 +279,20 @@
     $('biometric-invite-no').addEventListener('click',()=>{const user=auth.currentUser;if(user)localStorage.setItem(INVITE_KEY_PREFIX+user.uid,'no');$('biometric-invite').classList.add('hidden')});
     $('biometric-invite-yes').addEventListener('click',async()=>{const user=auth.currentUser,button=$('biometric-invite-yes'),message=$('biometric-invite-message');button.disabled=true;message.style.color='#64748b';message.textContent='Android solicitará tu huella, rostro o PIN…';try{await registerBiometric();localStorage.setItem(INVITE_KEY_PREFIX+user.uid,'yes');$('biometric-invite').classList.add('hidden')}catch(error){message.style.color='#be123c';message.textContent=error?.name==='NotAllowedError'?'La configuración fue cancelada. Podés elegir Ahora no o volver a intentar.':'No se pudo activar. Verificá el bloqueo de pantalla y usá Chrome.'}finally{button.disabled=false}});
     async function handleAuthState(user){
-      if(!user){initialAuthResolved=true;if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}sessionStorage.removeItem(UNLOCK_KEY);appView.classList.add('hidden');loginView.classList.remove('hidden');await updateBiometricUi(null);return}
+      if(!user){initialAuthResolved=true;if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();sessionStorage.removeItem(UNLOCK_KEY);appView.classList.add('hidden');loginView.classList.remove('hidden');await updateBiometricUi(null);return}
       const record=getBiometricRecord(),isInitialAuthenticatedSession=!initialAuthResolved&&!passwordLoginPending;initialAuthResolved=true;
       const mustUnlock=record?.uid===user.uid&&(isInitialAuthenticatedSession||sessionStorage.getItem(UNLOCK_KEY)!==user.uid)&&await platformAuthenticatorAvailable();
-      if(mustUnlock){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Abriendo la verificación de Android…';await updateBiometricUi(user);if(automaticUnlockUid!==user.uid){automaticUnlockUid=user.uid;try{await unlockWithBiometric(user);return}catch{$('login-message').textContent='No se pudo abrir automáticamente. Tocá el botón de huella o ingresá tu contraseña.'}}return}
+      if(mustUnlock){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Abriendo la verificación de Android…';await updateBiometricUi(user);if(automaticUnlockUid!==user.uid){automaticUnlockUid=user.uid;try{await unlockWithBiometric(user);return}catch{$('login-message').textContent='No se pudo abrir automáticamente. Tocá el botón de huella o ingresá tu contraseña.'}}return}
       loadCredential(user);await updateBiometricUi(user);
     }
     onAuthStateChanged(auth,user=>{void handleAuthState(user)});
     $('logout-button').addEventListener('click',async()=>{const user=auth.currentUser;localStorage.removeItem('siga_mobile_credential');localStorage.removeItem(BIOMETRIC_KEY);if(user)localStorage.removeItem(INVITE_KEY_PREFIX+user.uid);sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;await signOut(auth)});
     $('print-button').addEventListener('click',()=>window.print());
-    $('password-toggle').addEventListener('click',()=>$('password-form').classList.toggle('hidden'));
-    $('password-form').addEventListener('submit',async event=>{event.preventDefault();const message=$('password-message'),button=event.submitter;if(button?.disabled)return;if(button)button.disabled=true;try{await updatePassword(auth.currentUser,$('new-password').value);message.style.color='#047857';message.textContent='Contraseña actualizada.';$('new-password').value=''}catch{message.style.color='#be123c';message.textContent='Volvé a iniciar sesión e intentá nuevamente.'}finally{if(button)button.disabled=false}});
      $('notices-more').addEventListener('click',()=>{visibleNotices+=NOTICE_PAGE_SIZE;renderNotices()});
      document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('#credential-view,#family-view,#notices-view,#convention-view').forEach(view=>view.classList.add('hidden'));$(button.dataset.view).classList.remove('hidden');document.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===button))}));
     updateInstallUi();
     void updateBiometricUi();
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){hiddenAt=Date.now();return}if(!hiddenAt||Date.now()-hiddenAt<BIOMETRIC_RELOCK_MS)return;hiddenAt=0;const user=auth.currentUser,record=getBiometricRecord();if(!user||record?.uid!==user.uid||biometricPromptActive)return;sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Confirmá tu identidad para continuar…';automaticUnlockUid=user.uid;unlockWithBiometric(user).catch(error=>{$('login-message').textContent=error?.name==='NotAllowedError'?'Verificación cancelada. Podés ingresar con contraseña.':'La biometría ya no está disponible. Ingresá con contraseña.'})});
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){hiddenAt=Date.now();return}if(!hiddenAt||Date.now()-hiddenAt<BIOMETRIC_RELOCK_MS)return;hiddenAt=0;const user=auth.currentUser,record=getBiometricRecord();if(!user||record?.uid!==user.uid||biometricPromptActive)return;sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;stopNoticeWatches();appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Confirmá tu identidad para continuar…';automaticUnlockUid=user.uid;unlockWithBiometric(user).catch(error=>{$('login-message').textContent=error?.name==='NotAllowedError'?'Verificación cancelada. Podés ingresar con contraseña.':'La biometría ya no está disponible. Ingresá con contraseña.'})});
     if('serviceWorker'in navigator){
       let reloading=false;
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
