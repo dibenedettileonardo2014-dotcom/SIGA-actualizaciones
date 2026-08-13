@@ -51,6 +51,7 @@
         body[data-role="operador"] #firebase-accounts-link {
             display: none !important;
         }
+        #notice-table td:nth-child(2) { font-weight: 700; }
     </style>
 </head>
 <body class="h-full overflow-hidden flex flex-col">
@@ -532,7 +533,7 @@
                             <input id="notice-edit-id" type="hidden">
                             <div><label for="notice-title" class="block text-xs font-semibold text-slate-500 uppercase mb-2">Título *</label><input id="notice-title" maxlength="160" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm"></div>
                             <div><label for="notice-text" class="block text-xs font-semibold text-slate-500 uppercase mb-2">Texto / descripción</label><textarea id="notice-text" maxlength="20000" rows="7" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm resize-y"></textarea></div>
-                            <div><label for="notice-image" class="block text-xs font-semibold text-slate-500 uppercase mb-2">Imagen JPG/JPEG/PNG (máx. 2 MB)</label><input id="notice-image" type="file" accept="image/jpeg,image/png" class="w-full text-xs text-slate-600"></div>
+                            <div><label for="notice-image" class="block text-xs font-semibold text-slate-500 uppercase mb-2">Imagen JPG/JPEG/PNG (se optimiza automáticamente)</label><input id="notice-image" type="file" accept="image/jpeg,image/png" class="w-full text-xs text-slate-600"></div>
                             <div><label for="notice-pdf" class="block text-xs font-semibold text-slate-500 uppercase mb-2">PDF (máx. 5 MB)</label><input id="notice-pdf" type="file" accept="application/pdf" class="w-full text-xs text-slate-600"></div>
                             <label class="flex items-center gap-2 text-sm font-semibold text-slate-700"><input id="notice-important" type="checkbox" class="rounded text-emerald-600"> Marcar como importante</label>
                             <div id="notice-preview" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">La vista previa aparecerá aquí.</div>
@@ -682,7 +683,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.3.2</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.3.3</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -703,7 +704,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.3.2</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.3.3</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -764,7 +765,7 @@
                             <p class="font-semibold text-slate-700">Creado en 2026</p>
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.3.2 · Sincronización estable</p>
+                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.3.3 · Localidad y fotografías completas</p>
                     </section>
                 </div>
 
@@ -919,7 +920,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <!-- Empresa -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Empresa de Trabajo *</label>
@@ -964,6 +965,10 @@
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Dirección Particular</label>
                             <input type="text" id="form-address" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: Av. San Martín 1500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Localidad</label>
+                            <input type="text" id="form-locality" maxlength="120" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: Rosario">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Estado del Afiliado</label>
@@ -1777,7 +1782,7 @@ window.__firebase_config = {
 
             window.appState.filteredAffiliates = window.appState.affiliates.filter(a => {
                 if (!a.__searchText) Object.defineProperty(a, '__searchText', {
-                    value: [a.name, a.dni, a.number, a.company, a.consultant]
+                    value: [a.name, a.dni, a.number, a.company, a.consultant, a.locality]
                         .map(value => String(value || '').toLowerCase()).join('\u0000'),
                     configurable: true
                 });
@@ -2077,7 +2082,7 @@ window.__firebase_config = {
         function enableAffiliateUppercaseFields() {
             [
                 'form-name', 'form-number', 'form-company', 'form-consultant',
-                'form-sector', 'form-address', 'form-partner-first-name',
+                'form-sector', 'form-address', 'form-locality', 'form-partner-first-name',
                 'form-partner-last-name'
             ].forEach(id => enableUppercaseEntry(document.getElementById(id)));
         }
@@ -2273,6 +2278,7 @@ window.__firebase_config = {
                 phone: document.getElementById('form-phone').value.trim(),
                 email: document.getElementById('form-email').value.trim(),
                 address: uppercaseText(document.getElementById('form-address').value),
+                locality: uppercaseText(document.getElementById('form-locality').value),
                 status: document.getElementById('form-status').value,
                 hasPaid: document.getElementById('form-hasPaid').checked,
                 isDelegate: document.getElementById('form-is-delegate').checked,
@@ -2314,6 +2320,7 @@ window.__firebase_config = {
             document.getElementById('form-phone').value = a.phone || '';
             document.getElementById('form-email').value = a.email || '';
             document.getElementById('form-address').value = a.address || '';
+            document.getElementById('form-locality').value = a.locality || '';
             document.getElementById('form-status').value = a.status;
             document.getElementById('form-hasPaid').checked = a.hasPaid;
             document.getElementById('form-is-delegate').checked = Boolean(a.isDelegate);
@@ -2948,7 +2955,7 @@ window.__firebase_config = {
                 affiliateId: affiliate.id,
                 name: affiliate.name || '', number: affiliate.number || '', dni: affiliate.dni || '',
                 company: affiliate.company || '', consultant: affiliate.consultant || '', sector: affiliate.sector || '',
-                birthdate: affiliate.birthdate || '', affiliationDate: affiliate.affiliationDate || '', phone: affiliate.phone || '', email: affiliate.email || '', address: affiliate.address || '',
+                birthdate: affiliate.birthdate || '', affiliationDate: affiliate.affiliationDate || '', phone: affiliate.phone || '', email: affiliate.email || '', address: affiliate.address || '', locality: affiliate.locality || '',
                 status: affiliate.status || '', hasPaid: Boolean(affiliate.hasPaid),
                 isDelegate: Boolean(affiliate.isDelegate), isInternalCommission: Boolean(affiliate.isInternalCommission), isDirectiveCommission: Boolean(affiliate.isDirectiveCommission),
                 familyGroup: { partner, children },
@@ -3302,7 +3309,7 @@ window.__firebase_config = {
                 return;
             }
             
-            const headers = ["Legajo/Nro", "Nombre", "DNI", "Fecha Nacimiento", "Fecha Afiliacion", "Empresa", "Consultora", "Sector", "Telefono", "Email", "Direccion", "Estado", "Al Dia"];
+            const headers = ["Legajo/Nro", "Nombre", "DNI", "Fecha Nacimiento", "Fecha Afiliacion", "Empresa", "Consultora", "Sector", "Telefono", "Email", "Direccion", "Localidad", "Estado", "Al Dia"];
             const safeSpreadsheetCell = value => /^[=+\-@]/.test(String(value ?? '').trimStart()) ? `'${value}` : value;
             const rows = window.appState.affiliates.map(a => [
                 a.number || '',
@@ -3316,6 +3323,7 @@ window.__firebase_config = {
                 a.phone || '',
                 a.email || '',
                 a.address || '',
+                a.locality || '',
                 a.status,
                 a.hasPaid ? 'SI' : 'NO'
             ].map(safeSpreadsheetCell));
@@ -3335,7 +3343,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.3.2";
+        const APP_VERSION = "1.3.3";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3482,7 +3490,7 @@ window.__firebase_config = {
                                 id: candidateId,
                                 name: uppercaseText(item.name), number, dni,
                                 company: uppercaseText(item.company), consultant: uppercaseText(item.consultant),
-                                sector: uppercaseText(item.sector), address: uppercaseText(item.address),
+                                sector: uppercaseText(item.sector), address: uppercaseText(item.address), locality: uppercaseText(item.locality),
                                 attachments: Array.isArray(item.attachments) ? item.attachments : [],
                                 familyGroup: item.familyGroup && typeof item.familyGroup === 'object' ? item.familyGroup : { partner: null, children: [] },
                                 revision: Number(item.revision) || 0,
@@ -3575,21 +3583,23 @@ window.__firebase_config = {
             }, 4000);
         }
 
-        const NOTICE_CHUNK_BYTES=240000,NOTICE_MAX_IMAGE=2097152,NOTICE_MAX_PDF=5242880; let unsubscribeNotices=null;
+        const NOTICE_CHUNK_BYTES=240000,NOTICE_MAX_IMAGE=2097152,NOTICE_MAX_IMAGE_SOURCE=15728640,NOTICE_MAX_PDF=5242880; let unsubscribeNotices=null,noticePreviewUrl='';
         const noticeCollection=()=>collection(window.appState.db,'artifacts',window.appState.appId,'public','data','comunicados');
         const noticeFilesCollection=()=>collection(window.appState.db,'artifacts',window.appState.appId,'public','data','comunicado_files');
         const safeNoticeName=value=>String(value||'').replace(/[^A-Za-z0-9À-ſ._ -]/g,'_').replace(/\s+/g,' ').trim().slice(0,100);
-        function validateNoticeFile(file,kind){if(!file)return;const allowed=kind==='image'?['image/jpeg','image/png']:['application/pdf'],extension=kind==='image'?/\.(jpe?g|png)$/i:/\.pdf$/i,maximum=kind==='image'?NOTICE_MAX_IMAGE:NOTICE_MAX_PDF;if(!allowed.includes(file.type)||!extension.test(file.name))throw new Error(`El archivo ${file.name} no tiene un tipo permitido.`);if(!file.size||file.size>maximum)throw new Error(`${file.name} supera el máximo de ${maximum/1048576} MB.`)}
+        function validateNoticeFile(file,kind){if(!file)return;const allowed=kind==='image'?['image/jpeg','image/png']:['application/pdf'],extension=kind==='image'?/\.(jpe?g|png)$/i:/\.pdf$/i,maximum=kind==='image'?NOTICE_MAX_IMAGE_SOURCE:NOTICE_MAX_PDF;if(!allowed.includes(file.type)||!extension.test(file.name))throw new Error(`El archivo ${file.name} no tiene un tipo permitido.`);if(!file.size||file.size>maximum)throw new Error(`${file.name} supera el máximo de ${maximum/1048576} MB.`)}
         const fileToBase64=file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('No se pudo leer el archivo.'));reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.readAsDataURL(file)});
-        const imageThumbnail=file=>new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),image=new Image();image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('La imagen está dañada.'))};image.onload=()=>{const scale=Math.min(1,480/Math.max(image.width,image.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('No se pudo optimizar la imagen.')),'image/jpeg',.78)};image.src=url});
+        function resizeNoticeImage(file,maxDimension,quality=.84){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),image=new Image();image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('La imagen está dañada o no puede abrirse.'))};image.onload=()=>{const scale=Math.min(1,maxDimension/Math.max(image.naturalWidth,image.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(blob=>blob?resolve(new File([blob],safeNoticeName(file.name.replace(/\.(png|jpe?g)$/i,'.jpg'))||'imagen.jpg',{type:'image/jpeg'})):reject(new Error('No se pudo optimizar la imagen.')),'image/jpeg',quality)};image.src=url})}
+        async function optimizeNoticeImage(file){if(!file)return null;validateNoticeFile(file,'image');let optimized=await resizeNoticeImage(file,1920,.84);if(optimized.size>NOTICE_MAX_IMAGE)optimized=await resizeNoticeImage(file,1600,.72);if(optimized.size>NOTICE_MAX_IMAGE)throw new Error('La imagen no pudo reducirse por debajo de 2 MB. Elegí otra fotografía.');return optimized}
+        const imageThumbnail=file=>resizeNoticeImage(file,480,.78);
         async function deleteNoticeFiles(noticeId,kind=null){const constraints=[where('noticeId','==',noticeId)];if(kind)constraints.push(where('kind','==',kind));const snapshot=await getDocs(query(noticeFilesCollection(),...constraints));for(let offset=0;offset<snapshot.docs.length;offset+=450){const batch=writeBatch(window.appState.db);snapshot.docs.slice(offset,offset+450).forEach(item=>batch.delete(item.ref));await batch.commit()}}
         async function uploadNoticeFile(noticeId,kind,file){const base64=await fileToBase64(file),chunks=[];for(let offset=0;offset<base64.length;offset+=NOTICE_CHUNK_BYTES)chunks.push(base64.slice(offset,offset+NOTICE_CHUNK_BYTES));for(let offset=0;offset<chunks.length;offset+=450){const batch=writeBatch(window.appState.db);chunks.slice(offset,offset+450).forEach((data,localIndex)=>{const index=offset+localIndex;batch.set(doc(noticeFilesCollection(),`${noticeId}_${kind}_${String(index).padStart(4,'0')}`),{noticeId,kind,index,total:chunks.length,data})});await batch.commit()}}
-        function renderNoticePreview(){const title=document.getElementById('notice-title').value.trim()||'Título del comunicado',text=document.getElementById('notice-text').value.trim(),important=document.getElementById('notice-important').checked,image=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0],preview=document.getElementById('notice-preview');preview.innerHTML=`<div class="flex gap-2 mb-2">${important?'<span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">IMPORTANTE</span>':''}<span class="text-xs text-slate-400">${new Date().toLocaleDateString('es-AR')}</span></div><strong class="text-slate-800"></strong><p class="mt-2 whitespace-pre-wrap"></p><p class="mt-2 text-xs text-slate-500">${image?'🖼️ '+safeNoticeName(image.name):''}${image&&pdf?' · ':''}${pdf?'📄 '+safeNoticeName(pdf.name):''}</p>`;preview.querySelector('strong').textContent=title;preview.querySelector('p').textContent=text||'Sin texto adjunto.'}
+        function renderNoticePreview(){const title=document.getElementById('notice-title').value.trim()||'Título del comunicado',text=document.getElementById('notice-text').value.trim(),important=document.getElementById('notice-important').checked,image=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0],preview=document.getElementById('notice-preview');if(noticePreviewUrl){URL.revokeObjectURL(noticePreviewUrl);noticePreviewUrl=''}preview.innerHTML=`<div class="flex gap-2 mb-2">${important?'<span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">IMPORTANTE</span>':''}<span class="text-xs text-slate-400">${new Date().toLocaleDateString('es-AR')}</span></div><strong class="block text-slate-800 font-extrabold"></strong><p class="mt-2 whitespace-pre-wrap"></p><div class="notice-preview-media"></div><p class="mt-2 text-xs text-slate-500">${image?'🖼️ '+safeNoticeName(image.name):''}${image&&pdf?' · ':''}${pdf?'📄 '+safeNoticeName(pdf.name):''}</p>`;preview.querySelector('strong').textContent=title;preview.querySelector('p').textContent=text||'Sin texto adjunto.';if(image){noticePreviewUrl=URL.createObjectURL(image);const element=document.createElement('img');element.src=noticePreviewUrl;element.alt='Vista previa de la fotografía';element.className='block w-full h-auto max-h-80 object-contain object-center mx-auto mt-3 rounded-xl bg-white';preview.querySelector('.notice-preview-media').append(element)}}
         function resetNoticeForm(){document.getElementById('notice-form').reset();document.getElementById('notice-edit-id').value='';document.getElementById('notice-form-title').textContent='Nuevo Comunicado';document.getElementById('notice-submit').textContent='PUBLICAR COMUNICADO';document.getElementById('notice-cancel').classList.add('hidden');document.getElementById('notice-message').textContent='';renderNoticePreview()}
         function renderNoticeTable(){const search=document.getElementById('notice-search').value.trim().toLowerCase(),items=[...window.appState.notices].filter(item=>!search||`${item.title} ${item.text}`.toLowerCase().includes(search)).sort((a,b)=>Number(b.important)-Number(a.important)||new Date(b.publishedAt)-new Date(a.publishedAt)),table=document.getElementById('notice-table');table.replaceChildren();document.getElementById('notice-empty').classList.toggle('hidden',items.length>0);items.forEach(item=>{const row=document.createElement('tr'),content=[item.text?'Texto':'',item.hasImage?'Imagen':'',item.hasPdf?'PDF':''].filter(Boolean).join(' + ')||'—';row.className='text-slate-600';row.innerHTML=`<td class="p-3 whitespace-nowrap">${new Date(item.publishedAt).toLocaleDateString('es-AR')}</td><td class="p-3 font-semibold text-slate-800"></td><td class="p-3">${content}</td><td class="p-3">${item.hasImage?'Sí':'No'}</td><td class="p-3">${item.hasPdf?'Sí':'No'}</td><td class="p-3">${item.important?'Sí':'No'}</td><td class="p-3 text-emerald-700 font-semibold">Publicado</td><td class="p-3"><div class="flex flex-wrap gap-2"><button class="notice-view text-emerald-700 font-bold">Ver</button><button class="notice-edit text-blue-700 font-bold">Editar</button><button class="notice-toggle text-amber-700 font-bold">${item.important?'Desmarcar':'Marcar'}</button><button class="notice-delete text-rose-700 font-bold">Eliminar</button></div></td>`;row.children[1].textContent=item.title;row.querySelector('.notice-view').onclick=()=>alert(`${item.title}\n\n${item.text||'(Sin texto)'}\n\n${item.hasImage?'Incluye imagen. ':''}${item.hasPdf?`Incluye PDF: ${item.pdfName}.`:''}`);row.querySelector('.notice-edit').onclick=()=>{document.getElementById('notice-edit-id').value=item.id;document.getElementById('notice-title').value=item.title;document.getElementById('notice-text').value=item.text||'';document.getElementById('notice-important').checked=Boolean(item.important);document.getElementById('notice-form-title').textContent='Editar Comunicado';document.getElementById('notice-submit').textContent='GUARDAR CAMBIOS';document.getElementById('notice-cancel').classList.remove('hidden');renderNoticePreview()};row.querySelector('.notice-toggle').onclick=()=>setDoc(doc(noticeCollection(),item.id),{...item,important:!item.important,updatedAt:new Date().toISOString()});row.querySelector('.notice-delete').onclick=async()=>{if(!confirm(`¿Eliminar definitivamente el comunicado "${item.title}"?`))return;await deleteNoticeFiles(item.id);await deleteDoc(doc(noticeCollection(),item.id));showToast('Comunicados','El comunicado fue eliminado.','success')};table.append(row)})}
         function subscribeNotices(){if(!window.appState.firebaseEnabled||unsubscribeNotices)return;unsubscribeNotices=onSnapshot(noticeCollection(),snapshot=>{window.appState.notices=snapshot.docs.map(item=>({id:item.id,...item.data()}));renderNoticeTable()},error=>{console.error('Error sincronizando comunicados:',error);document.getElementById('notice-message').textContent='No se pudieron sincronizar los comunicados.'})}
-        document.getElementById('notice-form').addEventListener('input',renderNoticePreview);document.getElementById('notice-search').addEventListener('input',renderNoticeTable);document.getElementById('notice-cancel').addEventListener('click',resetNoticeForm);
-        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(window.appState.currentUserRole!=='admin')return showToast('Denegado','Solo el administrador puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),image=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(image,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!image&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Validando y publicando…';const id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',new File([thumb],'miniatura.jpg',{type:'image/jpeg'}))}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim(),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(image.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
+        document.getElementById('notice-text').addEventListener('input',event=>{const start=event.target.selectionStart,end=event.target.selectionEnd,upper=event.target.value.toLocaleUpperCase('es-AR');if(event.target.value!==upper){event.target.value=upper;event.target.setSelectionRange(start,end)}});document.getElementById('notice-form').addEventListener('input',renderNoticePreview);document.getElementById('notice-search').addEventListener('input',renderNoticeTable);document.getElementById('notice-cancel').addEventListener('click',resetNoticeForm);
+        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(window.appState.currentUserRole!=='admin')return showToast('Denegado','Solo el administrador puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
             window.appState.currentTab = tabId;

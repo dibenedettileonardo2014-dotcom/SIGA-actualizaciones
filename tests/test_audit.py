@@ -103,6 +103,15 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("Desarrollado por <span", desktop_html)
         self.assertIn("Creado en 2026", desktop_html)
 
+    def test_notice_formatting_and_locality_contract(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        for marker in ("form-locality", "locality: affiliate.locality", "toLocaleUpperCase('es-AR')", "optimizeNoticeImage", "object-contain"):
+            self.assertIn(marker, desktop)
+        self.assertIn("['Localidad',data.locality]", mobile)
+        self.assertIn("object-fit:contain", mobile)
+        self.assertNotIn("object-fit:cover", mobile)
+
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")
