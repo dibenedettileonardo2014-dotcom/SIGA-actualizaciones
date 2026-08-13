@@ -83,8 +83,7 @@ service cloud.firestore {
       allow create, update: if isStaff()
         && request.resource.data.keys().hasOnly(['affiliateId', 'type'])
         && request.resource.data.affiliateId is string
-        && request.resource.data.type in ['dni', 'number']
-        && getAfter(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.id == request.resource.data.affiliateId;
+        && request.resource.data.type in ['dni', 'number'];
     }
 
     match /artifacts/{appId}/mobile_credentials/{userId} {
