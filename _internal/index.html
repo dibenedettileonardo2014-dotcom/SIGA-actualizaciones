@@ -47,6 +47,7 @@
         body[data-role="operador"] #admin-nav-section,
         body[data-role="operador"] #btn-tab-usuarios,
         body[data-role="operador"] #btn-tab-configuracion,
+        body[data-role="operador"] #btn-tab-comunicados,
         body[data-role="operador"] #firebase-accounts-link {
             display: none !important;
         }
@@ -104,6 +105,9 @@
                     <i class="fa-solid fa-circle-down text-lg"></i>
                     <span>Actualizaciones</span>
                     <span id="update-badge" class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 hidden"></span>
+                </button>
+                <button onclick="switchTab('comunicados')" id="btn-tab-comunicados" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-bullhorn text-lg"></i> Comunicados
                 </button>
                 <button onclick="switchTab('acerca')" id="btn-tab-acerca" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i class="fa-solid fa-circle-info text-lg"></i>
@@ -520,6 +524,29 @@
                     </div>
                 </div>
 
+                <!-- SECCIÓN: COMUNICADOS -->
+                <div id="tab-comunicados" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-6">
+                        <form id="notice-form" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                            <div><h4 id="notice-form-title" class="font-bold text-slate-800">Nuevo Comunicado</h4><p class="text-xs text-slate-500 mt-1">Se publicará dinámicamente en Mi SIGA.</p></div>
+                            <input id="notice-edit-id" type="hidden">
+                            <div><label for="notice-title" class="block text-xs font-semibold text-slate-500 uppercase mb-2">Título *</label><input id="notice-title" maxlength="160" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm"></div>
+                            <div><label for="notice-text" class="block text-xs font-semibold text-slate-500 uppercase mb-2">Texto / descripción</label><textarea id="notice-text" maxlength="20000" rows="7" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm resize-y"></textarea></div>
+                            <div><label for="notice-image" class="block text-xs font-semibold text-slate-500 uppercase mb-2">Imagen JPG/JPEG/PNG (máx. 2 MB)</label><input id="notice-image" type="file" accept="image/jpeg,image/png" class="w-full text-xs text-slate-600"></div>
+                            <div><label for="notice-pdf" class="block text-xs font-semibold text-slate-500 uppercase mb-2">PDF (máx. 5 MB)</label><input id="notice-pdf" type="file" accept="application/pdf" class="w-full text-xs text-slate-600"></div>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-slate-700"><input id="notice-important" type="checkbox" class="rounded text-emerald-600"> Marcar como importante</label>
+                            <div id="notice-preview" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">La vista previa aparecerá aquí.</div>
+                            <p id="notice-message" class="text-xs min-h-4 text-rose-600"></p>
+                            <div class="flex gap-2"><button id="notice-submit" type="submit" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs">PUBLICAR COMUNICADO</button><button id="notice-cancel" type="button" class="hidden px-4 py-3 bg-slate-200 rounded-xl text-xs font-bold">Cancelar</button></div>
+                        </form>
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 justify-between"><div><h4 class="font-bold text-slate-800">Comunicados publicados</h4><p class="text-xs text-slate-500">Ordenados por prioridad y fecha.</p></div><input id="notice-search" type="search" placeholder="Buscar comunicado…" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm"></div>
+                            <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="bg-slate-50 text-[10px] uppercase text-slate-400"><th class="p-3">Fecha</th><th class="p-3">Título</th><th class="p-3">Contenido</th><th class="p-3">Imagen</th><th class="p-3">PDF</th><th class="p-3">Importante</th><th class="p-3">Estado</th><th class="p-3">Acciones</th></tr></thead><tbody id="notice-table" class="divide-y divide-slate-100 text-xs"></tbody></table></div>
+                            <p id="notice-empty" class="p-8 text-center text-sm text-slate-400">No hay comunicados publicados.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- SECCIÓN: CONVENIO COLECTIVO -->
                 <div id="tab-convenio" class="tab-content hidden space-y-6">
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -655,7 +682,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                                <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.2.52</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.3.0</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -676,7 +703,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                            <span id="current-version-text" class="font-bold text-amber-800">v1.2.52</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.3.0</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -737,7 +764,7 @@
                             <p class="font-semibold text-slate-700">Creado en 2026</p>
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                        <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.2.52 · Versión Cósmica</p>
+                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.3.0 · Grupo Familiar y Comunicados</p>
                     </section>
                 </div>
 
@@ -1086,13 +1113,14 @@
     <!-- Módulos de Firebase y Script Principal de Aplicación -->
     <script type="module">
         import { initializeApp, getApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, onSnapshot, query, runTransaction, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         // --- Estado Global de la Aplicación ---
         window.appState = {
             affiliates: [],
             payments: [],
+            notices: [],
             currentPage: 1,
             itemsPerPage: 8,
             currentTab: 'dashboard',
@@ -2908,16 +2936,17 @@ window.__firebase_config = {
             const family = affiliate.familyGroup || {};
             const partner = family.partner ? {
                 firstName: family.partner.firstName || '', lastName: family.partner.lastName || '',
-                dni: family.partner.dni || '', birthdate: family.partner.birthdate || '', age: calculateAge(family.partner.birthdate) ?? (Number(family.partner.age) || 0)
+                dni: family.partner.dni || '', birthdate: family.partner.birthdate || '', age: calculateAge(family.partner.birthdate) ?? (Number(family.partner.age) || 0), schoolLevel: schoolLevelForAge(calculateAge(family.partner.birthdate) ?? Number(family.partner.age))
             } : null;
             const children = Array.isArray(family.children) ? family.children.map(child => ({
                 firstName: child.firstName || '', lastName: child.lastName || '',
-                dni: child.dni || '', birthdate: child.birthdate || '', age: calculateAge(child.birthdate) ?? (Number(child.age) || 0)
+                dni: child.dni || '', birthdate: child.birthdate || '', age: calculateAge(child.birthdate) ?? (Number(child.age) || 0), schoolLevel: schoolLevelForAge(calculateAge(child.birthdate) ?? Number(child.age))
             })) : [];
             return {
                 affiliateId: affiliate.id,
                 name: affiliate.name || '', number: affiliate.number || '', dni: affiliate.dni || '',
                 company: affiliate.company || '', consultant: affiliate.consultant || '', sector: affiliate.sector || '',
+                birthdate: affiliate.birthdate || '', affiliationDate: affiliate.affiliationDate || '', phone: affiliate.phone || '', email: affiliate.email || '', address: affiliate.address || '',
                 status: affiliate.status || '', hasPaid: Boolean(affiliate.hasPaid),
                 isDelegate: Boolean(affiliate.isDelegate), isInternalCommission: Boolean(affiliate.isInternalCommission), isDirectiveCommission: Boolean(affiliate.isDirectiveCommission),
                 familyGroup: { partner, children },
@@ -3304,7 +3333,7 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.2.52";
+        const APP_VERSION = "1.3.0";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3544,6 +3573,22 @@ window.__firebase_config = {
             }, 4000);
         }
 
+        const NOTICE_CHUNK_BYTES=240000,NOTICE_MAX_IMAGE=2097152,NOTICE_MAX_PDF=5242880; let unsubscribeNotices=null;
+        const noticeCollection=()=>collection(window.appState.db,'artifacts',window.appState.appId,'public','data','comunicados');
+        const noticeFilesCollection=()=>collection(window.appState.db,'artifacts',window.appState.appId,'public','data','comunicado_files');
+        const safeNoticeName=value=>String(value||'').replace(/[^A-Za-z0-9À-ſ._ -]/g,'_').replace(/\s+/g,' ').trim().slice(0,100);
+        function validateNoticeFile(file,kind){if(!file)return;const allowed=kind==='image'?['image/jpeg','image/png']:['application/pdf'],extension=kind==='image'?/\.(jpe?g|png)$/i:/\.pdf$/i,maximum=kind==='image'?NOTICE_MAX_IMAGE:NOTICE_MAX_PDF;if(!allowed.includes(file.type)||!extension.test(file.name))throw new Error(`El archivo ${file.name} no tiene un tipo permitido.`);if(!file.size||file.size>maximum)throw new Error(`${file.name} supera el máximo de ${maximum/1048576} MB.`)}
+        const fileToBase64=file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('No se pudo leer el archivo.'));reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.readAsDataURL(file)});
+        const imageThumbnail=file=>new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),image=new Image();image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('La imagen está dañada.'))};image.onload=()=>{const scale=Math.min(1,480/Math.max(image.width,image.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('No se pudo optimizar la imagen.')),'image/jpeg',.78)};image.src=url});
+        async function deleteNoticeFiles(noticeId,kind=null){const constraints=[where('noticeId','==',noticeId)];if(kind)constraints.push(where('kind','==',kind));const snapshot=await getDocs(query(noticeFilesCollection(),...constraints));for(let offset=0;offset<snapshot.docs.length;offset+=450){const batch=writeBatch(window.appState.db);snapshot.docs.slice(offset,offset+450).forEach(item=>batch.delete(item.ref));await batch.commit()}}
+        async function uploadNoticeFile(noticeId,kind,file){const base64=await fileToBase64(file),chunks=[];for(let offset=0;offset<base64.length;offset+=NOTICE_CHUNK_BYTES)chunks.push(base64.slice(offset,offset+NOTICE_CHUNK_BYTES));for(let offset=0;offset<chunks.length;offset+=450){const batch=writeBatch(window.appState.db);chunks.slice(offset,offset+450).forEach((data,localIndex)=>{const index=offset+localIndex;batch.set(doc(noticeFilesCollection(),`${noticeId}_${kind}_${String(index).padStart(4,'0')}`),{noticeId,kind,index,total:chunks.length,data})});await batch.commit()}}
+        function renderNoticePreview(){const title=document.getElementById('notice-title').value.trim()||'Título del comunicado',text=document.getElementById('notice-text').value.trim(),important=document.getElementById('notice-important').checked,image=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0],preview=document.getElementById('notice-preview');preview.innerHTML=`<div class="flex gap-2 mb-2">${important?'<span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">IMPORTANTE</span>':''}<span class="text-xs text-slate-400">${new Date().toLocaleDateString('es-AR')}</span></div><strong class="text-slate-800"></strong><p class="mt-2 whitespace-pre-wrap"></p><p class="mt-2 text-xs text-slate-500">${image?'🖼️ '+safeNoticeName(image.name):''}${image&&pdf?' · ':''}${pdf?'📄 '+safeNoticeName(pdf.name):''}</p>`;preview.querySelector('strong').textContent=title;preview.querySelector('p').textContent=text||'Sin texto adjunto.'}
+        function resetNoticeForm(){document.getElementById('notice-form').reset();document.getElementById('notice-edit-id').value='';document.getElementById('notice-form-title').textContent='Nuevo Comunicado';document.getElementById('notice-submit').textContent='PUBLICAR COMUNICADO';document.getElementById('notice-cancel').classList.add('hidden');document.getElementById('notice-message').textContent='';renderNoticePreview()}
+        function renderNoticeTable(){const search=document.getElementById('notice-search').value.trim().toLowerCase(),items=[...window.appState.notices].filter(item=>!search||`${item.title} ${item.text}`.toLowerCase().includes(search)).sort((a,b)=>Number(b.important)-Number(a.important)||new Date(b.publishedAt)-new Date(a.publishedAt)),table=document.getElementById('notice-table');table.replaceChildren();document.getElementById('notice-empty').classList.toggle('hidden',items.length>0);items.forEach(item=>{const row=document.createElement('tr'),content=[item.text?'Texto':'',item.hasImage?'Imagen':'',item.hasPdf?'PDF':''].filter(Boolean).join(' + ')||'—';row.className='text-slate-600';row.innerHTML=`<td class="p-3 whitespace-nowrap">${new Date(item.publishedAt).toLocaleDateString('es-AR')}</td><td class="p-3 font-semibold text-slate-800"></td><td class="p-3">${content}</td><td class="p-3">${item.hasImage?'Sí':'No'}</td><td class="p-3">${item.hasPdf?'Sí':'No'}</td><td class="p-3">${item.important?'Sí':'No'}</td><td class="p-3 text-emerald-700 font-semibold">Publicado</td><td class="p-3"><div class="flex flex-wrap gap-2"><button class="notice-view text-emerald-700 font-bold">Ver</button><button class="notice-edit text-blue-700 font-bold">Editar</button><button class="notice-toggle text-amber-700 font-bold">${item.important?'Desmarcar':'Marcar'}</button><button class="notice-delete text-rose-700 font-bold">Eliminar</button></div></td>`;row.children[1].textContent=item.title;row.querySelector('.notice-view').onclick=()=>alert(`${item.title}\n\n${item.text||'(Sin texto)'}\n\n${item.hasImage?'Incluye imagen. ':''}${item.hasPdf?`Incluye PDF: ${item.pdfName}.`:''}`);row.querySelector('.notice-edit').onclick=()=>{document.getElementById('notice-edit-id').value=item.id;document.getElementById('notice-title').value=item.title;document.getElementById('notice-text').value=item.text||'';document.getElementById('notice-important').checked=Boolean(item.important);document.getElementById('notice-form-title').textContent='Editar Comunicado';document.getElementById('notice-submit').textContent='GUARDAR CAMBIOS';document.getElementById('notice-cancel').classList.remove('hidden');renderNoticePreview()};row.querySelector('.notice-toggle').onclick=()=>setDoc(doc(noticeCollection(),item.id),{...item,important:!item.important,updatedAt:new Date().toISOString()});row.querySelector('.notice-delete').onclick=async()=>{if(!confirm(`¿Eliminar definitivamente el comunicado "${item.title}"?`))return;await deleteNoticeFiles(item.id);await deleteDoc(doc(noticeCollection(),item.id));showToast('Comunicados','El comunicado fue eliminado.','success')};table.append(row)})}
+        function subscribeNotices(){if(!window.appState.firebaseEnabled||unsubscribeNotices)return;unsubscribeNotices=onSnapshot(noticeCollection(),snapshot=>{window.appState.notices=snapshot.docs.map(item=>({id:item.id,...item.data()}));renderNoticeTable()},error=>{console.error('Error sincronizando comunicados:',error);document.getElementById('notice-message').textContent='No se pudieron sincronizar los comunicados.'})}
+        document.getElementById('notice-form').addEventListener('input',renderNoticePreview);document.getElementById('notice-search').addEventListener('input',renderNoticeTable);document.getElementById('notice-cancel').addEventListener('click',resetNoticeForm);
+        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(window.appState.currentUserRole!=='admin')return showToast('Denegado','Solo el administrador puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),image=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(image,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!image&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Validando y publicando…';const id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',new File([thumb],'miniatura.jpg',{type:'image/jpeg'}))}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim(),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(image.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
+
         window.switchTab = function(tabId) {
             window.appState.currentTab = tabId;
             
@@ -3562,6 +3607,7 @@ window.__firebase_config = {
                 'dashboard': 'Panel General - SIGA',
                 'afiliados': 'Padrón de Afiliados',
                 'pagos': 'Control de Cuotas',
+                'comunicados': 'Comunicados',
                 'convenio': 'Convenio 77/89',
                 'credenciales': 'Credencial Digital',
                 'actualizaciones': 'Verificar Actualizaciones',
@@ -3578,6 +3624,7 @@ window.__firebase_config = {
                 renderDashboardStats();
                 renderSectorChart();
             }
+            if (tabId === 'comunicados') subscribeNotices();
             if (tabId === 'pagos' && typeof window.subscribePaymentsRealtime === 'function') {
                 populateDropdowns();
                 window.subscribePaymentsRealtime();

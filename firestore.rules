@@ -12,6 +12,16 @@ service cloud.firestore {
           || request.auth.token.email == 'operador@siga.com');
     }
 
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'administrador@siga.com';
+    }
+
+    function isEnabledAffiliate(appId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/artifacts/$(appId)/mobile_credentials/$(request.auth.uid))
+        && get(/databases/$(database)/documents/artifacts/$(appId)/mobile_credentials/$(request.auth.uid)).data.enabled == true;
+    }
+
     function validAffiliate(affiliateId, appId) {
       return request.resource.data.keys().hasAll(['id', 'name', 'number', 'dni', 'status', 'uniqueDniKey', 'uniqueNumberKey', 'revision', 'clientMutationId'])
         && request.resource.data.id == affiliateId
@@ -83,6 +93,47 @@ service cloud.firestore {
         && resource.data.enabled == true
         && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(resource.data.affiliateId));
       allow create, update: if isStaff();
+      allow delete: if false;
+    }
+
+    // Publicaciones: solo administración crea o altera contenido. Los adjuntos
+    // se fragmentan para respetar el límite de documento y se leen bajo demanda.
+    match /artifacts/{appId}/public/data/comunicados/{noticeId} {
+      allow read: if isStaff() || isEnabledAffiliate(appId);
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasAll(['id', 'title', 'text', 'publishedAt', 'important', 'published'])
+        && request.resource.data.id == noticeId
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 160
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 20000
+        && request.resource.data.publishedAt is string
+        && request.resource.data.important is bool
+        && request.resource.data.published == true;
+      allow delete: if isAdmin();
+    }
+
+    match /artifacts/{appId}/public/data/comunicado_files/{chunkId} {
+      allow read: if isStaff() || isEnabledAffiliate(appId);
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasAll(['noticeId', 'kind', 'index', 'total', 'data'])
+        && request.resource.data.kind in ['image', 'thumbnail', 'pdf']
+        && request.resource.data.index is int
+        && request.resource.data.total is int
+        && request.resource.data.total > 0
+        && request.resource.data.data is string
+        && request.resource.data.data.size() <= 360000;
+      allow delete: if isAdmin();
+    }
+
+    match /artifacts/{appId}/mobile_reads/{userId}/items/{noticeId} {
+      allow read: if isEnabledAffiliate(appId) && request.auth.uid == userId;
+      allow create, update: if isEnabledAffiliate(appId) && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['noticeId', 'readAt'])
+        && request.resource.data.noticeId == noticeId
+        && request.resource.data.readAt is string
+        && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/comunicados/$(noticeId));
       allow delete: if false;
     }
 
