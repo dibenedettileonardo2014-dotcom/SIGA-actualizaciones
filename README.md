@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.3.4` — aplica mayúsculas consistentes a títulos y textos de Comunicados.
+`1.3.5` — incorpora acceso biométrico automático y control de segundo plano.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.3.3
 - 1.3.4
+- 1.3.5
 
 Los instaladores se encuentran en `installer/`.
 

@@ -1,12 +1,12 @@
 {
-  "version": "1.3.4",
+  "version": "1.3.5",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
-  "sha256": "90AD77CBD6BF67AFBC65E8A5AE74D4F4DA8D85C9CD794D58D26F4A70E9188A37",
+  "sha256": "3D2C9D62D6657FA84959C400F85F9B52172613DF79A1F684B4DBE8E6D3765CED",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": ["https://siga-85bdd.web.app/SIGA-update.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"],
-  "packageSha256": "1C12FCD8BC86BB3CB032C79EA4915D844E1E8D008413E3EF97CE13477ACF889E",
-  "notes": "Mayúsculas consistentes en títulos y textos de Comunicados.",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.4.exe",
-  "installerSha256": "35E30490A947980C7AB1AE9DCB5CA1D35BDE6A64695104F0ACCCEDFE7F51D1E8"
+  "packageSha256": "C3C2EE5E373F3020ED38AF5B2650F2E424E32B0C2026ECD18B152FDB8A3F3E5B",
+  "notes": "Acceso biométrico automático al abrir SIGA móvil, con reactivación segura tras inactividad y alternativa por contraseña.",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.5.exe",
+  "installerSha256": "E3284FEFCDEFD1721ABDFA2D964A9F8900F64ECEBCF6D1F9333C4D52532C7465"
 }

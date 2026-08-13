@@ -44,7 +44,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.3.4</p>
+      <p class="app-version">Versión 1.3.5</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -92,8 +92,8 @@
     const db = getFirestore(app);
     const $ = id => document.getElementById(id);
     const loginView = $('login-view'), appView = $('app-view');
-    let installPrompt = null,automaticUnlockUid=null;
-    const MOBILE_READ_ONLY = true;
+    let installPrompt=null,automaticUnlockUid=null,biometricPromptActive=false,passwordLoginPending=false,initialAuthResolved=false,hiddenAt=0;
+    const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
 
     function supportsBiometrics(){return window.isSecureContext&&'PublicKeyCredential'in window&&'credentials'in navigator}
@@ -130,14 +130,18 @@
       await updateBiometricUi(user);
     }
     async function unlockWithBiometric(user){
+      if(biometricPromptActive)throw new Error('prompt-active');
+      biometricPromptActive=true;
       const record=getBiometricRecord();
-      if(!user||record?.uid!==user.uid)throw new Error('not-registered');
-      const credential=await navigator.credentials.get({publicKey:{challenge:randomChallenge(),rpId:record.rpId||location.hostname,allowCredentials:[{type:'public-key',id:fromBase64Url(record.credentialId),transports:['internal']}],userVerification:'required',timeout:60000}});
-      if(!credential||toBase64Url(credential.rawId)!==record.credentialId)throw new Error('invalid');
-      sessionStorage.setItem(UNLOCK_KEY,user.uid);
-      $('login-message').textContent='';
-      loadCredential(user);
-      await updateBiometricUi(user);
+      try{
+        if(!user||record?.uid!==user.uid)throw new Error('not-registered');
+        const credential=await navigator.credentials.get({publicKey:{challenge:randomChallenge(),rpId:record.rpId||location.hostname,allowCredentials:[{type:'public-key',id:fromBase64Url(record.credentialId),transports:['internal']}],userVerification:'required',timeout:60000}});
+        if(!credential||toBase64Url(credential.rawId)!==record.credentialId)throw new Error('invalid');
+        sessionStorage.setItem(UNLOCK_KEY,user.uid);
+        $('login-message').textContent='';
+        loadCredential(user);
+        await updateBiometricUi(user);
+      }finally{biometricPromptActive=false}
     }
     async function offerBiometricSetup(user){
       if(MOBILE_READ_ONLY)return;
@@ -266,19 +270,20 @@
        localStorage.setItem('siga_mobile_credential',JSON.stringify(data)); showCredential(data); watchNotices(user); loginView.classList.add('hidden'); appView.classList.remove('hidden');
       },error=>handleCredentialWatchError(error,user));
     }
-    $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const password=$('password').value;const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';try{const result=await signInWithEmailAndPassword(auth,loginEmail(dni),password);sessionStorage.setItem(UNLOCK_KEY,result.user.uid);$('password').value='';loadCredential(result.user);await updateBiometricUi(result.user);await offerBiometricSetup(result.user)}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{button.disabled=false;button.textContent='Ingresar'}});
+    $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const password=$('password').value;const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';passwordLoginPending=true;try{const result=await signInWithEmailAndPassword(auth,loginEmail(dni),password);sessionStorage.setItem(UNLOCK_KEY,result.user.uid);automaticUnlockUid=result.user.uid;$('password').value='';loadCredential(result.user);await updateBiometricUi(result.user);await offerBiometricSetup(result.user)}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{passwordLoginPending=false;button.disabled=false;button.textContent='Ingresar'}});
     $('biometric-button').addEventListener('click',async()=>{const message=$('login-message');message.textContent='Confirmá tu identidad con Android…';try{await unlockWithBiometric(auth.currentUser)}catch(error){message.textContent=error?.name==='NotAllowedError'?'La verificación fue cancelada o no pudo completarse.':'No se pudo usar la autenticación del dispositivo. Ingresá con DNI y contraseña.'}});
     $('biometric-setup').addEventListener('click',async()=>{const status=$('biometric-status'),button=$('biometric-setup');button.disabled=true;status.textContent='Android solicitará tu huella, rostro o PIN…';try{await registerBiometric();status.textContent='Listo. El desbloqueo biométrico quedó activado en este dispositivo.'}catch(error){status.textContent=error?.name==='NotAllowedError'?'La configuración fue cancelada. Podés intentarlo nuevamente.':'No se pudo activar. Verificá que el teléfono tenga bloqueo de pantalla y usá Chrome.'}finally{button.disabled=false}});
     $('biometric-invite-no').addEventListener('click',()=>{const user=auth.currentUser;if(user)localStorage.setItem(INVITE_KEY_PREFIX+user.uid,'no');$('biometric-invite').classList.add('hidden')});
     $('biometric-invite-yes').addEventListener('click',async()=>{const user=auth.currentUser,button=$('biometric-invite-yes'),message=$('biometric-invite-message');button.disabled=true;message.style.color='#64748b';message.textContent='Android solicitará tu huella, rostro o PIN…';try{await registerBiometric();localStorage.setItem(INVITE_KEY_PREFIX+user.uid,'yes');$('biometric-invite').classList.add('hidden')}catch(error){message.style.color='#be123c';message.textContent=error?.name==='NotAllowedError'?'La configuración fue cancelada. Podés elegir Ahora no o volver a intentar.':'No se pudo activar. Verificá el bloqueo de pantalla y usá Chrome.'}finally{button.disabled=false}});
     async function handleAuthState(user){
-      if(!user){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}sessionStorage.removeItem(UNLOCK_KEY);appView.classList.add('hidden');loginView.classList.remove('hidden');await updateBiometricUi(null);return}
-      const record=getBiometricRecord(),mustUnlock=record?.uid===user.uid&&sessionStorage.getItem(UNLOCK_KEY)!==user.uid&&await platformAuthenticatorAvailable();
+      if(!user){initialAuthResolved=true;if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}sessionStorage.removeItem(UNLOCK_KEY);appView.classList.add('hidden');loginView.classList.remove('hidden');await updateBiometricUi(null);return}
+      const record=getBiometricRecord(),isInitialAuthenticatedSession=!initialAuthResolved&&!passwordLoginPending;initialAuthResolved=true;
+      const mustUnlock=record?.uid===user.uid&&(isInitialAuthenticatedSession||sessionStorage.getItem(UNLOCK_KEY)!==user.uid)&&await platformAuthenticatorAvailable();
       if(mustUnlock){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Abriendo la verificación de Android…';await updateBiometricUi(user);if(automaticUnlockUid!==user.uid){automaticUnlockUid=user.uid;try{await unlockWithBiometric(user);return}catch{$('login-message').textContent='No se pudo abrir automáticamente. Tocá el botón de huella o ingresá tu contraseña.'}}return}
       loadCredential(user);await updateBiometricUi(user);
     }
     onAuthStateChanged(auth,user=>{void handleAuthState(user)});
-    $('logout-button').addEventListener('click',async()=>{localStorage.removeItem('siga_mobile_credential');sessionStorage.removeItem(UNLOCK_KEY);await signOut(auth)});
+    $('logout-button').addEventListener('click',async()=>{const user=auth.currentUser;localStorage.removeItem('siga_mobile_credential');localStorage.removeItem(BIOMETRIC_KEY);if(user)localStorage.removeItem(INVITE_KEY_PREFIX+user.uid);sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;await signOut(auth)});
     $('print-button').addEventListener('click',()=>window.print());
     $('password-toggle').addEventListener('click',()=>$('password-form').classList.toggle('hidden'));
     $('password-form').addEventListener('submit',async event=>{event.preventDefault();const message=$('password-message'),button=event.submitter;if(button?.disabled)return;if(button)button.disabled=true;try{await updatePassword(auth.currentUser,$('new-password').value);message.style.color='#047857';message.textContent='Contraseña actualizada.';$('new-password').value=''}catch{message.style.color='#be123c';message.textContent='Volvé a iniciar sesión e intentá nuevamente.'}finally{if(button)button.disabled=false}});
@@ -286,6 +291,7 @@
      document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('#credential-view,#family-view,#notices-view,#convention-view').forEach(view=>view.classList.add('hidden'));$(button.dataset.view).classList.remove('hidden');document.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===button))}));
     updateInstallUi();
     void updateBiometricUi();
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){hiddenAt=Date.now();return}if(!hiddenAt||Date.now()-hiddenAt<BIOMETRIC_RELOCK_MS)return;hiddenAt=0;const user=auth.currentUser,record=getBiometricRecord();if(!user||record?.uid!==user.uid||biometricPromptActive)return;sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Confirmá tu identidad para continuar…';automaticUnlockUid=user.uid;unlockWithBiometric(user).catch(error=>{$('login-message').textContent=error?.name==='NotAllowedError'?'Verificación cancelada. Podés ingresar con contraseña.':'La biometría ya no está disponible. Ingresá con contraseña.'})});
     if('serviceWorker'in navigator){
       let reloading=false;
       navigator.serviceWorker.addEventListener('controllerchange',()=>{

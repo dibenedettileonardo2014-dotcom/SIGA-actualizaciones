@@ -112,6 +112,12 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("object-fit:contain", mobile)
         self.assertNotIn("object-fit:cover", mobile)
 
+    def test_automatic_biometric_lifecycle_contract(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        for marker in ("BIOMETRIC_RELOCK_MS=5*60*1000", "biometricPromptActive", "isInitialAuthenticatedSession", "Confirmá tu identidad para continuar", "localStorage.removeItem(BIOMETRIC_KEY)"):
+            self.assertIn(marker, mobile)
+        self.assertIn("const MOBILE_READ_ONLY=false", mobile)
+
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")
