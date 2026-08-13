@@ -117,6 +117,8 @@ class ApplicationSourceTests(unittest.TestCase):
         for marker in ("BIOMETRIC_RELOCK_MS=5*60*1000", "biometricPromptActive", "isInitialAuthenticatedSession", "Confirmá tu identidad para continuar", "localStorage.removeItem(BIOMETRIC_KEY)"):
             self.assertIn(marker, mobile)
         self.assertIn("const MOBILE_READ_ONLY=false", mobile)
+        self.assertIn("authUiReadyUid===result.user.uid&&!maintenanceBlocked", mobile)
+        self.assertIn("pendingBiometricOfferUid===user.uid&&!maintenanceBlocked", mobile)
 
     def test_mobile_password_change_ui_is_removed(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")

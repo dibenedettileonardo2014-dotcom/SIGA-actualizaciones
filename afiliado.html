@@ -45,7 +45,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.3.8</p>
+      <p class="app-version">Versión 1.3.9</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -97,7 +97,7 @@
     const db = getFirestore(app);
     const $ = id => document.getElementById(id);
     const loginView = $('login-view'), appView = $('app-view');
-    let installPrompt=null,automaticUnlockUid=null,biometricPromptActive=false,passwordLoginPending=false,pendingBiometricOfferUid=null,initialAuthResolved=false,hiddenAt=0,stopMaintenanceWatch=null,maintenanceBlocked=false,maintenanceEpoch=0;
+    let installPrompt=null,automaticUnlockUid=null,biometricPromptActive=false,passwordLoginPending=false,pendingBiometricOfferUid=null,authUiReadyUid=null,initialAuthResolved=false,hiddenAt=0,stopMaintenanceWatch=null,maintenanceBlocked=false,maintenanceEpoch=0;
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
@@ -294,17 +294,17 @@
        localStorage.setItem('siga_mobile_credential',JSON.stringify(data)); showCredential(data); watchNotices(user); loginView.classList.add('hidden'); appView.classList.remove('hidden');
       },error=>handleCredentialWatchError(error,user));
     }
-    $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const password=$('password').value;const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';passwordLoginPending=true;try{const result=await signInWithEmailAndPassword(auth,loginEmail(dni),password);sessionStorage.setItem(UNLOCK_KEY,result.user.uid);automaticUnlockUid=result.user.uid;pendingBiometricOfferUid=result.user.uid;$('password').value=''}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{passwordLoginPending=false;button.disabled=false;button.textContent='Ingresar'}});
+    $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const password=$('password').value;const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';passwordLoginPending=true;try{const result=await signInWithEmailAndPassword(auth,loginEmail(dni),password);sessionStorage.setItem(UNLOCK_KEY,result.user.uid);automaticUnlockUid=result.user.uid;pendingBiometricOfferUid=result.user.uid;$('password').value='';if(authUiReadyUid===result.user.uid&&!maintenanceBlocked){pendingBiometricOfferUid=null;await offerBiometricSetup(result.user)}}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{passwordLoginPending=false;button.disabled=false;button.textContent='Ingresar'}});
     $('biometric-button').addEventListener('click',async()=>{const message=$('login-message');message.textContent='Confirmá tu identidad con Android…';try{await unlockWithBiometric(auth.currentUser)}catch(error){message.textContent=error?.name==='NotAllowedError'?'La verificación fue cancelada o no pudo completarse.':'No se pudo usar la autenticación del dispositivo. Ingresá con DNI y contraseña.'}});
     $('biometric-setup').addEventListener('click',async()=>{const status=$('biometric-status'),button=$('biometric-setup');button.disabled=true;status.textContent='Android solicitará tu huella, rostro o PIN…';try{await registerBiometric();status.textContent='Listo. El desbloqueo biométrico quedó activado en este dispositivo.'}catch(error){status.textContent=error?.name==='NotAllowedError'?'La configuración fue cancelada. Podés intentarlo nuevamente.':'No se pudo activar. Verificá que el teléfono tenga bloqueo de pantalla y usá Chrome.'}finally{button.disabled=false}});
     $('biometric-invite-no').addEventListener('click',()=>{const user=auth.currentUser;if(user)localStorage.setItem(INVITE_KEY_PREFIX+user.uid,'no');$('biometric-invite').classList.add('hidden')});
     $('biometric-invite-yes').addEventListener('click',async()=>{const user=auth.currentUser,button=$('biometric-invite-yes'),message=$('biometric-invite-message');button.disabled=true;message.style.color='#64748b';message.textContent='Android solicitará tu huella, rostro o PIN…';try{await registerBiometric();localStorage.setItem(INVITE_KEY_PREFIX+user.uid,'yes');$('biometric-invite').classList.add('hidden')}catch(error){message.style.color='#be123c';message.textContent=error?.name==='NotAllowedError'?'La configuración fue cancelada. Podés elegir Ahora no o volver a intentar.':'No se pudo activar. Verificá el bloqueo de pantalla y usá Chrome.'}finally{button.disabled=false}});
     async function handleAuthState(user){
-      if(!user){initialAuthResolved=true;if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();sessionStorage.removeItem(UNLOCK_KEY);appView.classList.add('hidden');loginView.classList.remove('hidden');await updateBiometricUi(null);return}
+      if(!user){initialAuthResolved=true;authUiReadyUid=null;if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();sessionStorage.removeItem(UNLOCK_KEY);appView.classList.add('hidden');loginView.classList.remove('hidden');await updateBiometricUi(null);return}
       const record=getBiometricRecord(),isInitialAuthenticatedSession=!initialAuthResolved&&!passwordLoginPending;initialAuthResolved=true;
       const mustUnlock=record?.uid===user.uid&&(isInitialAuthenticatedSession||sessionStorage.getItem(UNLOCK_KEY)!==user.uid)&&await platformAuthenticatorAvailable();
       if(mustUnlock){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Abriendo la verificación de Android…';await updateBiometricUi(user);if(automaticUnlockUid!==user.uid){automaticUnlockUid=user.uid;try{await unlockWithBiometric(user);return}catch{$('login-message').textContent='No se pudo abrir automáticamente. Tocá el botón de huella o ingresá tu contraseña.'}}return}
-      loadCredential(user);await updateBiometricUi(user);if(pendingBiometricOfferUid===user.uid){pendingBiometricOfferUid=null;await offerBiometricSetup(user)}
+      loadCredential(user);await updateBiometricUi(user);authUiReadyUid=user.uid;if(pendingBiometricOfferUid===user.uid&&!maintenanceBlocked){pendingBiometricOfferUid=null;await offerBiometricSetup(user)}
     }
     onAuthStateChanged(auth,user=>{void(async()=>{if(!user){stopMaintenanceWatch?.();stopMaintenanceWatch=null;hideMaintenance();await handleAuthState(null);return}await watchMaintenance(user);if(!maintenanceBlocked)await handleAuthState(user)})()});
     $('logout-button').addEventListener('click',async()=>{const user=auth.currentUser;localStorage.removeItem('siga_mobile_credential');localStorage.removeItem(BIOMETRIC_KEY);if(user)localStorage.removeItem(INVITE_KEY_PREFIX+user.uid);sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;await signOut(auth)});

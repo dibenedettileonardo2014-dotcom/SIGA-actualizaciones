@@ -1,12 +1,12 @@
 {
-  "version": "1.3.8",
+  "version": "1.3.9",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
-  "sha256": "CD257EEE98AA4E4CD0D9241AF86262D0CADE326CF74376D5D8B7C429DBB5EC96",
+  "sha256": "A5E42374E457CDD7B929894747061EBA494D9940188F13AD3110C142B9D16C88",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": ["https://siga-85bdd.web.app/SIGA-update.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"],
-  "packageSha256": "5FC0D353794CCC489883EAB0F83B4261BA464348C1B69299135154D5CE95D73D",
-  "notes": "Respuesta prioritaria e inmediata del mantenimiento, incluso durante la carga de imágenes y PDF.",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.8.exe",
-  "installerSha256": "D38634EC8CDF7034BA3989857B623A395D3811D96E239FE8DFCBC289E46C82AD"
+  "packageSha256": "E92437A45D3A10DA734907AAFFA71C839DA9C382DF8B5264B23E4D3E6AFC6EF4",
+  "notes": "Auditoría técnica integral y corrección de la carrera entre autenticación, mantenimiento y biometría.",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.9.exe",
+  "installerSha256": "C0AB37CAEEB1AE63AC8E842DC37DBABF13DC56BD7989AEFF5460DD0D376CD007"
 }
