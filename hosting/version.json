@@ -1,12 +1,12 @@
 {
-  "version": "1.3.1",
+  "version": "1.3.2",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
-  "sha256": "97FCBAEB8F7A3BEA84E842FBE0D1BC49EC7B3B1351856B041677CAF0666A7692",
+  "sha256": "D0CEF92A9869FE34EE0A2664313F226B9618A2873574F82EDDAD0B6DF7D0C96B",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": ["https://siga-85bdd.web.app/SIGA-update.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"],
-  "packageSha256": "C4B3F7E916055CD31AAC262D76FC8B53B17EDCBDE21989FEEC0698F949ABC149",
-  "notes": "Corrección de sincronización de altas y accesos móviles pendientes.",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.1.exe",
-  "installerSha256": "132A05F07ACF98CB9EC4734B3702F23F8C0978F5B293FB12DB2B275A83C3DE52"
+  "packageSha256": "6826E4C95814349573486FC27BD6AC3913D028028F349E553E1F56437C2E2291",
+  "notes": "Corrección definitiva de la ruta Firestore para altas y claves únicas.",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.2.exe",
+  "installerSha256": "F37EC2B9D1E3DC17839D8C7C33ED3DF74A0C8B089FD78F6D2D385C0117952ABC"
 }

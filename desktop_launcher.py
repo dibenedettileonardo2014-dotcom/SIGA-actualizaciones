@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.3.1"
+APP_VERSION = "1.3.2"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -219,6 +219,17 @@ def install_update(manifest: dict) -> bool:
 
 class DesktopApi:
     """Native operations explicitly requested from the desktop interface."""
+
+    def report_sync_error(self, code: str, message: str) -> dict:
+        """Persist a sanitized Firestore diagnostic without record contents."""
+        try:
+            safe_code = re.sub(r"[^A-Za-z0-9._/-]", "_", str(code or "unknown"))[:100]
+            safe_message = re.sub(r"[\r\n\x00-\x1f]+", " ", str(message or "Sin detalle"))[:500]
+            log_path = webview_storage_path().parent / "sync-error.log"
+            log_path.write_text(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {safe_code} | {safe_message}\n", encoding="utf-8")
+            return {"ok": True}
+        except OSError:
+            return {"ok": False}
 
     def install_available_update(self) -> dict:
         if not getattr(sys, "frozen", False):

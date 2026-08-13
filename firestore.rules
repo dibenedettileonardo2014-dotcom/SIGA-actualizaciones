@@ -43,8 +43,8 @@ service cloud.firestore {
         && request.resource.data.clientMutationId is string
         && request.resource.data.clientMutationId.size() >= 16
         && request.resource.data.clientMutationId.size() <= 80
-        && getAfter(/databases/$(database)/documents/artifacts/$(appId)/public/unique_affiliates/$(request.resource.data.uniqueDniKey)).data.affiliateId == affiliateId
-        && getAfter(/databases/$(database)/documents/artifacts/$(appId)/public/unique_affiliates/$(request.resource.data.uniqueNumberKey)).data.affiliateId == affiliateId;
+        && getAfter(/databases/$(database)/documents/artifacts/$(appId)/public/data/unique_affiliates/$(request.resource.data.uniqueDniKey)).data.affiliateId == affiliateId
+        && getAfter(/databases/$(database)/documents/artifacts/$(appId)/public/data/unique_affiliates/$(request.resource.data.uniqueNumberKey)).data.affiliateId == affiliateId;
     }
 
     function validPayment(paymentId, appId) {
@@ -78,7 +78,7 @@ service cloud.firestore {
       allow create, update: if isStaff() && validPayment(paymentId, appId);
     }
 
-    match /artifacts/{appId}/public/unique_affiliates/{uniqueKey} {
+    match /artifacts/{appId}/public/data/unique_affiliates/{uniqueKey} {
       allow read, delete: if isStaff();
       allow create, update: if isStaff()
         && request.resource.data.keys().hasOnly(['affiliateId', 'type'])

@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.3.1` — corrige la sincronización de altas y accesos móviles pendientes.
+`1.3.2` — corrige definitivamente la ruta de sincronización de altas.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.3.0
 - 1.3.1
+- 1.3.2
 
 Los instaladores se encuentran en `installer/`.
 
