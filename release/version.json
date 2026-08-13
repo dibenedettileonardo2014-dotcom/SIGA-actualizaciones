@@ -1,12 +1,12 @@
 {
-  "version": "1.3.3",
+  "version": "1.3.4",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
-  "sha256": "CB3C1ABD73D0A7D326249758C071BE18745482CEBBE3834C332FE53904E73FE2",
+  "sha256": "90AD77CBD6BF67AFBC65E8A5AE74D4F4DA8D85C9CD794D58D26F4A70E9188A37",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": ["https://siga-85bdd.web.app/SIGA-update.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"],
-  "packageSha256": "2716EA06066FE0E9FE147ECDE00A8B6D28176767A01B875839CB59111B81EBE7",
-  "notes": "Localidad en afiliados, comunicados en mayúsculas y fotografías completas optimizadas.",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.3.exe",
-  "installerSha256": "712842AE06828265A04A4207CF1CC0550F18B79049FA26FE4972BBD0FFB49EA9"
+  "packageSha256": "1C12FCD8BC86BB3CB032C79EA4915D844E1E8D008413E3EF97CE13477ACF889E",
+  "notes": "Mayúsculas consistentes en títulos y textos de Comunicados.",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.4.exe",
+  "installerSha256": "35E30490A947980C7AB1AE9DCB5CA1D35BDE6A64695104F0ACCCEDFE7F51D1E8"
 }

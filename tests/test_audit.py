@@ -106,7 +106,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_notice_formatting_and_locality_contract(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
-        for marker in ("form-locality", "locality: affiliate.locality", "toLocaleUpperCase('es-AR')", "optimizeNoticeImage", "object-contain"):
+        for marker in ("form-locality", "locality: affiliate.locality", "toLocaleUpperCase('es-AR')", "uppercaseNoticeInput", "notice-title').addEventListener('input'", "optimizeNoticeImage", "object-contain"):
             self.assertIn(marker, desktop)
         self.assertIn("['Localidad',data.locality]", mobile)
         self.assertIn("object-fit:contain", mobile)
