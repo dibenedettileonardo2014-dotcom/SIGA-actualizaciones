@@ -16,6 +16,15 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email == 'administrador@siga.com';
     }
 
+    function maintenanceEnabled(appId) {
+      return exists(/databases/$(database)/documents/artifacts/$(appId)/public/config/maintenance/state)
+        && get(/databases/$(database)/documents/artifacts/$(appId)/public/config/maintenance/state).data.enabled == true;
+    }
+
+    function isStaffOperational(appId) {
+      return isStaff() && (isAdmin() || !maintenanceEnabled(appId));
+    }
+
     function isEnabledAffiliate(appId) {
       return signedIn()
         && exists(/databases/$(database)/documents/artifacts/$(appId)/mobile_credentials/$(request.auth.uid))
@@ -63,24 +72,24 @@ service cloud.firestore {
     // Solo las cuentas administrativas autorizadas pueden acceder al padrón.
     // Las sesiones anónimas y las cuentas móviles quedan excluidas.
     match /artifacts/{appId}/public/data/afiliados/{affiliateId} {
-      allow read, delete: if isStaff();
-      allow create: if isStaff()
+      allow read, delete: if isStaffOperational(appId);
+      allow create: if isStaffOperational(appId)
         && validAffiliate(affiliateId, appId)
         && request.resource.data.revision == 1;
-      allow update: if isStaff()
+      allow update: if isStaffOperational(appId)
         && validAffiliate(affiliateId, appId)
         && ((!resource.data.keys().hasAll(['revision']) && request.resource.data.revision == 1)
           || (resource.data.revision is int && request.resource.data.revision == resource.data.revision + 1));
     }
 
     match /artifacts/{appId}/public/data/pagos/{paymentId} {
-      allow read, delete: if isStaff();
-      allow create, update: if isStaff() && validPayment(paymentId, appId);
+      allow read, delete: if isStaffOperational(appId);
+      allow create, update: if isStaffOperational(appId) && validPayment(paymentId, appId);
     }
 
     match /artifacts/{appId}/public/data/unique_affiliates/{uniqueKey} {
-      allow read, delete: if isStaff();
-      allow create, update: if isStaff()
+      allow read, delete: if isStaffOperational(appId);
+      allow create, update: if isStaffOperational(appId)
         && request.resource.data.keys().hasOnly(['affiliateId', 'type'])
         && request.resource.data.affiliateId is string
         && request.resource.data.type in ['dni', 'number'];
@@ -91,14 +100,14 @@ service cloud.firestore {
         && request.auth.uid == userId
         && resource.data.enabled == true
         && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(resource.data.affiliateId));
-      allow create, update: if isStaff();
+      allow create, update: if isStaffOperational(appId);
       allow delete: if false;
     }
 
     // Publicaciones: solo administración crea o altera contenido. Los adjuntos
     // se fragmentan para respetar el límite de documento y se leen bajo demanda.
     match /artifacts/{appId}/public/data/comunicados/{noticeId} {
-      allow read: if isStaff() || isEnabledAffiliate(appId);
+      allow read: if isAdmin() || (!maintenanceEnabled(appId) && (isStaff() || isEnabledAffiliate(appId)));
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasAll(['id', 'title', 'text', 'publishedAt', 'important', 'published'])
         && request.resource.data.id == noticeId
@@ -114,7 +123,7 @@ service cloud.firestore {
     }
 
     match /artifacts/{appId}/public/data/comunicado_files/{chunkId} {
-      allow read: if isStaff() || isEnabledAffiliate(appId);
+      allow read: if isAdmin() || (!maintenanceEnabled(appId) && (isStaff() || isEnabledAffiliate(appId)));
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasAll(['noticeId', 'kind', 'index', 'total', 'data'])
         && request.resource.data.kind in ['image', 'thumbnail', 'pdf']
@@ -127,13 +136,44 @@ service cloud.firestore {
     }
 
     match /artifacts/{appId}/mobile_reads/{userId}/items/{noticeId} {
-      allow read: if isEnabledAffiliate(appId) && request.auth.uid == userId;
-      allow create, update: if isEnabledAffiliate(appId) && request.auth.uid == userId
+      allow read: if !maintenanceEnabled(appId) && isEnabledAffiliate(appId) && request.auth.uid == userId;
+      allow create, update: if !maintenanceEnabled(appId) && isEnabledAffiliate(appId) && request.auth.uid == userId
         && request.resource.data.keys().hasOnly(['noticeId', 'readAt'])
         && request.resource.data.noticeId == noticeId
         && request.resource.data.readAt is string
         && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/comunicados/$(noticeId));
       allow delete: if false;
+    }
+
+    match /artifacts/{appId}/public/config/maintenance/state {
+      allow read: if isStaff() || isEnabledAffiliate(appId);
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasAll(['enabled', 'title', 'message', 'updatedAt', 'updatedBy'])
+        && request.resource.data.enabled is bool
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 1000
+        && request.resource.data.estimatedReturn is string
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedBy == request.auth.token.email;
+      allow delete: if false;
+    }
+
+    match /artifacts/{appId}/public/data/maintenance_audit/{eventId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['action', 'enabled', 'title', 'message', 'estimatedReturn', 'administrator', 'occurredAt'])
+        && request.resource.data.action in ['activated', 'deactivated']
+        && request.resource.data.enabled is bool
+        && request.resource.data.title is string
+        && request.resource.data.message is string
+        && request.resource.data.estimatedReturn is string
+        && request.resource.data.administrator == request.auth.token.email
+        && request.resource.data.occurredAt is timestamp;
+      allow update, delete: if false;
     }
 
     match /{document=**} {

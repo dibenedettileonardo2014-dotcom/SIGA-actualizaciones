@@ -130,6 +130,20 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("watchedNoticesUid===user.uid&&stopNoticesWatch&&stopReadsWatch", mobile)
         self.assertGreaterEqual(mobile.count("stopNoticeWatches()"), 4)
 
+    def test_global_maintenance_contract(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
+        service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
+        for marker in ("MANTENIMIENTO DEL SISTEMA", "toggleGlobalMaintenance", "maintenance-admin-banner", "serverTimestamp()", "maintenance_audit"):
+            self.assertIn(marker, desktop)
+        for marker in ("maintenance-screen", "watchMaintenance", "includeMetadataChanges:true", "stopNoticeWatches()"):
+            self.assertIn(marker, mobile)
+        for marker in ("maintenanceEnabled", "isStaffOperational", "maintenance_audit", "allow create, update: if isAdmin()"):
+            self.assertIn(marker, rules)
+        self.assertIn("assets/mantenimiento.png", service_worker)
+        self.assertTrue((ROOT / "assets" / "mantenimiento.png").exists())
+
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")

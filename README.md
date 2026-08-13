@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.3.6` — auditoría integral, menor consumo de listeners móviles y retiro de Cambiar contraseña en la interfaz móvil.
+`1.3.7` — modo mantenimiento global en tiempo real para PC y móvil, con control administrativo y auditoría.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.3.5
 - 1.3.6
+- 1.3.7
 
 Los instaladores se encuentran en `installer/`.
 

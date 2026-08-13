@@ -1,12 +1,12 @@
 {
-  "version": "1.3.6",
+  "version": "1.3.7",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
-  "sha256": "E508EBF499568EE1D3BB34EA5FCF8BA8CF34475DDF6B7E89886E21D6B443F6D6",
+  "sha256": "C4BE688F037322C688353993C85BFE67D4792B064313E8AD33ADA8921CDE941C",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": ["https://siga-85bdd.web.app/SIGA-update.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"],
-  "packageSha256": "8AC9AD1C7215938A19AB59AE3877017F5E010945FF958E895B4227C9C21B7BFA",
-  "notes": "Auditoría integral, menor consumo de Firebase móvil y retiro de Cambiar contraseña de la interfaz del afiliado.",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.6.exe",
-  "installerSha256": "A7B87F237F8F8FE0FB5FF6137A7AF51FF5DF83D6646CE894BDEA8EB47793BD33"
+  "packageSha256": "94BE602BBD36FB7202A5823874B6D9EC84D2716CE3D2E4A4249FA4B3789F6F35",
+  "notes": "Modo mantenimiento global en tiempo real para PC y móvil, administrado con seguridad desde SIGA escritorio.",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.3.7.exe",
+  "installerSha256": "A11FBAA6DFD187570D9A86231AEEC361BA512BF292D74C57A57DCE29F403893C"
 }
