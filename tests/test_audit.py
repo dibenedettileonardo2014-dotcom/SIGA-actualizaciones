@@ -144,6 +144,19 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("assets/mantenimiento.png", service_worker)
         self.assertTrue((ROOT / "assets" / "mantenimiento.png").exists())
 
+    def test_maintenance_priority_path_has_no_artificial_delay(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        self.assertIn("if (snapshot.metadata.hasPendingWrites) return", desktop)
+        self.assertIn("$('maintenance-screen').classList.remove('hidden');appView.classList.add('hidden')", mobile)
+        self.assertIn("yieldForPrioritySignal", mobile)
+        self.assertIn("maintenanceEpoch", mobile)
+        self.assertIn("notice-dialog-backdrop", mobile)
+        maintenance_function = re.search(r"function showMaintenance\(data=\{\}\)\{([^\n]+)", mobile)
+        self.assertIsNotNone(maintenance_function)
+        body = maintenance_function.group(1)
+        self.assertLess(body.index("classList.remove('hidden')"), body.index("stopNoticeWatches()"))
+
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")

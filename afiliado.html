@@ -45,7 +45,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.3.7</p>
+      <p class="app-version">Versión 1.3.8</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -97,13 +97,13 @@
     const db = getFirestore(app);
     const $ = id => document.getElementById(id);
     const loginView = $('login-view'), appView = $('app-view');
-    let installPrompt=null,automaticUnlockUid=null,biometricPromptActive=false,passwordLoginPending=false,pendingBiometricOfferUid=null,initialAuthResolved=false,hiddenAt=0,stopMaintenanceWatch=null,maintenanceBlocked=false;
+    let installPrompt=null,automaticUnlockUid=null,biometricPromptActive=false,passwordLoginPending=false,pendingBiometricOfferUid=null,initialAuthResolved=false,hiddenAt=0,stopMaintenanceWatch=null,maintenanceBlocked=false,maintenanceEpoch=0;
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
 
     function maintenanceRef(){return doc(db,'artifacts',networkId,'public','config','maintenance','state')}
-    function showMaintenance(data={}){maintenanceBlocked=true;if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();appView.classList.add('hidden');loginView.classList.add('hidden');$('maintenance-title').textContent=data.title||DEFAULT_MAINTENANCE_TITLE;$('maintenance-message').textContent=data.message||DEFAULT_MAINTENANCE_MESSAGE;const estimate=$('maintenance-estimate');estimate.textContent=data.estimatedReturn?`Regreso estimado: ${data.estimatedReturn}`:'';estimate.classList.toggle('hidden',!data.estimatedReturn);$('maintenance-screen').classList.remove('hidden')}
+    function showMaintenance(data={}){if(!maintenanceBlocked)maintenanceEpoch++;maintenanceBlocked=true;$('maintenance-title').textContent=data.title||DEFAULT_MAINTENANCE_TITLE;$('maintenance-message').textContent=data.message||DEFAULT_MAINTENANCE_MESSAGE;const estimate=$('maintenance-estimate');estimate.textContent=data.estimatedReturn?`Regreso estimado: ${data.estimatedReturn}`:'';estimate.classList.toggle('hidden',!data.estimatedReturn);$('maintenance-screen').classList.remove('hidden');appView.classList.add('hidden');loginView.classList.add('hidden');document.querySelectorAll('.notice-dialog-backdrop').forEach(element=>element.remove());if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches()}
     function hideMaintenance(){maintenanceBlocked=false;$('maintenance-screen').classList.add('hidden')}
     function watchMaintenance(user){stopMaintenanceWatch?.();stopMaintenanceWatch=null;return new Promise(resolve=>{let initial=true;stopMaintenanceWatch=onSnapshot(maintenanceRef(),{includeMetadataChanges:true},snapshot=>{const data=snapshot.exists()?snapshot.data():{enabled:false},wasBlocked=maintenanceBlocked;if(data.enabled)showMaintenance(data);else if(snapshot.metadata.fromCache)showMaintenance({title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});else hideMaintenance();if(initial){initial=false;resolve()}else if(wasBlocked&&!maintenanceBlocked&&auth.currentUser?.uid===user.uid){void handleAuthState(auth.currentUser)}},()=>{showMaintenance({title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});if(initial){initial=false;resolve()}})})}
 
@@ -231,18 +231,27 @@
     let notices=[],readNoticeIds=new Set(),visibleNotices=NOTICE_PAGE_SIZE,stopNoticesWatch=null,stopReadsWatch=null,watchedNoticesUid=null;
     function stopNoticeWatches(){stopNoticesWatch?.();stopReadsWatch?.();stopNoticesWatch=null;stopReadsWatch=null;watchedNoticesUid=null}
     function noticeDate(value){const date=new Date(value||0);return Number.isNaN(date.getTime())?'—':date.toLocaleDateString('es-AR')}
+    function yieldForPrioritySignal(){if(globalThis.scheduler?.yield)return globalThis.scheduler.yield();return new Promise(resolve=>{const channel=new MessageChannel();channel.port1.onmessage=()=>{channel.port1.close();channel.port2.close();resolve()};channel.port2.postMessage(null)})}
     function updateNoticeBadge(){const unread=notices.filter(item=>!readNoticeIds.has(item.id)).length,badge=$('notices-badge');badge.textContent=String(unread);badge.classList.toggle('hidden',unread===0)}
     async function loadNoticeFile(noticeId,kind,mimeType){
+      const requestedEpoch=maintenanceEpoch;
       const snapshot=await getDocs(query(collection(db,'artifacts',networkId,'public','data','comunicado_files'),where('noticeId','==',noticeId),where('kind','==',kind)));
       const chunks=snapshot.docs.map(item=>item.data()).sort((a,b)=>a.index-b.index);
       if(!chunks.length)throw new Error('missing-file');
-      const binary=atob(chunks.map(item=>item.data).join('')),bytes=new Uint8Array(binary.length);
-      for(let index=0;index<binary.length;index++)bytes[index]=binary.charCodeAt(index);
-      return URL.createObjectURL(new Blob([bytes],{type:mimeType}));
+      const parts=[];
+      for(const chunk of chunks){
+        if(maintenanceBlocked||requestedEpoch!==maintenanceEpoch)throw new Error('maintenance-active');
+        const binary=atob(chunk.data),bytes=new Uint8Array(binary.length);
+        for(let index=0;index<binary.length;index++)bytes[index]=binary.charCodeAt(index);
+        parts.push(bytes);
+        await yieldForPrioritySignal();
+      }
+      if(maintenanceBlocked||requestedEpoch!==maintenanceEpoch)throw new Error('maintenance-active');
+      return URL.createObjectURL(new Blob(parts,{type:mimeType}));
     }
     async function openNotice(item){
       if(!readNoticeIds.has(item.id)&&auth.currentUser){readNoticeIds.add(item.id);updateNoticeBadge();renderNotices();await setDoc(doc(db,'artifacts',networkId,'mobile_reads',auth.currentUser.uid,'items',item.id),{noticeId:item.id,readAt:new Date().toISOString()}).catch(()=>{})}
-      const backdrop=document.createElement('div');backdrop.className='dialog-backdrop';const dialog=document.createElement('article');dialog.className='dialog';
+      const backdrop=document.createElement('div');backdrop.className='dialog-backdrop notice-dialog-backdrop';const dialog=document.createElement('article');dialog.className='dialog';
       const labels=`${item.important?'<span class="notice-label important">IMPORTANTE</span>':''}<span class="muted">${noticeDate(item.publishedAt)}</span>`;
       dialog.innerHTML=`<div class="notice-meta">${labels}</div><h2></h2><p class="notice-detail-text"></p><div class="notice-media"></div><div class="actions"><button class="secondary notice-close" type="button">Cerrar</button></div>`;
       dialog.querySelector('h2').textContent=item.title;dialog.querySelector('.notice-detail-text').textContent=item.text||'';const media=dialog.querySelector('.notice-media');
@@ -278,6 +287,7 @@
     function loadCredential(user){
       if(stopCredentialWatch)stopCredentialWatch();
       stopCredentialWatch=onSnapshot(doc(db,'artifacts',networkId,'mobile_credentials',user.uid),snapshot=>{
+        if(maintenanceBlocked)return;
         if(!snapshot.exists())return revokeCurrentSession('La cuenta no tiene una credencial habilitada.');
         const data=snapshot.data();
         if(data.enabled===false)return revokeCurrentSession('Tu acceso está bloqueado. Comunicate con el sindicato.');
