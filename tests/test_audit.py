@@ -1,12 +1,15 @@
 import json
 import hashlib
+import io
 import re
 import subprocess
+import tempfile
 import unittest
 import zipfile
 from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
+from unittest import mock
 
 import desktop_launcher
 
@@ -75,7 +78,46 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('if errorlevel 1 exit /b 1', source)
         self.assertNotIn('timeout /t 2 /nobreak', source)
         self.assertIn('cache_safe_url', source)
-        self.assertIn('"Cache-Control": "no-cache"', source)
+        self.assertIn('"Cache-Control": "no-cache, no-store"', source)
+        self.assertIn('automatic_update_on_startup()', source)
+        self.assertIn('Local\\\\SIGA-Update-1.4.11', source)
+        self.assertIn('UPDATE_LOG_MAX_BYTES', source)
+
+    def test_same_visible_version_is_repaired_by_hash(self):
+        with tempfile.TemporaryDirectory() as folder:
+            executable = Path(folder) / "SIGA.exe"
+            executable.write_bytes(b"old build")
+            digest = hashlib.sha256(b"corrected build").hexdigest().upper()
+            manifest = {"displayVersion": "1.4.11", "sha256": digest, "revision": "20260814-02"}
+            self.assertTrue(desktop_launcher.update_required(manifest, executable))
+            executable.write_bytes(b"corrected build")
+            self.assertFalse(desktop_launcher.update_required(manifest, executable))
+            self.assertFalse(desktop_launcher.update_required({"displayVersion": "1.4.11", "sha256": "0" * 64}, executable))
+
+    def test_interrupted_download_retries_without_leaving_partial_file(self):
+        payload = b"corrected executable"
+        response = io.BytesIO(payload)
+        response.status = 200
+        manifest = {
+            "version": "1.4.11.1", "displayVersion": "1.4.11", "revision": "20260814-02",
+            "architecture": desktop_launcher.APP_ARCH,
+            "url": "https://example.test/SIGA.exe", "urls": ["https://example.test/SIGA.exe"],
+            "sha256": hashlib.sha256(payload).hexdigest(), "size": len(payload),
+        }
+        with tempfile.TemporaryDirectory() as folder, \
+                mock.patch.object(desktop_launcher, "update_state_path", return_value=Path(folder)), \
+                mock.patch.object(desktop_launcher, "urlopen", side_effect=[OSError("connection lost"), response]), \
+                mock.patch.object(desktop_launcher.time, "sleep"), \
+                mock.patch.object(desktop_launcher.subprocess, "Popen") as popen:
+            self.assertTrue(desktop_launcher.install_update(manifest))
+            self.assertTrue(popen.called)
+            self.assertFalse(any(Path(folder).glob("*.part")))
+
+    def test_packages_are_validated_for_their_own_architecture(self):
+        desktop_launcher.validate_update_package(ROOT / "SIGA-update-x86.zip", "x86")
+        desktop_launcher.validate_update_package(ROOT / "SIGA-update-x64.zip", "x64")
+        with self.assertRaises(ValueError):
+            desktop_launcher.validate_update_package(ROOT / "SIGA-update-x86.zip", "x64")
 
 
 class ApplicationSourceTests(unittest.TestCase):
@@ -247,33 +289,37 @@ class ApplicationSourceTests(unittest.TestCase):
 
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
-        self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")
+        self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
+        self.assertEqual(manifest["displayVersion"], "1.4.11")
+        self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["installerSha256"], r"^[A-F0-9]{64}$")
         artifacts = {
             "sha256": ROOT / "SIGA.exe",
             "packageSha256": ROOT / "SIGA-update.zip",
-            "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['version']}-x64.exe",
+            "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['displayVersion']}-x64.exe",
         }
         for key, path in artifacts.items():
             with self.subTest(artifact=path.name):
                 digest = hashlib.sha256(path.read_bytes()).hexdigest().upper()
                 self.assertEqual(manifest[key], digest)
+                self.assertEqual(manifest[{"sha256": "size", "packageSha256": "packageSize", "installerSha256": "installerSize"}[key]], path.stat().st_size)
         self.assertEqual(set(manifest["architectures"]), {"x86", "x64"})
-        self.assertIn(manifest["version"], manifest["packageUrl"])
+        self.assertIn(manifest["displayVersion"], manifest["packageUrl"])
         for architecture, metadata in manifest["architectures"].items():
             self.assertEqual(metadata["architecture"], architecture)
-            self.assertIn(manifest["version"], metadata["packageUrl"])
+            self.assertIn(manifest["displayVersion"], metadata["packageUrl"])
             architecture_artifacts = {
                 "sha256": ROOT / f"SIGA-{architecture}.exe",
                 "packageSha256": ROOT / f"SIGA-update-{architecture}.zip",
-                "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['version']}-{architecture}.exe",
+                "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['displayVersion']}-{architecture}.exe",
             }
             for key, path in architecture_artifacts.items():
                 with self.subTest(architecture=architecture, artifact=path.name):
                     digest = hashlib.sha256(path.read_bytes()).hexdigest().upper()
                     self.assertEqual(metadata[key], digest)
+                    self.assertEqual(metadata[{"sha256": "size", "packageSha256": "packageSize", "installerSha256": "installerSize"}[key]], path.stat().st_size)
 
     def test_x86_x64_packages_share_the_current_source(self):
         source = (ROOT / "index.html").read_bytes()

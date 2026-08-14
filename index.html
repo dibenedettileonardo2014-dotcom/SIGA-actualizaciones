@@ -3648,6 +3648,7 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
         const APP_VERSION = "1.4.11";
+        const APP_REVISION = "20260814-02";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3664,14 +3665,16 @@ window.__firebase_config = {
                 
                 if (!manifest.version) throw new Error('Formato de manifiesto inválido');
                 
-                const hasUpdate = compareVersions(manifest.version, APP_VERSION) > 0;
+                const remoteVersion = manifest.displayVersion || manifest.version;
+                const hasUpdate = compareVersions(remoteVersion, APP_VERSION) > 0
+                    || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision !== APP_REVISION);
                 
                 document.getElementById('update-checking').classList.add('hidden');
                 
                 if (hasUpdate) {
                     // Actualización disponible
                     document.getElementById('current-version-text').textContent = `v${APP_VERSION}`;
-                    document.getElementById('new-version-text').textContent = `v${manifest.version}`;
+                    document.getElementById('new-version-text').textContent = `v${remoteVersion}`;
                     document.getElementById('update-notes').textContent = manifest.notes || 'Nueva versión disponible';
                     document.getElementById('update-available').classList.remove('hidden');
                     
@@ -3749,7 +3752,8 @@ window.__firebase_config = {
                 fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
                     .then(r => r.json())
                     .then(manifest => {
-                        if (manifest.version && compareVersions(manifest.version, APP_VERSION) > 0) {
+                        const remoteVersion = manifest.displayVersion || manifest.version;
+                        if (remoteVersion && (compareVersions(remoteVersion, APP_VERSION) > 0 || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision !== APP_REVISION))) {
                             // Hay actualización disponible
                             window.appState.updateManifest = manifest;
                             const badge = document.getElementById('update-badge');
@@ -3757,7 +3761,7 @@ window.__firebase_config = {
                                 badge.textContent = 'NUEVA';
                                 badge.classList.remove('hidden');
                             }
-                            showToast('Actualización disponible', `La versión ${manifest.version} está lista. Abrí Actualizaciones para instalarla.`, 'info');
+                            showToast('Actualización disponible', `La versión ${remoteVersion} tiene una revisión corregida. Abrí Actualizaciones para instalarla.`, 'info');
                         }
                     })
                     .catch(() => {});

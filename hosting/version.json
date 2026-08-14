@@ -1,36 +1,47 @@
 {
-  "version": "1.4.11",
+  "version": "1.4.11.1",
+  "displayVersion": "1.4.11",
+  "revision": "20260814-02",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
-  "sha256": "6F30D28EEFA7E1A4F4CDCAF8B5B6A89C38F88B4B554D891DD53CF6A1BED4F904",
+  "sha256": "721EF3F18103C72534C2E5249B6A4694C800C9F188F03F82585FA993F074E44F",
+  "size": 4674354,
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.11.zip",
   "packageUrls": ["https://siga-85bdd.web.app/SIGA-update-1.4.11.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.11.zip"],
-  "packageSha256": "05B29F1B668267B4A7A3EA2A6350D10DA8B797D2423BDEF5AC00ED010AB5BDAF",
-  "notes": "Usa paquetes con versión única y sin caché para actualizar directamente a la última versión disponible.",
+  "packageSha256": "04CB1A313D7C351AF82BE1558439666FD6F1AA4D611B6A41D7F8DA5CA0CD1DF8",
+  "packageSize": 15494288,
+  "notes": "Revisión técnica de SIGA 1.4.11: detección por SHA-256, autorreparación, reintentos, bloqueo y caché segura.",
   "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.11-x64.exe",
-  "installerSha256": "D9668F2ECCB9E055D8E47228BB9B3B962BF9DD0334B185D3838B5FC961F14AAB",
+  "installerSha256": "B746D8C8A437BFE65D342E13425177D278D7733F27B5122CE6628250B5A29221",
+  "installerSize": 14335677,
   "architectures": {
     "x64": {
       "architecture": "x64",
       "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe",
       "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe"],
-      "sha256": "6F30D28EEFA7E1A4F4CDCAF8B5B6A89C38F88B4B554D891DD53CF6A1BED4F904",
+      "sha256": "721EF3F18103C72534C2E5249B6A4694C800C9F188F03F82585FA993F074E44F",
+      "size": 4674354,
       "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.11-x64.zip",
       "packageUrls": ["https://siga-85bdd.web.app/SIGA-update-1.4.11-x64.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.11-x64.zip"],
-      "packageSha256": "05B29F1B668267B4A7A3EA2A6350D10DA8B797D2423BDEF5AC00ED010AB5BDAF",
+      "packageSha256": "04CB1A313D7C351AF82BE1558439666FD6F1AA4D611B6A41D7F8DA5CA0CD1DF8",
+      "packageSize": 15494288,
       "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.11-x64.exe",
-      "installerSha256": "D9668F2ECCB9E055D8E47228BB9B3B962BF9DD0334B185D3838B5FC961F14AAB"
+      "installerSha256": "B746D8C8A437BFE65D342E13425177D278D7733F27B5122CE6628250B5A29221",
+      "installerSize": 14335677
     },
     "x86": {
       "architecture": "x86",
       "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe",
       "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe"],
-      "sha256": "C95752C4E7097CB28CB5AFFE4B3F00415EE47BB025FBAFA9901F05A1151224F0",
+      "sha256": "28EA310073DD8FB002F6B3577F42546BF4A539B628355581FEFFF8345D38004A",
+      "size": 4556453,
       "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.11-x86.zip",
       "packageUrls": ["https://siga-85bdd.web.app/SIGA-update-1.4.11-x86.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.11-x86.zip"],
-      "packageSha256": "0AD525EEF93E6CF33593E8FC83C684859F83A6AD52FFAE195FB4AC9915A34CA7",
+      "packageSha256": "B7E684C5F4D423F358CFEB6D9E049AB210C668F9B9EDCAF4EC097C65C6DBE48B",
+      "packageSize": 14164618,
       "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.11-x86.exe",
-      "installerSha256": "626658A659445B9F93A6A8BB332FCAFC14C607386175ADD6AF5EC21935E1844C"
+      "installerSha256": "DA1DF9DF05B3F6BD580DBB09A03326F75A1B4B8C16D175C919B0BCFD6FA408B7",
+      "installerSize": 13285201
     }
   }
 }

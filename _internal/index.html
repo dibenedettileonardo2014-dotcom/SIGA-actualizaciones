@@ -48,7 +48,6 @@
         body[data-role="operador"] #btn-tab-usuarios,
         body[data-role="operador"] #btn-tab-configuracion,
         body[data-role="operador"] #btn-tab-mantenimiento,
-        body[data-role="operador"] #btn-tab-comunicados,
         body[data-role="operador"] #firebase-accounts-link {
             display: none !important;
         }
@@ -691,7 +690,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.2</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.11</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -712,7 +711,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.2</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.11</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -773,7 +772,7 @@
                             <p class="font-semibold text-slate-700">Creado en 2026</p>
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.2 · Auditoría integral x86/x64</p>
+                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.11 · Actualización directa a la última versión</p>
                     </section>
                 </div>
 
@@ -926,8 +925,8 @@
                         </div>
                         <!-- N° de Afiliado -->
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nº Afiliado / Legajo *</label>
-                            <input type="text" id="form-number" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: AF-1023">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nº Afiliado / Legajo (automático)</label>
+                            <input type="text" id="form-number" required readonly aria-readonly="true" class="w-full bg-slate-100 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl p-3 block cursor-not-allowed" placeholder="Se asigna automáticamente">
                         </div>
                     </div>
 
@@ -1186,6 +1185,10 @@
         let dropdownRevision = -1;
         let localPaymentsLoaded = false;
         let isFlushingPendingChanges = false;
+        let affiliateSaveInProgress = false;
+        let affiliateUniquenessMigrationStarted = false;
+        let affiliateUniquenessReady = Promise.resolve();
+        let resolveAffiliateUniquenessReady = () => {};
         let authenticationRequired = false;
         let unsubscribeMaintenance = null;
         let maintenanceConfigVerified = false;
@@ -1354,6 +1357,8 @@ window.__firebase_config = {
         // Sincronización en Tiempo Real de Red (Cumpliendo reglas estrictas de Firestore)
         function setupRealtimeSync() {
             affiliatesSnapshotReady = false;
+            affiliateUniquenessMigrationStarted = false;
+            affiliateUniquenessReady = new Promise(resolve => { resolveAffiliateUniquenessReady = resolve; });
             affiliatesById.clear();
             paymentsSnapshotReady = false;
             paymentsById.clear();
@@ -1374,6 +1379,9 @@ window.__firebase_config = {
                 if (!affiliatesSnapshotReady) {
                     affiliatesById = new Map(snapshot.docs.map(item => [item.id, { id: item.id, ...item.data() }]));
                     affiliatesSnapshotReady = true;
+                    void migrateAffiliateUniquenessIndex(Array.from(affiliatesById.values()))
+                        .then(resolveAffiliateUniquenessReady)
+                        .catch(error => console.error('La sincronización esperará hasta completar el índice único:', error));
                 } else {
                     snapshot.docChanges().forEach(change => {
                         if (change.type === 'removed') affiliatesById.delete(change.doc.id);
@@ -1561,6 +1569,47 @@ window.__firebase_config = {
             return doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'unique_affiliates', key);
         }
 
+        function affiliateSequenceRef() {
+            return doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'affiliate_sequence', 'state');
+        }
+
+        async function migrateAffiliateUniquenessIndex(affiliates) {
+            if (affiliateUniquenessMigrationStarted) return;
+            affiliateUniquenessMigrationStarted = true;
+            const legacy = affiliates.filter(item => !item.uniqueDniKey || !item.uniqueNumberKey);
+            for (const affiliate of legacy) {
+                try {
+                    await runTransaction(window.appState.db, async transaction => {
+                        const keys = [uniqueAffiliateKey('dni', affiliate.dni), uniqueAffiliateKey('number', affiliate.number)];
+                        const missing = [];
+                        for (const key of keys) {
+                            const ref = uniqueAffiliateRef(key);
+                            const snapshot = await transaction.get(ref);
+                            if (!snapshot.exists()) missing.push({ key, ref });
+                        }
+                        missing.forEach(({ key, ref }) => transaction.set(ref, { affiliateId: affiliate.id, type: key.startsWith('dni_') ? 'dni' : 'number' }));
+                    });
+                } catch (error) {
+                    console.error('No se pudo migrar una reserva única existente:', affiliate.id, error);
+                    throw error;
+                }
+            }
+            const numericNumbers = affiliates.map(item => Number(normalizedAffiliateNumber(item.number))).filter(Number.isSafeInteger);
+            const nextNumber = numericNumbers.length ? Math.max(...numericNumbers) + 1 : 1;
+            try {
+                await runTransaction(window.appState.db, async transaction => {
+                    const ref = affiliateSequenceRef();
+                    const snapshot = await transaction.get(ref);
+                    if ((Number(snapshot.data()?.nextNumber) || 0) < nextNumber) {
+                        transaction.set(ref, { nextNumber, updatedAt: serverTimestamp() }, { merge: true });
+                    }
+                });
+            } catch (error) {
+                console.error('No se pudo inicializar la secuencia de afiliados:', error);
+                throw error;
+            }
+        }
+
         async function sendAffiliateTransaction(change, affiliateRef) {
             return runTransaction(window.appState.db, async transaction => {
                 const currentSnapshot = await transaction.get(affiliateRef);
@@ -1595,24 +1644,45 @@ window.__firebase_config = {
                 }
 
                 const uniqueDniKey = uniqueAffiliateKey('dni', change.data.dni);
-                const uniqueNumberKey = uniqueAffiliateKey('number', change.data.number);
-                const newKeys = [uniqueDniKey, uniqueNumberKey];
-                const keysToRead = [...new Set([...currentKeys, ...newKeys])];
+                let finalNumber = uppercaseText(change.data.number);
+                let uniqueNumberKey = uniqueAffiliateKey('number', finalNumber);
+                const sequenceReference = affiliateSequenceRef();
+                const sequenceSnapshot = current ? null : await transaction.get(sequenceReference);
+                const sequenceNext = Math.max(1, Number(sequenceSnapshot?.data()?.nextNumber) || 1);
+                const keysToRead = [...new Set([...currentKeys, uniqueDniKey, uniqueNumberKey])];
                 const reservations = new Map();
                 for (const key of keysToRead) {
                     const ref = uniqueAffiliateRef(key);
                     reservations.set(key, { ref, snapshot: await transaction.get(ref) });
                 }
-                for (const key of newKeys) {
-                    const reservation = reservations.get(key).snapshot;
-                    if (reservation.exists() && reservation.data().affiliateId !== change.id) {
-                        const error = new Error(key === uniqueDniKey ? 'El DNI ya está registrado en otra PC.' : 'El número de afiliado ya está registrado en otra PC.');
-                        error.code = 'already-exists';
-                        throw error;
-                    }
+                const dniReservation = reservations.get(uniqueDniKey).snapshot;
+                if (dniReservation.exists() && dniReservation.data().affiliateId !== change.id) {
+                    const error = new Error('No se pudo sincronizar este afiliado porque el DNI ya se encuentra registrado en la base de datos.');
+                    error.code = 'dni-conflict';
+                    throw error;
                 }
 
-                const data = { ...change.data, uniqueDniKey, uniqueNumberKey, revision: currentRevision + 1 };
+                let numberReservation = reservations.get(uniqueNumberKey).snapshot;
+                if (numberReservation.exists() && numberReservation.data().affiliateId !== change.id) {
+                    if (current) {
+                        const error = new Error('El número de afiliado ya está registrado en otra PC.');
+                        error.code = 'number-conflict';
+                        throw error;
+                    }
+                    let candidate = sequenceNext;
+                    do {
+                        finalNumber = String(candidate++);
+                        uniqueNumberKey = uniqueAffiliateKey('number', finalNumber);
+                        if (!reservations.has(uniqueNumberKey)) {
+                            const ref = uniqueAffiliateRef(uniqueNumberKey);
+                            reservations.set(uniqueNumberKey, { ref, snapshot: await transaction.get(ref) });
+                        }
+                        numberReservation = reservations.get(uniqueNumberKey).snapshot;
+                    } while (numberReservation.exists() && numberReservation.data().affiliateId !== change.id);
+                }
+
+                const newKeys = [uniqueDniKey, uniqueNumberKey];
+                const data = { ...change.data, number: finalNumber, uniqueDniKey, uniqueNumberKey, revision: currentRevision + 1 };
                 transaction.set(affiliateRef, data);
                 for (const key of newKeys) {
                     const { ref, snapshot } = reservations.get(key);
@@ -1624,12 +1694,20 @@ window.__firebase_config = {
                     const { ref, snapshot } = reservations.get(key);
                     if (snapshot.exists() && snapshot.data().affiliateId === change.id) transaction.delete(ref);
                 }
+                if (!current) {
+                    transaction.set(sequenceReference, {
+                        nextNumber: Math.max(sequenceNext, Number(finalNumber) + 1),
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                }
                 return data;
             });
         }
 
         async function flushPendingChanges() {
             if (isFlushingPendingChanges || !window.appState.firebaseEnabled || !window.appState.db || !window.appState.auth?.currentUser) return;
+            await affiliateUniquenessReady;
+            if (isFlushingPendingChanges || !window.appState.firebaseEnabled || !window.appState.auth?.currentUser) return;
             isFlushingPendingChanges = true;
             const pending = readPendingChanges();
             const remaining = [];
@@ -1654,9 +1732,15 @@ window.__firebase_config = {
                     } catch (error) {
                         console.error('Error al sincronizar cambio pendiente:', error);
                         window.pywebview?.api?.report_sync_error?.(error?.code || 'unknown', error?.message || String(error)).catch(() => {});
-                        if (error?.code === 'already-exists') {
+                        if (error?.code === 'dni-conflict' || error?.code === 'number-conflict') {
                             showToast('Conflicto entre computadoras', error.message, 'error');
                             remaining.push({ ...change, conflict: true });
+                            const localItem = window.appState.affiliates.find(item => item.id === change.id && item.clientMutationId === change.data?.clientMutationId);
+                            if (localItem) {
+                                localItem.syncStatus = 'conflict';
+                                localItem.syncConflictReason = error.message;
+                                localStateChanged = true;
+                            }
                         } else if (error?.code === 'revision-conflict') {
                             const rebasedChange = { ...change, conflict: true, data: { ...change.data, revision: error.currentRevision } };
                             remaining.push(rebasedChange);
@@ -1804,7 +1888,28 @@ window.__firebase_config = {
             processStateChange();
         }
 
+        function validateAffiliateLocally(affiliate) {
+            if (!affiliate?.id || !uppercaseText(affiliate.name) || !uppercaseText(affiliate.number) || !/^\d{7,9}$/.test(normalizedDni(affiliate.dni)) || !affiliate.status) {
+                const error = new Error('Faltan datos obligatorios o contienen valores inválidos.');
+                error.code = 'local-validation';
+                throw error;
+            }
+            const duplicateDni = window.appState.affiliates.find(item => item.id !== affiliate.id && normalizedDni(item.dni) === normalizedDni(affiliate.dni));
+            if (duplicateDni) {
+                const error = new Error('No se puede registrar el afiliado. El DNI ingresado ya se encuentra registrado.');
+                error.code = 'dni-conflict';
+                throw error;
+            }
+            const duplicateNumber = window.appState.affiliates.find(item => item.id !== affiliate.id && uppercaseText(item.number) === uppercaseText(affiliate.number));
+            if (duplicateNumber) {
+                const error = new Error('El número de afiliado ya pertenece a otro afiliado.');
+                error.code = 'number-conflict';
+                throw error;
+            }
+        }
+
         async function commitToDatabase(affiliate) {
+            validateAffiliateLocally(affiliate);
             const prepared = {
                 ...affiliate,
                 revision: Number(affiliate.revision) || 0,
@@ -1985,6 +2090,9 @@ window.__firebase_config = {
                     a.isInternalCommission ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-100"><i class="fa-solid fa-people-group"></i> Comisión interna</span>' : '',
                     a.isDirectiveCommission ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100"><i class="fa-solid fa-users-gear"></i> Comisión directiva</span>' : ''
                 ].filter(Boolean).join('<br>') || '<span class="text-xs text-slate-400">—</span>';
+                const syncConflictBadge = a.syncStatus === 'conflict'
+                    ? `<div class="mt-1"><span class="inline-flex px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700" title="${escapePrintHtml(a.syncConflictReason || 'Revisar conflicto de sincronización')}">CONFLICTO DE SINCRONIZACIÓN</span></div>`
+                    : '';
 
                 // Deshabilitar controles de edición/borrado según rol activo (Seguridad en interfaz)
                 const isReader = window.appState.currentUserRole === 'lector';
@@ -2001,6 +2109,7 @@ window.__firebase_config = {
                     <td class="py-4 px-6">
                         <div class="font-bold text-slate-800 text-sm">${escapePrintHtml(a.name)}</div>
                         <div class="text-xs text-slate-400 font-semibold mt-0.5">Legajo: ${escapePrintHtml(a.number || 'N/A')}</div>
+                        ${syncConflictBadge}
                     </td>
                     <td class="py-4 px-6 text-slate-700 font-medium">${escapePrintHtml(a.dni)}</td>
                     <td class="py-4 px-6 text-xs font-medium text-slate-700 whitespace-nowrap">${formatAffiliationDate(a.affiliationDate)}</td>
@@ -2199,11 +2308,32 @@ window.__firebase_config = {
             return String(value ?? '').replace(/\D/g, '');
         }
 
+        function normalizedAffiliateNumber(value) {
+            const numeric = String(value ?? '').replace(/\D/g, '');
+            return numeric ? String(Number(numeric)) : '';
+        }
+
+        function nextAvailableAffiliateNumber(excludedId = '') {
+            const used = new Set(window.appState.affiliates
+                .filter(item => item.id !== excludedId)
+                .map(item => normalizedAffiliateNumber(item.number))
+                .filter(Boolean));
+            let candidate = 1;
+            while (used.has(String(candidate))) candidate += 1;
+            return String(candidate);
+        }
+
+        function reserveNextLocalAffiliateNumber(excludedId = '') {
+            const number = nextAvailableAffiliateNumber(excludedId);
+            document.getElementById('form-number').value = number;
+            return number;
+        }
+
         function findDuplicateAffiliate(id, dni, number) {
-            const normalizedNumber = uppercaseText(number);
+            const normalizedNumber = normalizedAffiliateNumber(number);
             return window.appState.affiliates.find(item => item.id !== id && (
                 normalizedDni(item.dni) === normalizedDni(dni)
-                || uppercaseText(item.number) === normalizedNumber
+                || normalizedAffiliateNumber(item.number) === normalizedNumber
             ));
         }
 
@@ -2348,6 +2478,7 @@ window.__firebase_config = {
             document.getElementById('affiliate-form').reset();
             enableAffiliateUppercaseFields();
             document.getElementById('form-id').value = '';
+            reserveNextLocalAffiliateNumber();
             document.getElementById('form-affiliation-date').value = new Date().toISOString().slice(0, 10);
             toggleConsultantInput(false);
             renderFamilyGroup();
@@ -2365,20 +2496,31 @@ window.__firebase_config = {
             if (window.appState.currentUserRole === 'lector') return;
 
             const submitButton = event.submitter || event.currentTarget.querySelector('[type="submit"]');
-            if (submitButton?.dataset.busy === 'true') return;
+            if (affiliateSaveInProgress || submitButton?.dataset.busy === 'true') return;
+            affiliateSaveInProgress = true;
+            if (submitButton) {
+                submitButton.dataset.busy = 'true';
+                submitButton.disabled = true;
+            }
+            try {
 
             const id = document.getElementById('form-id').value || crypto.randomUUID();
             const existing = window.appState.affiliates.find(a => a.id === id);
             const submittedDni = document.getElementById('form-dni').value.trim();
-            const submittedNumber = document.getElementById('form-number').value;
+            let submittedNumber = document.getElementById('form-number').value;
             if (!/^\d{7,9}$/.test(normalizedDni(submittedDni))) {
                 showToast('DNI inválido', 'Ingresá un DNI de 7 a 9 dígitos.', 'warning');
                 return;
             }
-            const duplicate = findDuplicateAffiliate(id, submittedDni, submittedNumber);
-            if (duplicate) {
-                const field = normalizedDni(duplicate.dni) === normalizedDni(submittedDni) ? 'DNI' : 'número de afiliado';
-                showToast('Registro duplicado', `Ya existe un afiliado con ese ${field}.`, 'warning');
+            const duplicateDni = window.appState.affiliates.find(item => item.id !== id && normalizedDni(item.dni) === normalizedDni(submittedDni));
+            if (duplicateDni) {
+                showToast('Registro duplicado', 'No se puede registrar el afiliado. El DNI ingresado ya se encuentra registrado.', 'warning');
+                return;
+            }
+            const duplicateNumber = window.appState.affiliates.find(item => item.id !== id && uppercaseText(item.number) === uppercaseText(submittedNumber));
+            if (duplicateNumber && !existing) submittedNumber = reserveNextLocalAffiliateNumber(id);
+            else if (duplicateNumber) {
+                showToast('Registro duplicado', 'El número de afiliado ya pertenece a otro afiliado.', 'warning');
                 return;
             }
             if (existing?.mobileAccess?.uid && submittedDni.replace(/\D/g, '') !== String(existing.dni || '').replace(/\D/g, '')) {
@@ -2434,9 +2576,12 @@ window.__firebase_config = {
             await commitToDatabase(affiliate);
             closeAffiliateModal();
             showToast('Afiliado guardado', 'Los datos quedaron guardados en esta PC y enviados a sincronización.', 'success');
+            } finally {
+                affiliateSaveInProgress = false;
             if (submitButton) {
                 submitButton.dataset.busy = 'false';
                 submitButton.disabled = false;
+            }
             }
         };
 
@@ -3502,7 +3647,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.4.2";
+        const APP_VERSION = "1.4.11";
+        const APP_REVISION = "20260814-02";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3519,14 +3665,16 @@ window.__firebase_config = {
                 
                 if (!manifest.version) throw new Error('Formato de manifiesto inválido');
                 
-                const hasUpdate = compareVersions(manifest.version, APP_VERSION) > 0;
+                const remoteVersion = manifest.displayVersion || manifest.version;
+                const hasUpdate = compareVersions(remoteVersion, APP_VERSION) > 0
+                    || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision !== APP_REVISION);
                 
                 document.getElementById('update-checking').classList.add('hidden');
                 
                 if (hasUpdate) {
                     // Actualización disponible
                     document.getElementById('current-version-text').textContent = `v${APP_VERSION}`;
-                    document.getElementById('new-version-text').textContent = `v${manifest.version}`;
+                    document.getElementById('new-version-text').textContent = `v${remoteVersion}`;
                     document.getElementById('update-notes').textContent = manifest.notes || 'Nueva versión disponible';
                     document.getElementById('update-available').classList.remove('hidden');
                     
@@ -3604,7 +3752,8 @@ window.__firebase_config = {
                 fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
                     .then(r => r.json())
                     .then(manifest => {
-                        if (manifest.version && compareVersions(manifest.version, APP_VERSION) > 0) {
+                        const remoteVersion = manifest.displayVersion || manifest.version;
+                        if (remoteVersion && (compareVersions(remoteVersion, APP_VERSION) > 0 || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision !== APP_REVISION))) {
                             // Hay actualización disponible
                             window.appState.updateManifest = manifest;
                             const badge = document.getElementById('update-badge');
@@ -3612,7 +3761,7 @@ window.__firebase_config = {
                                 badge.textContent = 'NUEVA';
                                 badge.classList.remove('hidden');
                             }
-                            showToast('Actualización disponible', `La versión ${manifest.version} está lista. Abrí Actualizaciones para instalarla.`, 'info');
+                            showToast('Actualización disponible', `La versión ${remoteVersion} tiene una revisión corregida. Abrí Actualizaciones para instalarla.`, 'info');
                         }
                     })
                     .catch(() => {});
@@ -3760,7 +3909,7 @@ window.__firebase_config = {
         function subscribeNotices(){if(!window.appState.firebaseEnabled||unsubscribeNotices)return;unsubscribeNotices=onSnapshot(noticeCollection(),snapshot=>{window.appState.notices=snapshot.docs.map(item=>({id:item.id,...item.data()}));renderNoticeTable()},error=>{console.error('Error sincronizando comunicados:',error);document.getElementById('notice-message').textContent='No se pudieron sincronizar los comunicados.'})}
         const uppercaseNoticeInput=event=>{const start=event.target.selectionStart,end=event.target.selectionEnd,upper=event.target.value.toLocaleUpperCase('es-AR');if(event.target.value!==upper){event.target.value=upper;event.target.setSelectionRange(start,end)}};document.getElementById('notice-title').addEventListener('input',uppercaseNoticeInput);document.getElementById('notice-text').addEventListener('input',uppercaseNoticeInput);document.getElementById('notice-form').addEventListener('input',renderNoticePreview);document.getElementById('notice-search').addEventListener('input',renderNoticeTable);document.getElementById('notice-cancel').addEventListener('click',resetNoticeForm);
         document.getElementById('notice-form').addEventListener('submit',()=>{const title=document.getElementById('notice-title'),text=document.getElementById('notice-text');title.value=title.value.toLocaleUpperCase('es-AR');text.value=text.value.toLocaleUpperCase('es-AR')},{capture:true});
-        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(window.appState.currentUserRole!=='admin')return showToast('Denegado','Solo el administrador puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
+        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
             window.appState.currentTab = tabId;
@@ -3859,8 +4008,8 @@ window.__firebase_config = {
         };
 
         window.addEventListener('online', async () => {
-            await flushPendingChanges();
             if (window.appState.firebaseEnabled) setupRealtimeSync();
+            await flushPendingChanges();
         });
 
         window.onload = function() {

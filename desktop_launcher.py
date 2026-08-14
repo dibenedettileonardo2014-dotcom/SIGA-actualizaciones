@@ -17,15 +17,16 @@ import platform
 import re
 import subprocess
 import sys
-import tempfile
 import threading
 import time
+import zipfile
 from urllib.request import Request, urlopen
 
 import webview
 
 LOCAL_PORT = 18765
 APP_VERSION = "1.4.11"
+APP_REVISION = "20260814-02"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -33,6 +34,8 @@ UPDATE_MANIFEST_URLS = (
 )
 
 APP_ARCH = "x64" if platform.architecture()[0] == "64bit" else "x86"
+UPDATE_LOG_MAX_BYTES = 512 * 1024
+UPDATE_LOG_BACKUPS = 3
 
 
 class LocalAppServer(ThreadingHTTPServer):
@@ -61,6 +64,53 @@ def webview_storage_path() -> Path:
     local_app_data = os.environ.get("LOCALAPPDATA")
     base_folder = Path(local_app_data) if local_app_data else Path.home() / "AppData" / "Local"
     return base_folder / "SIGA" / "WebViewProfile"
+
+
+def update_state_path() -> Path:
+    return webview_storage_path().parent / "Updater"
+
+
+def update_log(event: str, **details: object) -> None:
+    """Write bounded diagnostics without credentials, tokens or personal data."""
+    try:
+        folder = update_state_path()
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "update.log"
+        if path.exists() and path.stat().st_size >= UPDATE_LOG_MAX_BYTES:
+            for index in range(UPDATE_LOG_BACKUPS, 0, -1):
+                source = path if index == 1 else folder / f"update.log.{index - 1}"
+                destination = folder / f"update.log.{index}"
+                if source.exists():
+                    if index == UPDATE_LOG_BACKUPS:
+                        destination.unlink(missing_ok=True)
+                    source.replace(destination)
+        safe = {
+            re.sub(r"[^A-Za-z0-9_.-]", "_", str(key))[:50]:
+            re.sub(r"[\r\n\x00-\x1f]+", " ", str(value))[:300]
+            for key, value in details.items()
+        }
+        record = {"time": time.strftime("%Y-%m-%dT%H:%M:%S"), "event": event, **safe}
+        with path.open("a", encoding="utf-8") as output:
+            output.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+class UpdateMutex:
+    """Prevent two SIGA processes from preparing the same update."""
+
+    def __init__(self) -> None:
+        self.handle = None
+
+    def __enter__(self) -> bool:
+        if os.name != "nt":
+            return True
+        self.handle = ctypes.windll.kernel32.CreateMutexW(None, False, "Local\\SIGA-Update-1.4.11")
+        return bool(self.handle) and ctypes.windll.kernel32.GetLastError() != 183
+
+    def __exit__(self, *_args: object) -> None:
+        if self.handle:
+            ctypes.windll.kernel32.CloseHandle(self.handle)
 
 
 def start_server(web_root: Path) -> ThreadingHTTPServer:
@@ -93,7 +143,12 @@ def update_metadata(manifest: object, architecture: str = APP_ARCH) -> dict | No
     metadata = architectures.get(architecture)
     if not isinstance(metadata, dict):
         return None
-    merged = {"version": manifest.get("version"), **metadata}
+    merged = {
+        "version": manifest.get("version"),
+        "displayVersion": manifest.get("displayVersion", manifest.get("version")),
+        "revision": manifest.get("revision", ""),
+        **metadata,
+    }
     if metadata.get("architecture") != architecture:
         return None
     return merged
@@ -110,6 +165,15 @@ def valid_update_manifest(manifest: object, architecture: str = APP_ARCH) -> boo
         version_key(manifest["version"])
     except (KeyError, TypeError, ValueError):
         return False
+    display_version = manifest.get("displayVersion", manifest["version"])
+    if not isinstance(display_version, str):
+        return False
+    try:
+        version_key(display_version)
+    except ValueError:
+        return False
+    if manifest.get("revision", "") and (not isinstance(manifest["revision"], str) or not re.fullmatch(r"[A-Za-z0-9._-]{1,80}", manifest["revision"])):
+        return False
     for url_key, hash_key in (("url", "sha256"), ("packageUrl", "packageSha256"), ("installerUrl", "installerSha256")):
         url = manifest.get(url_key)
         digest = manifest.get(hash_key)
@@ -123,23 +187,63 @@ def valid_update_manifest(manifest: object, architecture: str = APP_ARCH) -> boo
         urls = manifest.get(list_key, [])
         if not isinstance(urls, list) or any(not isinstance(url, str) or not url.startswith("https://") for url in urls):
             return False
+    for size_key in ("size", "packageSize", "installerSize"):
+        size = manifest.get(size_key)
+        if size is not None and (not isinstance(size, int) or isinstance(size, bool) or size <= 0):
+            return False
     return True
 
 
+def file_sha256(path: Path) -> str | None:
+    try:
+        digest = hashlib.sha256()
+        with path.open("rb") as source:
+            while chunk := source.read(1024 * 1024):
+                digest.update(chunk)
+        return digest.hexdigest().upper()
+    except OSError:
+        return None
+
+
+def update_required(manifest: dict, executable: Path | None = None) -> bool:
+    """Detect newer versions and repaired builds of the same visible version."""
+    executable = executable or Path(sys.executable)
+    remote_version = manifest.get("displayVersion", manifest.get("version", ""))
+    try:
+        remote_key = version_key(remote_version)
+        local_key = version_key(APP_VERSION)
+    except (TypeError, ValueError):
+        return False
+    if remote_key < local_key:
+        return False
+    remote_revision = str(manifest.get("revision", ""))
+    if remote_key == local_key and (not remote_revision or remote_revision < APP_REVISION):
+        return False
+    expected_hash = str(manifest.get("sha256", "")).upper()
+    local_hash = file_sha256(executable)
+    required = remote_key > local_key or not local_hash or local_hash != expected_hash
+    update_log("comparison", localRevision=APP_REVISION, remoteRevision=remote_revision, localHash=local_hash or "missing", expectedHash=expected_hash, required=required)
+    return required
+
+
 def fetch_update_manifest() -> dict | None:
+    update_log("manifest-check-start", revision=APP_REVISION, architecture=APP_ARCH)
     for manifest_url in UPDATE_MANIFEST_URLS:
-        for attempt in range(2):
+        for attempt in range(1):
             try:
                 request = Request(
-                    f"{manifest_url}?installed={APP_VERSION}&attempt={attempt}",
-                    headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})"},
+                    f"{manifest_url}?installed={APP_VERSION}&revision={APP_REVISION}&nonce={time.time_ns()}&attempt={attempt}",
+                    headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})", "Cache-Control": "no-cache, no-store", "Pragma": "no-cache"},
                 )
-                with urlopen(request, timeout=20) as response:
+                with urlopen(request, timeout=4) as response:
                     manifest = json.load(response)
                 if valid_update_manifest(manifest):
-                    return update_metadata(manifest)
-            except (OSError, ValueError, json.JSONDecodeError):
-                time.sleep(1)
+                    metadata = update_metadata(manifest)
+                    update_log("manifest-valid", source=manifest_url, remoteRevision=metadata.get("revision", ""))
+                    return metadata
+            except (OSError, ValueError, json.JSONDecodeError) as error:
+                update_log("manifest-error", source=manifest_url, attempt=attempt + 1, error=type(error).__name__)
+                time.sleep(2 ** attempt)
     return None
 
 
@@ -148,7 +252,7 @@ def install_update(manifest: dict) -> bool:
     if manifest.get("architecture", APP_ARCH) != APP_ARCH:
         return False
     executable = Path(sys.executable)
-    temp_folder = Path(tempfile.gettempdir()) / "SIGA-updater"
+    temp_folder = update_state_path()
     temp_folder.mkdir(parents=True, exist_ok=True)
     update_package = temp_folder / f"{executable.stem}.update.zip"
     legacy_replacement = temp_folder / f"{executable.stem}.update.exe"
@@ -169,24 +273,34 @@ def install_update(manifest: dict) -> bool:
         destination = update_installer if is_installer_update else update_package if is_package_update else legacy_replacement
         partial = destination.with_suffix(destination.suffix + ".part")
         last_error = None
+        update_log("download-start", revision=manifest.get("revision", ""), architecture=APP_ARCH)
         for download_url in download_urls:
             for attempt in range(3):
                 try:
                     digest = hashlib.sha256()
                     separator = "&" if "?" in download_url else "?"
                     cache_safe_url = f"{download_url}{separator}version={manifest.get('version', '')}&sha256={expected_hash[:16]}&attempt={attempt}"
-                    request = Request(cache_safe_url, headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})", "Cache-Control": "no-cache"})
+                    request = Request(cache_safe_url + f"&nonce={time.time_ns()}", headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})", "Cache-Control": "no-cache, no-store", "Pragma": "no-cache"})
                     with urlopen(request, timeout=120) as response, partial.open("wb") as output:
+                        if getattr(response, "status", 200) != 200:
+                            raise OSError(f"HTTP {response.status}")
                         while chunk := response.read(1024 * 1024):
                             output.write(chunk)
                             digest.update(chunk)
                     if digest.hexdigest().lower() != expected_hash.lower():
                         raise ValueError("La verificacion de integridad fallo.")
+                    expected_size = manifest.get("installerSize" if is_installer_update else "packageSize" if is_package_update else "size")
+                    if isinstance(expected_size, int) and expected_size > 0 and partial.stat().st_size != expected_size:
+                        raise ValueError("El tamano descargado no coincide con el manifiesto.")
+                    if is_package_update:
+                        validate_update_package(partial, APP_ARCH)
                     partial.replace(destination)
+                    update_log("download-verified", sha256=expected_hash, size=destination.stat().st_size, attempt=attempt + 1)
                     last_error = None
                     break
-                except (OSError, ValueError) as error:
+                except (OSError, ValueError, zipfile.BadZipFile) as error:
                     last_error = error
+                    update_log("download-retry", attempt=attempt + 1, error=type(error).__name__)
                     partial.unlink(missing_ok=True)
                     time.sleep(2 * (attempt + 1))
             if last_error is None:
@@ -195,12 +309,12 @@ def install_update(manifest: dict) -> bool:
             raise last_error
         script = temp_folder / f"{executable.stem}.update.cmd"
         if is_installer_update:
-            update_log = temp_folder / f"{executable.stem}.update.log"
+            installer_log = temp_folder / f"{executable.stem}.update.log"
             script_contents = (
                 "@echo off\nsetlocal\n"
                 f"set \"INSTALLER={update_installer}\"\n"
                 f"set \"TARGET={executable}\"\n"
-                f"set \"LOG={update_log}\"\n"
+                f"set \"LOG={installer_log}\"\n"
                 'start "" /wait "%INSTALLER%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CURRENTUSER /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS /LOG="%LOG%"\n'
                 "if errorlevel 1 exit /b 1\n"
                 'start "" "%TARGET%"\n'
@@ -251,7 +365,8 @@ def install_update(manifest: dict) -> bool:
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         return True
-    except (OSError, ValueError):
+    except (OSError, ValueError, zipfile.BadZipFile) as error:
+        update_log("update-failed", error=type(error).__name__)
         update_package.unlink(missing_ok=True)
         legacy_replacement.unlink(missing_ok=True)
         update_installer.unlink(missing_ok=True)
@@ -262,6 +377,38 @@ def install_update(manifest: dict) -> bool:
             0x10,
         )
         return False
+
+
+def validate_update_package(path: Path, architecture: str) -> None:
+    """Reject corrupt, unsafe or cross-architecture packages before installation."""
+    expected_machine = {"x86": 0x014C, "x64": 0x8664}[architecture]
+    with zipfile.ZipFile(path) as package:
+        names = package.namelist()
+        if "SIGA.exe" not in names or "_internal/index.html" not in names:
+            raise ValueError("El paquete no contiene los archivos criticos.")
+        if any(Path(name).is_absolute() or ".." in Path(name).parts for name in names):
+            raise ValueError("El paquete contiene rutas inseguras.")
+        executable = package.read("SIGA.exe")
+        if len(executable) < 64:
+            raise ValueError("El ejecutable del paquete esta incompleto.")
+        pe_offset = int.from_bytes(executable[60:64], "little")
+        if executable[pe_offset:pe_offset + 4] != b"PE\0\0" or int.from_bytes(executable[pe_offset + 4:pe_offset + 6], "little") != expected_machine:
+            raise ValueError("La arquitectura del paquete no coincide.")
+
+
+def automatic_update_on_startup() -> bool:
+    """Repair an installed build before opening its web interface."""
+    if not getattr(sys, "frozen", False):
+        return False
+    with UpdateMutex() as acquired:
+        if not acquired:
+            update_log("update-skipped-lock")
+            return False
+        manifest = fetch_update_manifest()
+        if not manifest or not update_required(manifest):
+            return False
+        update_log("update-required", revision=manifest.get("revision", ""))
+        return install_update(manifest)
 
 
 class DesktopApi:
@@ -284,11 +431,8 @@ class DesktopApi:
         manifest = fetch_update_manifest()
         if not manifest:
             return {"ok": False, "error": "No se pudo consultar el servidor de actualizaciones."}
-        try:
-            if version_key(manifest["version"]) <= version_key(APP_VERSION):
-                return {"ok": False, "error": "SIGA ya tiene la última versión."}
-        except (KeyError, ValueError):
-            return {"ok": False, "error": "El manifiesto de actualización no es válido."}
+        if not update_required(manifest):
+            return {"ok": False, "error": "SIGA ya tiene la última versión."}
         if not install_update(manifest):
             return {"ok": False, "error": "No se pudo preparar la actualización."}
         threading.Timer(0.6, self._close_window).start()
@@ -339,6 +483,8 @@ class DesktopApi:
 
 
 def main() -> None:
+    if automatic_update_on_startup():
+        return
     try:
         server = start_server(bundled_path())
     except OSError:
