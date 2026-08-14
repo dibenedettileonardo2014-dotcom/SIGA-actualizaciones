@@ -187,6 +187,14 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("assets/mantenimiento.png", service_worker)
         self.assertTrue((ROOT / "assets" / "mantenimiento.png").exists())
 
+    def test_mobile_maintenance_starts_before_authentication(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
+        self.assertIn("void watchMaintenance();", mobile)
+        self.assertIn("onAuthStateChanged(auth,user=>{if(!maintenanceBlocked)void handleAuthState(user)})", mobile)
+        self.assertNotIn("stopMaintenanceWatch?.();stopMaintenanceWatch=null;hideMaintenance()", mobile)
+        self.assertRegex(rules, r"match /artifacts/\{appId\}/public/config/maintenance/state \{\s*(?://[^\n]*\n\s*)*allow read: if true;")
+
     def test_maintenance_priority_path_has_no_artificial_delay(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
