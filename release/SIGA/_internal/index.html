@@ -48,7 +48,6 @@
         body[data-role="operador"] #btn-tab-usuarios,
         body[data-role="operador"] #btn-tab-configuracion,
         body[data-role="operador"] #btn-tab-mantenimiento,
-        body[data-role="operador"] #btn-tab-comunicados,
         body[data-role="operador"] #firebase-accounts-link {
             display: none !important;
         }
@@ -381,17 +380,23 @@
                 <!-- SECCIÓN: PADRÓN DE AFILIADOS -->
                 <div id="tab-afiliados" class="tab-content hidden space-y-6">
                     <!-- Barra de Búsqueda y Filtros -->
-                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                      <div class="flex flex-col xl:flex-row xl:items-center gap-3">
                         <div class="flex-1 relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
                             </span>
-                            <input type="text" id="filter-search" oninput="scheduleFilters()" placeholder="Buscar por Nombre, DNI, Legajo, Empresa o Consultora..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-10 p-3 transition-all">
+                            <input type="text" id="filter-search" oninput="scheduleFilters()" placeholder="Buscar por apellido, nombre, DNI, número, sector u otros datos..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-10 p-3 transition-all">
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+                            <div class="relative">
+                                <i class="fa-solid fa-building absolute left-3 top-3.5 text-slate-400"></i>
+                                <input id="filter-company" type="search" list="company-filter-options" oninput="scheduleFilters()" placeholder="Buscar o elegir empresa" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl py-3 pl-9 pr-3 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                                <datalist id="company-filter-options"></datalist>
+                            </div>
                             <!-- Filtro de Sector -->
                             <select id="filter-sector" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
-                                <option value="">Todos los sectores</option>
+                                <option value="">Filtrar por sector</option>
                             </select>
                             <!-- Filtro de Cuota -->
                             <select id="filter-payment" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
@@ -407,6 +412,14 @@
                                 <option value="Inactivo">Inactivo</option>
                             </select>
                         </div>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                          <p id="affiliate-result-count" class="text-sm font-bold text-slate-700" aria-live="polite">0 afiliados encontrados</p>
+                          <div class="flex flex-wrap gap-2">
+                              <button type="button" onclick="clearAffiliateFilters()" class="px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50"><i class="fa-solid fa-filter-circle-xmark mr-1"></i> Limpiar filtros</button>
+                              <button type="button" onclick="previewAffiliateRegister()" class="px-3 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-900"><i class="fa-solid fa-file-pdf mr-1"></i> Generar PDF / Imprimir padrón</button>
+                          </div>
+                      </div>
                     </div>
 
                     <!-- Tabla de Afiliados -->
@@ -691,7 +704,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.2</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.11</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -712,7 +725,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.2</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.11</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -773,7 +786,7 @@
                             <p class="font-semibold text-slate-700">Creado en 2026</p>
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.2 · Auditoría integral x86/x64</p>
+                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.11 · Actualización directa a la última versión</p>
                     </section>
                 </div>
 
@@ -926,8 +939,8 @@
                         </div>
                         <!-- N° de Afiliado -->
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nº Afiliado / Legajo *</label>
-                            <input type="text" id="form-number" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all" placeholder="Ej: AF-1023">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nº Afiliado / Legajo (automático)</label>
+                            <input type="text" id="form-number" required readonly aria-readonly="true" class="w-full bg-slate-100 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl p-3 block cursor-not-allowed" placeholder="Se asigna automáticamente">
                         </div>
                     </div>
 
@@ -1166,6 +1179,7 @@
                 ? __app_id
                 : localStorage.getItem('siga_custom_network_id') || 'siga-gremio-principal-v2',
             sectors: new Set(),
+            companies: new Set(),
             currentUserRole: 'operador', // Roles: admin, operador
             maintenance: { enabled: false }
         };
@@ -1186,6 +1200,10 @@
         let dropdownRevision = -1;
         let localPaymentsLoaded = false;
         let isFlushingPendingChanges = false;
+        let affiliateSaveInProgress = false;
+        let affiliateUniquenessMigrationStarted = false;
+        let affiliateUniquenessReady = Promise.resolve();
+        let resolveAffiliateUniquenessReady = () => {};
         let authenticationRequired = false;
         let unsubscribeMaintenance = null;
         let maintenanceConfigVerified = false;
@@ -1354,6 +1372,8 @@ window.__firebase_config = {
         // Sincronización en Tiempo Real de Red (Cumpliendo reglas estrictas de Firestore)
         function setupRealtimeSync() {
             affiliatesSnapshotReady = false;
+            affiliateUniquenessMigrationStarted = false;
+            affiliateUniquenessReady = new Promise(resolve => { resolveAffiliateUniquenessReady = resolve; });
             affiliatesById.clear();
             paymentsSnapshotReady = false;
             paymentsById.clear();
@@ -1374,6 +1394,9 @@ window.__firebase_config = {
                 if (!affiliatesSnapshotReady) {
                     affiliatesById = new Map(snapshot.docs.map(item => [item.id, { id: item.id, ...item.data() }]));
                     affiliatesSnapshotReady = true;
+                    void migrateAffiliateUniquenessIndex(Array.from(affiliatesById.values()))
+                        .then(resolveAffiliateUniquenessReady)
+                        .catch(error => console.error('La sincronización esperará hasta completar el índice único:', error));
                 } else {
                     snapshot.docChanges().forEach(change => {
                         if (change.type === 'removed') affiliatesById.delete(change.doc.id);
@@ -1561,6 +1584,47 @@ window.__firebase_config = {
             return doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'unique_affiliates', key);
         }
 
+        function affiliateSequenceRef() {
+            return doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'affiliate_sequence', 'state');
+        }
+
+        async function migrateAffiliateUniquenessIndex(affiliates) {
+            if (affiliateUniquenessMigrationStarted) return;
+            affiliateUniquenessMigrationStarted = true;
+            const legacy = affiliates.filter(item => !item.uniqueDniKey || !item.uniqueNumberKey);
+            for (const affiliate of legacy) {
+                try {
+                    await runTransaction(window.appState.db, async transaction => {
+                        const keys = [uniqueAffiliateKey('dni', affiliate.dni), uniqueAffiliateKey('number', affiliate.number)];
+                        const missing = [];
+                        for (const key of keys) {
+                            const ref = uniqueAffiliateRef(key);
+                            const snapshot = await transaction.get(ref);
+                            if (!snapshot.exists()) missing.push({ key, ref });
+                        }
+                        missing.forEach(({ key, ref }) => transaction.set(ref, { affiliateId: affiliate.id, type: key.startsWith('dni_') ? 'dni' : 'number' }));
+                    });
+                } catch (error) {
+                    console.error('No se pudo migrar una reserva única existente:', affiliate.id, error);
+                    throw error;
+                }
+            }
+            const numericNumbers = affiliates.map(item => Number(normalizedAffiliateNumber(item.number))).filter(Number.isSafeInteger);
+            const nextNumber = numericNumbers.length ? Math.max(...numericNumbers) + 1 : 1;
+            try {
+                await runTransaction(window.appState.db, async transaction => {
+                    const ref = affiliateSequenceRef();
+                    const snapshot = await transaction.get(ref);
+                    if ((Number(snapshot.data()?.nextNumber) || 0) < nextNumber) {
+                        transaction.set(ref, { nextNumber, updatedAt: serverTimestamp() }, { merge: true });
+                    }
+                });
+            } catch (error) {
+                console.error('No se pudo inicializar la secuencia de afiliados:', error);
+                throw error;
+            }
+        }
+
         async function sendAffiliateTransaction(change, affiliateRef) {
             return runTransaction(window.appState.db, async transaction => {
                 const currentSnapshot = await transaction.get(affiliateRef);
@@ -1595,24 +1659,45 @@ window.__firebase_config = {
                 }
 
                 const uniqueDniKey = uniqueAffiliateKey('dni', change.data.dni);
-                const uniqueNumberKey = uniqueAffiliateKey('number', change.data.number);
-                const newKeys = [uniqueDniKey, uniqueNumberKey];
-                const keysToRead = [...new Set([...currentKeys, ...newKeys])];
+                let finalNumber = uppercaseText(change.data.number);
+                let uniqueNumberKey = uniqueAffiliateKey('number', finalNumber);
+                const sequenceReference = affiliateSequenceRef();
+                const sequenceSnapshot = current ? null : await transaction.get(sequenceReference);
+                const sequenceNext = Math.max(1, Number(sequenceSnapshot?.data()?.nextNumber) || 1);
+                const keysToRead = [...new Set([...currentKeys, uniqueDniKey, uniqueNumberKey])];
                 const reservations = new Map();
                 for (const key of keysToRead) {
                     const ref = uniqueAffiliateRef(key);
                     reservations.set(key, { ref, snapshot: await transaction.get(ref) });
                 }
-                for (const key of newKeys) {
-                    const reservation = reservations.get(key).snapshot;
-                    if (reservation.exists() && reservation.data().affiliateId !== change.id) {
-                        const error = new Error(key === uniqueDniKey ? 'El DNI ya está registrado en otra PC.' : 'El número de afiliado ya está registrado en otra PC.');
-                        error.code = 'already-exists';
-                        throw error;
-                    }
+                const dniReservation = reservations.get(uniqueDniKey).snapshot;
+                if (dniReservation.exists() && dniReservation.data().affiliateId !== change.id) {
+                    const error = new Error('No se pudo sincronizar este afiliado porque el DNI ya se encuentra registrado en la base de datos.');
+                    error.code = 'dni-conflict';
+                    throw error;
                 }
 
-                const data = { ...change.data, uniqueDniKey, uniqueNumberKey, revision: currentRevision + 1 };
+                let numberReservation = reservations.get(uniqueNumberKey).snapshot;
+                if (numberReservation.exists() && numberReservation.data().affiliateId !== change.id) {
+                    if (current) {
+                        const error = new Error('El número de afiliado ya está registrado en otra PC.');
+                        error.code = 'number-conflict';
+                        throw error;
+                    }
+                    let candidate = sequenceNext;
+                    do {
+                        finalNumber = String(candidate++);
+                        uniqueNumberKey = uniqueAffiliateKey('number', finalNumber);
+                        if (!reservations.has(uniqueNumberKey)) {
+                            const ref = uniqueAffiliateRef(uniqueNumberKey);
+                            reservations.set(uniqueNumberKey, { ref, snapshot: await transaction.get(ref) });
+                        }
+                        numberReservation = reservations.get(uniqueNumberKey).snapshot;
+                    } while (numberReservation.exists() && numberReservation.data().affiliateId !== change.id);
+                }
+
+                const newKeys = [uniqueDniKey, uniqueNumberKey];
+                const data = { ...change.data, number: finalNumber, uniqueDniKey, uniqueNumberKey, revision: currentRevision + 1 };
                 transaction.set(affiliateRef, data);
                 for (const key of newKeys) {
                     const { ref, snapshot } = reservations.get(key);
@@ -1624,12 +1709,20 @@ window.__firebase_config = {
                     const { ref, snapshot } = reservations.get(key);
                     if (snapshot.exists() && snapshot.data().affiliateId === change.id) transaction.delete(ref);
                 }
+                if (!current) {
+                    transaction.set(sequenceReference, {
+                        nextNumber: Math.max(sequenceNext, Number(finalNumber) + 1),
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                }
                 return data;
             });
         }
 
         async function flushPendingChanges() {
             if (isFlushingPendingChanges || !window.appState.firebaseEnabled || !window.appState.db || !window.appState.auth?.currentUser) return;
+            await affiliateUniquenessReady;
+            if (isFlushingPendingChanges || !window.appState.firebaseEnabled || !window.appState.auth?.currentUser) return;
             isFlushingPendingChanges = true;
             const pending = readPendingChanges();
             const remaining = [];
@@ -1654,9 +1747,15 @@ window.__firebase_config = {
                     } catch (error) {
                         console.error('Error al sincronizar cambio pendiente:', error);
                         window.pywebview?.api?.report_sync_error?.(error?.code || 'unknown', error?.message || String(error)).catch(() => {});
-                        if (error?.code === 'already-exists') {
+                        if (error?.code === 'dni-conflict' || error?.code === 'number-conflict') {
                             showToast('Conflicto entre computadoras', error.message, 'error');
                             remaining.push({ ...change, conflict: true });
+                            const localItem = window.appState.affiliates.find(item => item.id === change.id && item.clientMutationId === change.data?.clientMutationId);
+                            if (localItem) {
+                                localItem.syncStatus = 'conflict';
+                                localItem.syncConflictReason = error.message;
+                                localStateChanged = true;
+                            }
                         } else if (error?.code === 'revision-conflict') {
                             const rebasedChange = { ...change, conflict: true, data: { ...change.data, revision: error.currentRevision } };
                             remaining.push(rebasedChange);
@@ -1804,7 +1903,28 @@ window.__firebase_config = {
             processStateChange();
         }
 
+        function validateAffiliateLocally(affiliate) {
+            if (!affiliate?.id || !uppercaseText(affiliate.name) || !uppercaseText(affiliate.number) || !/^\d{7,9}$/.test(normalizedDni(affiliate.dni)) || !affiliate.status) {
+                const error = new Error('Faltan datos obligatorios o contienen valores inválidos.');
+                error.code = 'local-validation';
+                throw error;
+            }
+            const duplicateDni = window.appState.affiliates.find(item => item.id !== affiliate.id && normalizedDni(item.dni) === normalizedDni(affiliate.dni));
+            if (duplicateDni) {
+                const error = new Error('No se puede registrar el afiliado. El DNI ingresado ya se encuentra registrado.');
+                error.code = 'dni-conflict';
+                throw error;
+            }
+            const duplicateNumber = window.appState.affiliates.find(item => item.id !== affiliate.id && uppercaseText(item.number) === uppercaseText(affiliate.number));
+            if (duplicateNumber) {
+                const error = new Error('El número de afiliado ya pertenece a otro afiliado.');
+                error.code = 'number-conflict';
+                throw error;
+            }
+        }
+
         async function commitToDatabase(affiliate) {
+            validateAffiliateLocally(affiliate);
             const prepared = {
                 ...affiliate,
                 revision: Number(affiliate.revision) || 0,
@@ -1872,14 +1992,16 @@ window.__firebase_config = {
             derivedState = null;
             // Actualizar sectores únicos
             window.appState.sectors.clear();
+            window.appState.companies.clear();
             window.appState.affiliates.forEach(a => {
                 if (a.sector) window.appState.sectors.add(a.sector.trim());
+                if (a.company) window.appState.companies.add(a.company.trim());
             });
 
             // Actualizar select de filtros de sector
             const sectorFilter = document.getElementById('filter-sector');
             const savedSelected = sectorFilter.value;
-            sectorFilter.innerHTML = '<option value="">Todos los sectores</option>';
+            sectorFilter.innerHTML = '<option value="">Filtrar por sector</option>';
             Array.from(window.appState.sectors).sort().forEach(sector => {
                 const opt = document.createElement('option');
                 opt.value = sector;
@@ -1887,6 +2009,14 @@ window.__firebase_config = {
                 sectorFilter.appendChild(opt);
             });
             sectorFilter.value = savedSelected;
+
+            const companyOptions = document.getElementById('company-filter-options');
+            companyOptions.replaceChildren();
+            Array.from(window.appState.companies).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })).forEach(company => {
+                const opt = document.createElement('option');
+                opt.value = company;
+                companyOptions.appendChild(opt);
+            });
 
             applyFilters();
             if (window.appState.currentTab === 'pagos' || window.appState.currentTab === 'credenciales') {
@@ -1906,25 +2036,32 @@ window.__firebase_config = {
         };
 
         window.applyFilters = function() {
-            const searchQuery = document.getElementById('filter-search').value.toLowerCase().trim();
+            const normalizeSearch = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es-AR').trim();
+            const searchQuery = normalizeSearch(document.getElementById('filter-search').value);
+            const companyVal = normalizeSearch(document.getElementById('filter-company').value);
             const sectorVal = document.getElementById('filter-sector').value;
             const paymentVal = document.getElementById('filter-payment').value;
             const statusVal = document.getElementById('filter-status').value;
 
             window.appState.filteredAffiliates = window.appState.affiliates.filter(a => {
                 if (!a.__searchText) Object.defineProperty(a, '__searchText', {
-                    value: [a.name, a.dni, a.number, a.company, a.consultant, a.locality]
-                        .map(value => String(value || '').toLowerCase()).join('\u0000'),
+                    value: [a.name, a.dni, a.number, a.company, a.consultant, a.sector, a.locality, a.phone, a.email]
+                        .map(normalizeSearch).join('\u0000'),
                     configurable: true
                 });
                 const matchQuery = !searchQuery || a.__searchText.includes(searchQuery);
+                const matchCompany = !companyVal || normalizeSearch(a.company).includes(companyVal);
 
                 const matchSector = !sectorVal || a.sector === sectorVal;
                 const matchPayment = !paymentVal || (String(Boolean(a.hasPaid)) === paymentVal);
                 const matchStatus = !statusVal || a.status === statusVal;
 
-                return matchQuery && matchSector && matchPayment && matchStatus;
-            });
+                return matchQuery && matchCompany && matchSector && matchPayment && matchStatus;
+            }).sort((a, b) => String(a.company || '').localeCompare(String(b.company || ''), 'es', { sensitivity: 'base' }) || String(a.name || '').localeCompare(String(b.name || ''), 'es', { sensitivity: 'base' }));
+
+            window.appState.currentPage = 1;
+            const count = window.appState.filteredAffiliates.length;
+            document.getElementById('affiliate-result-count').textContent = `${count} ${count === 1 ? 'afiliado encontrado' : 'afiliados encontrados'}`;
 
             if (window.appState.currentTab === 'afiliados') renderAffiliatesTable();
         };
@@ -1985,6 +2122,9 @@ window.__firebase_config = {
                     a.isInternalCommission ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-100"><i class="fa-solid fa-people-group"></i> Comisión interna</span>' : '',
                     a.isDirectiveCommission ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100"><i class="fa-solid fa-users-gear"></i> Comisión directiva</span>' : ''
                 ].filter(Boolean).join('<br>') || '<span class="text-xs text-slate-400">—</span>';
+                const syncConflictBadge = a.syncStatus === 'conflict'
+                    ? `<div class="mt-1"><span class="inline-flex px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700" title="${escapePrintHtml(a.syncConflictReason || 'Revisar conflicto de sincronización')}">CONFLICTO DE SINCRONIZACIÓN</span></div>`
+                    : '';
 
                 // Deshabilitar controles de edición/borrado según rol activo (Seguridad en interfaz)
                 const isReader = window.appState.currentUserRole === 'lector';
@@ -2001,6 +2141,7 @@ window.__firebase_config = {
                     <td class="py-4 px-6">
                         <div class="font-bold text-slate-800 text-sm">${escapePrintHtml(a.name)}</div>
                         <div class="text-xs text-slate-400 font-semibold mt-0.5">Legajo: ${escapePrintHtml(a.number || 'N/A')}</div>
+                        ${syncConflictBadge}
                     </td>
                     <td class="py-4 px-6 text-slate-700 font-medium">${escapePrintHtml(a.dni)}</td>
                     <td class="py-4 px-6 text-xs font-medium text-slate-700 whitespace-nowrap">${formatAffiliationDate(a.affiliationDate)}</td>
@@ -2045,6 +2186,13 @@ window.__firebase_config = {
             if (authenticationRequired) return;
             document.getElementById('role-modal').classList.add('hidden');
             document.getElementById('role-password').value = '';
+        };
+
+        window.clearAffiliateFilters = function() {
+            ['filter-search', 'filter-company', 'filter-sector', 'filter-payment', 'filter-status'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            applyFilters();
         };
 
         function requireDesktopAuthentication() {
@@ -2199,11 +2347,32 @@ window.__firebase_config = {
             return String(value ?? '').replace(/\D/g, '');
         }
 
+        function normalizedAffiliateNumber(value) {
+            const numeric = String(value ?? '').replace(/\D/g, '');
+            return numeric ? String(Number(numeric)) : '';
+        }
+
+        function nextAvailableAffiliateNumber(excludedId = '') {
+            const used = new Set(window.appState.affiliates
+                .filter(item => item.id !== excludedId)
+                .map(item => normalizedAffiliateNumber(item.number))
+                .filter(Boolean));
+            let candidate = 1;
+            while (used.has(String(candidate))) candidate += 1;
+            return String(candidate);
+        }
+
+        function reserveNextLocalAffiliateNumber(excludedId = '') {
+            const number = nextAvailableAffiliateNumber(excludedId);
+            document.getElementById('form-number').value = number;
+            return number;
+        }
+
         function findDuplicateAffiliate(id, dni, number) {
-            const normalizedNumber = uppercaseText(number);
+            const normalizedNumber = normalizedAffiliateNumber(number);
             return window.appState.affiliates.find(item => item.id !== id && (
                 normalizedDni(item.dni) === normalizedDni(dni)
-                || uppercaseText(item.number) === normalizedNumber
+                || normalizedAffiliateNumber(item.number) === normalizedNumber
             ));
         }
 
@@ -2348,6 +2517,7 @@ window.__firebase_config = {
             document.getElementById('affiliate-form').reset();
             enableAffiliateUppercaseFields();
             document.getElementById('form-id').value = '';
+            reserveNextLocalAffiliateNumber();
             document.getElementById('form-affiliation-date').value = new Date().toISOString().slice(0, 10);
             toggleConsultantInput(false);
             renderFamilyGroup();
@@ -2365,20 +2535,31 @@ window.__firebase_config = {
             if (window.appState.currentUserRole === 'lector') return;
 
             const submitButton = event.submitter || event.currentTarget.querySelector('[type="submit"]');
-            if (submitButton?.dataset.busy === 'true') return;
+            if (affiliateSaveInProgress || submitButton?.dataset.busy === 'true') return;
+            affiliateSaveInProgress = true;
+            if (submitButton) {
+                submitButton.dataset.busy = 'true';
+                submitButton.disabled = true;
+            }
+            try {
 
             const id = document.getElementById('form-id').value || crypto.randomUUID();
             const existing = window.appState.affiliates.find(a => a.id === id);
             const submittedDni = document.getElementById('form-dni').value.trim();
-            const submittedNumber = document.getElementById('form-number').value;
+            let submittedNumber = document.getElementById('form-number').value;
             if (!/^\d{7,9}$/.test(normalizedDni(submittedDni))) {
                 showToast('DNI inválido', 'Ingresá un DNI de 7 a 9 dígitos.', 'warning');
                 return;
             }
-            const duplicate = findDuplicateAffiliate(id, submittedDni, submittedNumber);
-            if (duplicate) {
-                const field = normalizedDni(duplicate.dni) === normalizedDni(submittedDni) ? 'DNI' : 'número de afiliado';
-                showToast('Registro duplicado', `Ya existe un afiliado con ese ${field}.`, 'warning');
+            const duplicateDni = window.appState.affiliates.find(item => item.id !== id && normalizedDni(item.dni) === normalizedDni(submittedDni));
+            if (duplicateDni) {
+                showToast('Registro duplicado', 'No se puede registrar el afiliado. El DNI ingresado ya se encuentra registrado.', 'warning');
+                return;
+            }
+            const duplicateNumber = window.appState.affiliates.find(item => item.id !== id && uppercaseText(item.number) === uppercaseText(submittedNumber));
+            if (duplicateNumber && !existing) submittedNumber = reserveNextLocalAffiliateNumber(id);
+            else if (duplicateNumber) {
+                showToast('Registro duplicado', 'El número de afiliado ya pertenece a otro afiliado.', 'warning');
                 return;
             }
             if (existing?.mobileAccess?.uid && submittedDni.replace(/\D/g, '') !== String(existing.dni || '').replace(/\D/g, '')) {
@@ -2434,9 +2615,12 @@ window.__firebase_config = {
             await commitToDatabase(affiliate);
             closeAffiliateModal();
             showToast('Afiliado guardado', 'Los datos quedaron guardados en esta PC y enviados a sincronización.', 'success');
+            } finally {
+                affiliateSaveInProgress = false;
             if (submitButton) {
                 submitButton.dataset.busy = 'false';
                 submitButton.disabled = false;
+            }
             }
         };
 
@@ -3261,6 +3445,26 @@ window.__firebase_config = {
             document.body.appendChild(frame);
         }
 
+        function affiliateRegisterHtml() {
+            const affiliates = window.appState.filteredAffiliates;
+            const selectedCompany = document.getElementById('filter-company').value.trim();
+            const generatedAt = new Date().toLocaleString('es-AR');
+            const rows = affiliates.map(a => `<tr><td>${escapePrintHtml(a.number || '—')}</td><td>${escapePrintHtml(a.name || '—')}</td><td>${escapePrintHtml(a.dni || '—')}</td><td>${escapePrintHtml(a.company || 'Sin empresa')}</td><td>${escapePrintHtml(a.sector || '—')}</td></tr>`).join('');
+            return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Padrón de Afiliados</title><style>
+                @page{size:A4 portrait;margin:18mm 10mm 15mm}@media print{.toolbar{display:none!important}body{padding:0}.report{box-shadow:none}.page-number:after{content:counter(page)}}
+                *{box-sizing:border-box}body{margin:0;background:#e2e8f0;color:#1e293b;font-family:Arial,sans-serif;padding:18px}.toolbar{position:sticky;top:0;display:flex;justify-content:center;gap:10px;padding:10px;background:#0f172a;z-index:2}.toolbar button{border:0;border-radius:7px;padding:9px 14px;font-weight:bold;cursor:pointer}.primary{background:#059669;color:white}.secondary{background:white;color:#0f172a}.report{max-width:190mm;margin:auto;background:white;padding:10mm;box-shadow:0 4px 20px #0002}.header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #059669;padding-bottom:9px}.header img{width:46px;height:46px;object-fit:contain}.brand{font-size:12px;font-weight:bold;color:#047857}.header h1{font-size:22px;margin:2px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;font-size:10px;margin:10px 0}.meta b{color:#334155}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}thead{display:table-header-group}tr{break-inside:avoid}th,td{border:1px solid #94a3b8;padding:5px 4px;vertical-align:top;overflow-wrap:anywhere}th{background:#d1fae5;color:#064e3b;text-align:left}th:nth-child(1){width:14%}th:nth-child(2){width:29%}th:nth-child(3){width:16%}th:nth-child(4){width:25%}th:nth-child(5){width:16%}.footer{position:fixed;bottom:3mm;right:10mm;font-size:8px;color:#64748b}.empty{text-align:center;padding:30px;color:#64748b}
+            </style></head><body><div class="toolbar"><button class="secondary" onclick="window.print()">Guardar PDF</button><button class="primary" onclick="window.print()">Imprimir directamente</button><button class="secondary" onclick="window.close()">Cerrar vista previa</button></div><main class="report"><header class="header"><img src="assets/logo-sindicato.png" alt="Logo SIGA"><div><div class="brand">SIGA · Sistema Integral de Gestión de Afiliados</div><h1>Padrón de Afiliados</h1></div></header><section class="meta"><div><b>Empresa:</b> ${escapePrintHtml(selectedCompany || 'Todas las empresas')}</div><div><b>Generado:</b> ${escapePrintHtml(generatedAt)}</div><div><b>Cantidad total:</b> ${affiliates.length}</div><div><b>Búsqueda:</b> ${escapePrintHtml(document.getElementById('filter-search').value.trim() || 'Sin búsqueda general')}</div></section><table><thead><tr><th>N.º de afiliado</th><th>Apellido y nombre</th><th>DNI</th><th>Empresa</th><th>Sector</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">No hay afiliados para los filtros seleccionados.</td></tr>'}</tbody></table><footer class="footer">Página <span class="page-number"></span></footer></main></body></html>`;
+        }
+
+        window.previewAffiliateRegister = function() {
+            if (!window.appState.filteredAffiliates.length) return showToast('Sin datos', 'No hay afiliados para generar con los filtros activos.', 'warning');
+            const preview = window.open('', '_blank');
+            if (!preview) return showToast('Vista previa bloqueada', 'Habilitá las ventanas emergentes para ver e imprimir el padrón.', 'warning');
+            preview.document.open();
+            preview.document.write(affiliateRegisterHtml());
+            preview.document.close();
+        };
+
         window.printConvention = function() {
             const pdfFrame = document.getElementById('convention-pdf');
             try {
@@ -3502,7 +3706,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.4.2";
+        const APP_VERSION = "1.4.11";
+        const APP_REVISION = "20260814-03";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3519,14 +3724,16 @@ window.__firebase_config = {
                 
                 if (!manifest.version) throw new Error('Formato de manifiesto inválido');
                 
-                const hasUpdate = compareVersions(manifest.version, APP_VERSION) > 0;
+                const remoteVersion = manifest.displayVersion || manifest.version;
+                const hasUpdate = compareVersions(remoteVersion, APP_VERSION) > 0
+                    || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision !== APP_REVISION);
                 
                 document.getElementById('update-checking').classList.add('hidden');
                 
                 if (hasUpdate) {
                     // Actualización disponible
                     document.getElementById('current-version-text').textContent = `v${APP_VERSION}`;
-                    document.getElementById('new-version-text').textContent = `v${manifest.version}`;
+                    document.getElementById('new-version-text').textContent = `v${remoteVersion}`;
                     document.getElementById('update-notes').textContent = manifest.notes || 'Nueva versión disponible';
                     document.getElementById('update-available').classList.remove('hidden');
                     
@@ -3604,7 +3811,8 @@ window.__firebase_config = {
                 fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
                     .then(r => r.json())
                     .then(manifest => {
-                        if (manifest.version && compareVersions(manifest.version, APP_VERSION) > 0) {
+                        const remoteVersion = manifest.displayVersion || manifest.version;
+                        if (remoteVersion && (compareVersions(remoteVersion, APP_VERSION) > 0 || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision !== APP_REVISION))) {
                             // Hay actualización disponible
                             window.appState.updateManifest = manifest;
                             const badge = document.getElementById('update-badge');
@@ -3612,7 +3820,7 @@ window.__firebase_config = {
                                 badge.textContent = 'NUEVA';
                                 badge.classList.remove('hidden');
                             }
-                            showToast('Actualización disponible', `La versión ${manifest.version} está lista. Abrí Actualizaciones para instalarla.`, 'info');
+                            showToast('Actualización disponible', `La versión ${remoteVersion} tiene una revisión corregida. Abrí Actualizaciones para instalarla.`, 'info');
                         }
                     })
                     .catch(() => {});
@@ -3760,7 +3968,7 @@ window.__firebase_config = {
         function subscribeNotices(){if(!window.appState.firebaseEnabled||unsubscribeNotices)return;unsubscribeNotices=onSnapshot(noticeCollection(),snapshot=>{window.appState.notices=snapshot.docs.map(item=>({id:item.id,...item.data()}));renderNoticeTable()},error=>{console.error('Error sincronizando comunicados:',error);document.getElementById('notice-message').textContent='No se pudieron sincronizar los comunicados.'})}
         const uppercaseNoticeInput=event=>{const start=event.target.selectionStart,end=event.target.selectionEnd,upper=event.target.value.toLocaleUpperCase('es-AR');if(event.target.value!==upper){event.target.value=upper;event.target.setSelectionRange(start,end)}};document.getElementById('notice-title').addEventListener('input',uppercaseNoticeInput);document.getElementById('notice-text').addEventListener('input',uppercaseNoticeInput);document.getElementById('notice-form').addEventListener('input',renderNoticePreview);document.getElementById('notice-search').addEventListener('input',renderNoticeTable);document.getElementById('notice-cancel').addEventListener('click',resetNoticeForm);
         document.getElementById('notice-form').addEventListener('submit',()=>{const title=document.getElementById('notice-title'),text=document.getElementById('notice-text');title.value=title.value.toLocaleUpperCase('es-AR');text.value=text.value.toLocaleUpperCase('es-AR')},{capture:true});
-        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(window.appState.currentUserRole!=='admin')return showToast('Denegado','Solo el administrador puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
+        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
             window.appState.currentTab = tabId;
@@ -3859,8 +4067,8 @@ window.__firebase_config = {
         };
 
         window.addEventListener('online', async () => {
-            await flushPendingChanges();
             if (window.appState.firebaseEnabled) setupRealtimeSync();
+            await flushPendingChanges();
         });
 
         window.onload = function() {

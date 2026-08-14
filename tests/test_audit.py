@@ -88,7 +88,7 @@ class LauncherTests(unittest.TestCase):
             executable = Path(folder) / "SIGA.exe"
             executable.write_bytes(b"old build")
             digest = hashlib.sha256(b"corrected build").hexdigest().upper()
-            manifest = {"displayVersion": "1.4.11", "sha256": digest, "revision": "20260814-02"}
+            manifest = {"displayVersion": "1.4.11", "sha256": digest, "revision": desktop_launcher.APP_REVISION}
             self.assertTrue(desktop_launcher.update_required(manifest, executable))
             executable.write_bytes(b"corrected build")
             self.assertFalse(desktop_launcher.update_required(manifest, executable))
@@ -217,6 +217,26 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn('>Trabaja por consultora</span>', desktop)
         self.assertIn('class="grid grid-cols-1 sm:grid-cols-6 gap-3"', desktop)
         self.assertIn('class="sm:col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">Fecha de nacimiento</label><input type="date" id="form-partner-birthdate"', desktop)
+
+    def test_affiliate_company_filter_and_print_contract(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        for marker in (
+            'id="filter-company"',
+            'id="company-filter-options"',
+            "normalizeSearch(a.company).includes(companyVal)",
+            "clearAffiliateFilters",
+            'id="affiliate-result-count"',
+            "affiliateRegisterHtml",
+            "previewAffiliateRegister",
+            "@page{size:A4 portrait",
+            "thead{display:table-header-group}",
+            "Página <span class=\"page-number\"",
+            "assets/logo-sindicato.png",
+        ):
+            self.assertIn(marker, desktop)
+        self.assertNotIn('<option value="">Todos los sectores</option>', desktop)
+        self.assertIn("return matchQuery && matchCompany && matchSector && matchPayment && matchStatus", desktop)
+        self.assertIn("String(a.company || '').localeCompare", desktop)
 
     def test_automatic_biometric_lifecycle_contract(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
