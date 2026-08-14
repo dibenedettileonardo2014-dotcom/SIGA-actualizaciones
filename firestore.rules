@@ -106,11 +106,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Publicaciones: solo administración crea o altera contenido. Los adjuntos
-    // se fragmentan para respetar el límite de documento y se leen bajo demanda.
+    // Administración gestiona todo; el operador puede crear publicaciones.
+    // Los adjuntos se fragmentan para respetar el límite de documento.
     match /artifacts/{appId}/public/data/comunicados/{noticeId} {
       allow read: if isAdmin() || (!maintenanceEnabled(appId) && (isStaff() || isEnabledAffiliate(appId)));
-      allow create, update: if isAdmin()
+      allow create: if isStaffOperational(appId)
         && request.resource.data.keys().hasAll(['id', 'title', 'text', 'publishedAt', 'important', 'published'])
         && request.resource.data.id == noticeId
         && request.resource.data.title is string
@@ -121,12 +121,12 @@ service cloud.firestore {
         && request.resource.data.publishedAt is string
         && request.resource.data.important is bool
         && request.resource.data.published == true;
-      allow delete: if isAdmin();
+      allow update, delete: if isAdmin();
     }
 
     match /artifacts/{appId}/public/data/comunicado_files/{chunkId} {
       allow read: if isAdmin() || (!maintenanceEnabled(appId) && (isStaff() || isEnabledAffiliate(appId)));
-      allow create, update: if isAdmin()
+      allow create: if isStaffOperational(appId)
         && request.resource.data.keys().hasAll(['noticeId', 'kind', 'index', 'total', 'data'])
         && request.resource.data.kind in ['image', 'thumbnail', 'pdf']
         && request.resource.data.noticeId is string
@@ -140,7 +140,7 @@ service cloud.firestore {
         && request.resource.data.index < request.resource.data.total
         && request.resource.data.data is string
         && request.resource.data.data.size() <= 360000;
-      allow delete: if isAdmin();
+      allow update, delete: if isAdmin();
     }
 
     match /artifacts/{appId}/mobile_reads/{userId}/items/{noticeId} {

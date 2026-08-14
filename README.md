@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.4` — alta segura con DNI normalizado, número automático y reservas transaccionales únicas.
+`1.4.5` — los operadores pueden publicar comunicados con texto, imagen y PDF.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.4.3 (x86 y x64)
 - 1.4.4 (x86 y x64)
+- 1.4.5 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 
