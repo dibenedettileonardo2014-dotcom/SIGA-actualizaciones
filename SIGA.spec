@@ -27,12 +27,10 @@ a = Analysis(
     optimize=2,
 )
 
-# PyInstaller follows the architecture of the Python interpreter running this
-# file. Keep its native WebView2 loader plus ARM64: pywebview selects the ARM64
-# path from the host OS even when an x86/x64 build runs under Windows emulation.
+# Pywebview 6.2 resolves all three WebView2 runtime folders while importing its
+# Windows backend. Keep x86, x64 and ARM64 loaders in every desktop package.
 import struct
 build_arch = 'x64' if struct.calcsize('P') == 8 else 'x86'
-other_arch = 'x86' if build_arch == 'x64' else 'x64'
 other_clr_arch = 'x86' if build_arch == 'x64' else 'amd64'
 unused_runtime_files = {
     'pythonnet\\runtime\\Python.Runtime.xml',
@@ -40,7 +38,6 @@ unused_runtime_files = {
     'webview\\lib\\pywebview-android.jar',
     'webview\\lib\\WebBrowserInterop.x64.dll',
     'webview\\lib\\WebBrowserInterop.x86.dll',
-    f'webview\\lib\\runtimes\\win-{other_arch}\\native\\WebView2Loader.dll',
     f'clr_loader\\ffi\\dlls\\{other_clr_arch}\\ClrLoader.dll',
 }
 a.datas = [entry for entry in a.datas if entry[0] not in unused_runtime_files]

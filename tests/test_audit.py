@@ -257,14 +257,11 @@ class ApplicationSourceTests(unittest.TestCase):
             with zipfile.ZipFile(ROOT / f"SIGA-update-{architecture}.zip") as package:
                 self.assertEqual(package.read("_internal/index.html"), source)
                 names = set(package.namelist())
-                self.assertIn(
-                    "_internal/webview/lib/runtimes/win-arm64/native/WebView2Loader.dll",
-                    names,
-                )
-                self.assertIn(
-                    f"_internal/webview/lib/runtimes/win-{architecture}/native/WebView2Loader.dll",
-                    names,
-                )
+                for runtime_architecture in ("x86", "x64", "arm64"):
+                    self.assertIn(
+                        f"_internal/webview/lib/runtimes/win-{runtime_architecture}/native/WebView2Loader.dll",
+                        names,
+                    )
 
 
 if __name__ == "__main__":
