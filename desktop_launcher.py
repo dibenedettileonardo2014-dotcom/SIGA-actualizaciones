@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.8"
+APP_VERSION = "1.4.9"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -110,16 +110,16 @@ def valid_update_manifest(manifest: object, architecture: str = APP_ARCH) -> boo
         version_key(manifest["version"])
     except (KeyError, TypeError, ValueError):
         return False
-    for url_key, hash_key in (("url", "sha256"), ("packageUrl", "packageSha256")):
+    for url_key, hash_key in (("url", "sha256"), ("packageUrl", "packageSha256"), ("installerUrl", "installerSha256")):
         url = manifest.get(url_key)
         digest = manifest.get(hash_key)
-        if url is None and digest is None and url_key == "packageUrl":
+        if url is None and digest is None and url_key in {"packageUrl", "installerUrl"}:
             continue
         if not isinstance(url, str) or not url.startswith("https://"):
             return False
         if not isinstance(digest, str) or not re.fullmatch(r"[A-Fa-f0-9]{64}", digest):
             return False
-    for list_key in ("urls", "packageUrls"):
+    for list_key in ("urls", "packageUrls", "installerUrls"):
         urls = manifest.get(list_key, [])
         if not isinstance(urls, list) or any(not isinstance(url, str) or not url.startswith("https://") for url in urls):
             return False
@@ -152,17 +152,21 @@ def install_update(manifest: dict) -> bool:
     temp_folder.mkdir(parents=True, exist_ok=True)
     update_package = temp_folder / f"{executable.stem}.update.zip"
     legacy_replacement = temp_folder / f"{executable.stem}.update.exe"
+    update_installer = temp_folder / f"{executable.stem}.update-installer.exe"
     try:
+        installer_url = manifest.get("installerUrl")
+        installer_hash = manifest.get("installerSha256")
         package_url = manifest.get("packageUrl")
         package_hash = manifest.get("packageSha256")
-        is_package_update = isinstance(package_url, str) and isinstance(package_hash, str)
-        configured_urls = manifest.get("packageUrls") if is_package_update else manifest.get("urls")
+        is_installer_update = isinstance(installer_url, str) and isinstance(installer_hash, str)
+        is_package_update = not is_installer_update and isinstance(package_url, str) and isinstance(package_hash, str)
+        configured_urls = manifest.get("installerUrls") if is_installer_update else manifest.get("packageUrls") if is_package_update else manifest.get("urls")
         download_urls = [url for url in (configured_urls or []) if isinstance(url, str)]
-        primary_url = package_url if is_package_update else manifest["url"]
+        primary_url = installer_url if is_installer_update else package_url if is_package_update else manifest["url"]
         if primary_url not in download_urls:
             download_urls.insert(0, primary_url)
-        expected_hash = package_hash if is_package_update else manifest["sha256"]
-        destination = update_package if is_package_update else legacy_replacement
+        expected_hash = installer_hash if is_installer_update else package_hash if is_package_update else manifest["sha256"]
+        destination = update_installer if is_installer_update else update_package if is_package_update else legacy_replacement
         partial = destination.with_suffix(destination.suffix + ".part")
         last_error = None
         for download_url in download_urls:
@@ -188,14 +192,29 @@ def install_update(manifest: dict) -> bool:
         if last_error is not None:
             raise last_error
         script = temp_folder / f"{executable.stem}.update.cmd"
-        if is_package_update:
+        if is_installer_update:
+            update_log = temp_folder / f"{executable.stem}.update.log"
+            script_contents = (
+                "@echo off\nsetlocal\n"
+                f"set \"INSTALLER={update_installer}\"\n"
+                f"set \"TARGET={executable}\"\n"
+                f"set \"LOG={update_log}\"\n"
+                f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Wait-Process -Id {os.getpid()} -Timeout 120 -ErrorAction SilentlyContinue"\n'
+                'start "" /wait "%INSTALLER%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LOG="%LOG%"\n'
+                "if errorlevel 1 exit /b 1\n"
+                'start "" "%TARGET%"\n'
+                'del /q "%INSTALLER%"\n'
+                'del "%~f0"\n'
+            )
+        elif is_package_update:
             script_contents = (
                 "@echo off\nsetlocal\n"
                 f"set \"PACKAGE={update_package}\"\n"
                 f"set \"TARGETDIR={executable.parent}\"\n"
                 f"set \"TARGET={executable}\"\n"
-                "timeout /t 2 /nobreak >nul\n"
-                "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Expand-Archive -LiteralPath $env:PACKAGE -DestinationPath $env:TARGETDIR -Force\"\n"
+                f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Wait-Process -Id {os.getpid()} -Timeout 120 -ErrorAction SilentlyContinue"\n'
+                "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Expand-Archive -LiteralPath $env:PACKAGE -DestinationPath $env:TARGETDIR -Force; if (-not $?) { exit 1 }\"\n"
+                "if errorlevel 1 exit /b 1\n"
                 "if exist \"%PACKAGE%\" del /q \"%PACKAGE%\"\n"
                 "start \"\" \"%TARGET%\"\n"
                 "del \"%~f0\"\n"
@@ -234,6 +253,7 @@ def install_update(manifest: dict) -> bool:
     except (OSError, ValueError):
         update_package.unlink(missing_ok=True)
         legacy_replacement.unlink(missing_ok=True)
+        update_installer.unlink(missing_ok=True)
         ctypes.windll.user32.MessageBoxW(
             None,
             "No se pudo descargar la actualizacion. Intenta nuevamente mas tarde.",

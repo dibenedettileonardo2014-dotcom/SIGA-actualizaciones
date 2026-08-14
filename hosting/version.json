@@ -1,36 +1,36 @@
 {
-  "version": "1.4.8",
+  "version": "1.4.9",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
-  "sha256": "A016DDE4C18C6CCE4B7C3A901411A2F39E1611D4191E3900BAFB6A2043D33C24",
+  "sha256": "7057BC29ECE0829ED63F77C79A8CD1F0C6325C660FCA82053BF053C9392400F3",
   "packageUrl": "https://siga-85bdd.web.app/SIGA-update.zip",
   "packageUrls": ["https://siga-85bdd.web.app/SIGA-update.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update.zip"],
-  "packageSha256": "D2EAE4D377EA120A7FB20FC456BB3D0405BA63DC2927B3B7C5FEE68C3EC1A65F",
-  "notes": "Los operadores ahora pueden editar y eliminar comunicados y sus adjuntos con confirmación y sincronización inmediata.",
-  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.8-x64.exe",
-  "installerSha256": "BD0078C29CA78B575878A7528AEC3248E4A123F53B0FC268195B59F0BF978024",
+  "packageSha256": "FCE7BE138D44193146D9476041BE0C718FD0F68629285C3506FD4F8EC713D30C",
+  "notes": "Corrige la descarga e instalación automática: espera el cierre de SIGA, verifica el instalador y valida su resultado.",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.9-x64.exe",
+  "installerSha256": "86BB561B8E35C5EE3296A272D6593F7B7D24E7F08D347F0CEA34BFDA36470A2A",
   "architectures": {
     "x64": {
       "architecture": "x64",
       "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe",
       "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe"],
-      "sha256": "A016DDE4C18C6CCE4B7C3A901411A2F39E1611D4191E3900BAFB6A2043D33C24",
+      "sha256": "7057BC29ECE0829ED63F77C79A8CD1F0C6325C660FCA82053BF053C9392400F3",
       "packageUrl": "https://siga-85bdd.web.app/SIGA-update-x64.zip",
       "packageUrls": ["https://siga-85bdd.web.app/SIGA-update-x64.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-x64.zip"],
-      "packageSha256": "D2EAE4D377EA120A7FB20FC456BB3D0405BA63DC2927B3B7C5FEE68C3EC1A65F",
-      "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.8-x64.exe",
-      "installerSha256": "BD0078C29CA78B575878A7528AEC3248E4A123F53B0FC268195B59F0BF978024"
+      "packageSha256": "FCE7BE138D44193146D9476041BE0C718FD0F68629285C3506FD4F8EC713D30C",
+      "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.9-x64.exe",
+      "installerSha256": "86BB561B8E35C5EE3296A272D6593F7B7D24E7F08D347F0CEA34BFDA36470A2A"
     },
     "x86": {
       "architecture": "x86",
       "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe",
       "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe"],
-      "sha256": "5D210422D62535254E1D1A9755031FEB5B489AC80EAE19B2B55E5E45D82EB906",
+      "sha256": "0016809B587E65A4BA3723E6159A227F281F2598F2A878BFD3DBE5EE4CC4727D",
       "packageUrl": "https://siga-85bdd.web.app/SIGA-update-x86.zip",
       "packageUrls": ["https://siga-85bdd.web.app/SIGA-update-x86.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-x86.zip"],
-      "packageSha256": "089B8F782B31DD55478ED6F253863C2B83371CD2272400C5927EE124A66ED0E9",
-      "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.8-x86.exe",
-      "installerSha256": "94D740036A91F885EED3DD6D0C3587ECE8C9B245F61CD9A6A13FC9AFD3890429"
+      "packageSha256": "B1F5231CD548719B2D8BC9DC2D6AD539EB3DF99C771BA305FAC91E69A8D5779F",
+      "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.9-x86.exe",
+      "installerSha256": "AABBD7113376250B9C7C0EF9E1AAE30741B2DA6176199495ED03080C3C1F771C"
     }
   }
 }

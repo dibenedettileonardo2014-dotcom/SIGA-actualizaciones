@@ -43,6 +43,9 @@ class LauncherTests(unittest.TestCase):
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "url": "http://example.test/SIGA.exe"}, "x64"))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "sha256": "bad"}, "x64"))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "urls": ["http://example.test/SIGA.exe"]}, "x64"))
+        installer = {**valid, "installerUrl": "https://example.test/SIGA-Setup.exe", "installerSha256": "C" * 64}
+        self.assertTrue(desktop_launcher.valid_update_manifest(installer, "x64"))
+        self.assertFalse(desktop_launcher.valid_update_manifest({**installer, "installerSha256": "bad"}, "x64"))
 
     def test_update_manifest_selects_only_matching_architecture(self):
         artifact = {
@@ -63,6 +66,14 @@ class LauncherTests(unittest.TestCase):
     def test_cross_architecture_update_is_rejected_before_download(self):
         other_architecture = "x86" if desktop_launcher.APP_ARCH == "x64" else "x64"
         self.assertFalse(desktop_launcher.install_update({"architecture": other_architecture}))
+
+    def test_updater_waits_for_exit_and_uses_verified_installer(self):
+        source = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
+        self.assertIn('installerSha256', source)
+        self.assertIn('Wait-Process -Id {os.getpid()}', source)
+        self.assertIn('start "" /wait "%INSTALLER%"', source)
+        self.assertIn('if errorlevel 1 exit /b 1', source)
+        self.assertNotIn('timeout /t 2 /nobreak', source)
 
 
 class ApplicationSourceTests(unittest.TestCase):
