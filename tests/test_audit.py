@@ -74,6 +74,8 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('/CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS', source)
         self.assertIn('if errorlevel 1 exit /b 1', source)
         self.assertNotIn('timeout /t 2 /nobreak', source)
+        self.assertIn('cache_safe_url', source)
+        self.assertIn('"Cache-Control": "no-cache"', source)
 
 
 class ApplicationSourceTests(unittest.TestCase):
@@ -250,8 +252,10 @@ class ApplicationSourceTests(unittest.TestCase):
                 digest = hashlib.sha256(path.read_bytes()).hexdigest().upper()
                 self.assertEqual(manifest[key], digest)
         self.assertEqual(set(manifest["architectures"]), {"x86", "x64"})
+        self.assertIn(manifest["version"], manifest["packageUrl"])
         for architecture, metadata in manifest["architectures"].items():
             self.assertEqual(metadata["architecture"], architecture)
+            self.assertIn(manifest["version"], metadata["packageUrl"])
             architecture_artifacts = {
                 "sha256": ROOT / f"SIGA-{architecture}.exe",
                 "packageSha256": ROOT / f"SIGA-update-{architecture}.zip",

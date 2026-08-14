@@ -1,5 +1,5 @@
 #define MyAppName "SIGA"
-#define MyAppVersion "1.4.10"
+#define MyAppVersion "1.4.11"
 #define MyAppPublisher "LGDB"
 #define MyAppExeName "SIGA.exe"
 #ifndef MyAppArch

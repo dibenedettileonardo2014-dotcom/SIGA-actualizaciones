@@ -17,6 +17,10 @@
       {
         "source": "/**/*.@(html|json)",
         "headers": [{"key":"Cache-Control","value":"no-cache"}]
+      },
+      {
+        "source": "/*.zip",
+        "headers": [{"key":"Cache-Control","value":"no-store, max-age=0"}]
       }
     ]
   }

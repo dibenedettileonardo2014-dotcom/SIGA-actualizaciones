@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.10"
+APP_VERSION = "1.4.11"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -173,7 +173,9 @@ def install_update(manifest: dict) -> bool:
             for attempt in range(3):
                 try:
                     digest = hashlib.sha256()
-                    request = Request(download_url, headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})"})
+                    separator = "&" if "?" in download_url else "?"
+                    cache_safe_url = f"{download_url}{separator}version={manifest.get('version', '')}&sha256={expected_hash[:16]}&attempt={attempt}"
+                    request = Request(cache_safe_url, headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})", "Cache-Control": "no-cache"})
                     with urlopen(request, timeout=120) as response, partial.open("wb") as output:
                         while chunk := response.read(1024 * 1024):
                             output.write(chunk)
