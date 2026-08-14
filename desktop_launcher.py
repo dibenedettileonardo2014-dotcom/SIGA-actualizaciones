@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.1"
+APP_VERSION = "1.4.2"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -277,10 +277,12 @@ class DesktopApi:
         """Save an exported document in Documents and open its default Windows app."""
         safe_name = re.sub(r"[^A-Za-z0-9._ -]", "_", Path(filename).name).strip(" .")
         extension = Path(safe_name).suffix.lower()
-        if not safe_name or extension not in {".xlsx", ".pdf"}:
+        if not safe_name or extension not in {".xlsx", ".pdf", ".csv", ".json"}:
             return {"ok": False, "error": "Nombre o tipo de archivo no permitido."}
         try:
             content = base64.b64decode(content_base64, validate=True)
+            if len(content) > 64 * 1024 * 1024:
+                raise ValueError("El archivo supera el límite seguro de 64 MB.")
             documents_buffer = ctypes.create_unicode_buffer(260)
             result = ctypes.windll.shell32.SHGetFolderPathW(None, 5, None, 0, documents_buffer)
             documents = Path(documents_buffer.value) if result == 0 and documents_buffer.value else Path.home() / "Documents"

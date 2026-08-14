@@ -691,7 +691,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.1</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.2</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -712,7 +712,7 @@
                                         <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.1</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.2</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span class="text-sm text-amber-700">Nueva Versión:</span>
@@ -773,7 +773,7 @@
                             <p class="font-semibold text-slate-700">Creado en 2026</p>
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.1 · Windows x86/x64</p>
+                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.2 · Auditoría integral x86/x64</p>
                     </section>
                 </div>
 
@@ -2659,6 +2659,26 @@ window.__firebase_config = {
             browserFallback();
         }
 
+        function textToBase64(text, mimeType) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('No se pudo preparar el archivo.'));
+                reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+                reader.readAsDataURL(new Blob([text], { type: `${mimeType};charset=utf-8` }));
+            });
+        }
+
+        function downloadTextFile(filename, text, mimeType) {
+            const url = URL.createObjectURL(new Blob([text], { type: `${mimeType};charset=utf-8` }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
         window.exportSchoolExcel = async function() {
             if (!currentSchoolResults.length) return showToast('Sin datos', 'No hay hijos para exportar con los filtros activos.', 'warning');
             try {
@@ -3434,16 +3454,18 @@ window.__firebase_config = {
             }
         };
 
-        window.exportDataToJSON = function() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.appState.affiliates, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `siga_red_${window.appState.appId}_${new Date().toISOString().split('T')[0]}.json`);
-            dlAnchorElem.click();
-            showToast('Respaldo', 'Copia de seguridad local (JSON) guardada.', 'success');
+        window.exportDataToJSON = async function() {
+            const filename = `siga_red_${window.appState.appId}_${new Date().toISOString().split('T')[0]}.json`;
+            const content = JSON.stringify(window.appState.affiliates, null, 2);
+            try {
+                await saveAndOpenExport(filename, await textToBase64(content, 'application/json'), () => downloadTextFile(filename, content, 'application/json'));
+                if (!window.pywebview?.api?.save_and_open_file) showToast('Respaldo', 'Copia de seguridad local (JSON) guardada.', 'success');
+            } catch (error) {
+                showToast('Respaldo', error.message || 'No se pudo guardar la copia JSON.', 'error');
+            }
         };
 
-        window.exportDataToCSV = function() {
+        window.exportDataToCSV = async function() {
             if (window.appState.affiliates.length === 0) {
                 showToast('Advertencia', 'No hay datos para exportar.', 'warning');
                 return;
@@ -3468,22 +3490,19 @@ window.__firebase_config = {
                 a.hasPaid ? 'SI' : 'NO'
             ].map(safeSpreadsheetCell));
 
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"
-                + [headers.join(";"), ...rows.map(e => e.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(";"))].join("\n");
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `siga_red_planilla_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast('Exportación', 'Planilla de Red CSV guardada con éxito.', 'success');
+            const content = "\uFEFF" + [headers.join(";"), ...rows.map(e => e.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(";"))].join("\r\n");
+            const filename = `siga_red_planilla_${new Date().toISOString().split('T')[0]}.csv`;
+            try {
+                await saveAndOpenExport(filename, await textToBase64(content, 'text/csv'), () => downloadTextFile(filename, content, 'text/csv'));
+                if (!window.pywebview?.api?.save_and_open_file) showToast('Exportación', 'La planilla CSV fue descargada.', 'success');
+            } catch (error) {
+                showToast('Exportación', error.message || 'No se pudo guardar la planilla CSV.', 'error');
+            }
         };
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
-        const APP_VERSION = "1.4.1";
+        const APP_VERSION = "1.4.2";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3733,10 +3752,11 @@ window.__firebase_config = {
         async function optimizeNoticeImage(file){if(!file)return null;validateNoticeFile(file,'image');let optimized=await resizeNoticeImage(file,1920,.84);if(optimized.size>NOTICE_MAX_IMAGE)optimized=await resizeNoticeImage(file,1600,.72);if(optimized.size>NOTICE_MAX_IMAGE)throw new Error('La imagen no pudo reducirse por debajo de 2 MB. Elegí otra fotografía.');return optimized}
         const imageThumbnail=file=>resizeNoticeImage(file,480,.78);
         async function deleteNoticeFiles(noticeId,kind=null){const constraints=[where('noticeId','==',noticeId)];if(kind)constraints.push(where('kind','==',kind));const snapshot=await getDocs(query(noticeFilesCollection(),...constraints));for(let offset=0;offset<snapshot.docs.length;offset+=450){const batch=writeBatch(window.appState.db);snapshot.docs.slice(offset,offset+450).forEach(item=>batch.delete(item.ref));await batch.commit()}}
+        async function deleteNoticeAtomically(noticeId){const snapshot=await getDocs(query(noticeFilesCollection(),where('noticeId','==',noticeId)));if(snapshot.docs.length>448)throw new Error('El comunicado tiene demasiados fragmentos para eliminar de forma segura.');const batch=writeBatch(window.appState.db);snapshot.docs.forEach(item=>batch.delete(item.ref));batch.delete(doc(noticeCollection(),noticeId));await batch.commit()}
         async function uploadNoticeFile(noticeId,kind,file){const base64=await fileToBase64(file),chunks=[];for(let offset=0;offset<base64.length;offset+=NOTICE_CHUNK_BYTES)chunks.push(base64.slice(offset,offset+NOTICE_CHUNK_BYTES));for(let offset=0;offset<chunks.length;offset+=450){const batch=writeBatch(window.appState.db);chunks.slice(offset,offset+450).forEach((data,localIndex)=>{const index=offset+localIndex;batch.set(doc(noticeFilesCollection(),`${noticeId}_${kind}_${String(index).padStart(4,'0')}`),{noticeId,kind,index,total:chunks.length,data})});await batch.commit()}}
         function renderNoticePreview(){const title=document.getElementById('notice-title').value.trim()||'Título del comunicado',text=document.getElementById('notice-text').value.trim(),important=document.getElementById('notice-important').checked,image=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0],preview=document.getElementById('notice-preview');if(noticePreviewUrl){URL.revokeObjectURL(noticePreviewUrl);noticePreviewUrl=''}preview.innerHTML=`<div class="flex gap-2 mb-2">${important?'<span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">IMPORTANTE</span>':''}<span class="text-xs text-slate-400">${new Date().toLocaleDateString('es-AR')}</span></div><strong class="block text-slate-800 font-extrabold"></strong><p class="mt-2 whitespace-pre-wrap"></p><div class="notice-preview-media"></div><p class="mt-2 text-xs text-slate-500">${image?'🖼️ '+safeNoticeName(image.name):''}${image&&pdf?' · ':''}${pdf?'📄 '+safeNoticeName(pdf.name):''}</p>`;preview.querySelector('strong').textContent=title;preview.querySelector('p').textContent=text||'Sin texto adjunto.';if(image){noticePreviewUrl=URL.createObjectURL(image);const element=document.createElement('img');element.src=noticePreviewUrl;element.alt='Vista previa de la fotografía';element.className='block w-full h-auto max-h-80 object-contain object-center mx-auto mt-3 rounded-xl bg-white';preview.querySelector('.notice-preview-media').append(element)}}
         function resetNoticeForm(){document.getElementById('notice-form').reset();document.getElementById('notice-edit-id').value='';document.getElementById('notice-form-title').textContent='Nuevo Comunicado';document.getElementById('notice-submit').textContent='PUBLICAR COMUNICADO';document.getElementById('notice-cancel').classList.add('hidden');document.getElementById('notice-message').textContent='';renderNoticePreview()}
-        function renderNoticeTable(){const search=document.getElementById('notice-search').value.trim().toLowerCase(),items=[...window.appState.notices].filter(item=>!search||`${item.title} ${item.text}`.toLowerCase().includes(search)).sort((a,b)=>Number(b.important)-Number(a.important)||new Date(b.publishedAt)-new Date(a.publishedAt)),table=document.getElementById('notice-table');table.replaceChildren();document.getElementById('notice-empty').classList.toggle('hidden',items.length>0);items.forEach(item=>{const row=document.createElement('tr'),content=[item.text?'Texto':'',item.hasImage?'Imagen':'',item.hasPdf?'PDF':''].filter(Boolean).join(' + ')||'—';row.className='text-slate-600';row.innerHTML=`<td class="p-3 whitespace-nowrap">${new Date(item.publishedAt).toLocaleDateString('es-AR')}</td><td class="p-3 font-semibold text-slate-800"></td><td class="p-3">${content}</td><td class="p-3">${item.hasImage?'Sí':'No'}</td><td class="p-3">${item.hasPdf?'Sí':'No'}</td><td class="p-3">${item.important?'Sí':'No'}</td><td class="p-3 text-emerald-700 font-semibold">Publicado</td><td class="p-3"><div class="flex flex-wrap gap-2"><button class="notice-view text-emerald-700 font-bold">Ver</button><button class="notice-edit text-blue-700 font-bold">Editar</button><button class="notice-toggle text-amber-700 font-bold">${item.important?'Desmarcar':'Marcar'}</button><button class="notice-delete text-rose-700 font-bold">Eliminar</button></div></td>`;row.children[1].textContent=item.title;row.querySelector('.notice-view').onclick=()=>alert(`${item.title}\n\n${item.text||'(Sin texto)'}\n\n${item.hasImage?'Incluye imagen. ':''}${item.hasPdf?`Incluye PDF: ${item.pdfName}.`:''}`);row.querySelector('.notice-edit').onclick=()=>{document.getElementById('notice-edit-id').value=item.id;document.getElementById('notice-title').value=item.title;document.getElementById('notice-text').value=item.text||'';document.getElementById('notice-important').checked=Boolean(item.important);document.getElementById('notice-form-title').textContent='Editar Comunicado';document.getElementById('notice-submit').textContent='GUARDAR CAMBIOS';document.getElementById('notice-cancel').classList.remove('hidden');renderNoticePreview()};row.querySelector('.notice-toggle').onclick=()=>setDoc(doc(noticeCollection(),item.id),{...item,important:!item.important,updatedAt:new Date().toISOString()});row.querySelector('.notice-delete').onclick=async()=>{if(!confirm(`¿Eliminar definitivamente el comunicado "${item.title}"?`))return;await deleteNoticeFiles(item.id);await deleteDoc(doc(noticeCollection(),item.id));showToast('Comunicados','El comunicado fue eliminado.','success')};table.append(row)})}
+        function renderNoticeTable(){const search=document.getElementById('notice-search').value.trim().toLowerCase(),items=[...window.appState.notices].filter(item=>!search||`${item.title} ${item.text}`.toLowerCase().includes(search)).sort((a,b)=>Number(b.important)-Number(a.important)||new Date(b.publishedAt)-new Date(a.publishedAt)),table=document.getElementById('notice-table');table.replaceChildren();document.getElementById('notice-empty').classList.toggle('hidden',items.length>0);items.forEach(item=>{const row=document.createElement('tr'),content=[item.text?'Texto':'',item.hasImage?'Imagen':'',item.hasPdf?'PDF':''].filter(Boolean).join(' + ')||'—';row.className='text-slate-600';row.innerHTML=`<td class="p-3 whitespace-nowrap">${new Date(item.publishedAt).toLocaleDateString('es-AR')}</td><td class="p-3 font-semibold text-slate-800"></td><td class="p-3">${content}</td><td class="p-3">${item.hasImage?'Sí':'No'}</td><td class="p-3">${item.hasPdf?'Sí':'No'}</td><td class="p-3">${item.important?'Sí':'No'}</td><td class="p-3 text-emerald-700 font-semibold">Publicado</td><td class="p-3"><div class="flex flex-wrap gap-2"><button class="notice-view text-emerald-700 font-bold">Ver</button><button class="notice-edit text-blue-700 font-bold">Editar</button><button class="notice-toggle text-amber-700 font-bold">${item.important?'Desmarcar':'Marcar'}</button><button class="notice-delete text-rose-700 font-bold">Eliminar</button></div></td>`;row.children[1].textContent=item.title;row.querySelector('.notice-view').onclick=()=>alert(`${item.title}\n\n${item.text||'(Sin texto)'}\n\n${item.hasImage?'Incluye imagen. ':''}${item.hasPdf?`Incluye PDF: ${item.pdfName}.`:''}`);row.querySelector('.notice-edit').onclick=()=>{document.getElementById('notice-edit-id').value=item.id;document.getElementById('notice-title').value=item.title;document.getElementById('notice-text').value=item.text||'';document.getElementById('notice-important').checked=Boolean(item.important);document.getElementById('notice-form-title').textContent='Editar Comunicado';document.getElementById('notice-submit').textContent='GUARDAR CAMBIOS';document.getElementById('notice-cancel').classList.remove('hidden');renderNoticePreview()};row.querySelector('.notice-toggle').onclick=async event=>{const button=event.currentTarget;button.disabled=true;try{await setDoc(doc(noticeCollection(),item.id),{...item,important:!item.important,updatedAt:new Date().toISOString()})}catch(error){console.error('No se pudo cambiar la prioridad del comunicado:',error);showToast('Comunicados','No se pudo actualizar el comunicado. Verificá la conexión.','error')}finally{button.disabled=false}};row.querySelector('.notice-delete').onclick=async event=>{if(!confirm(`¿Eliminar definitivamente el comunicado "${item.title}"?`))return;const button=event.currentTarget;button.disabled=true;try{await deleteNoticeAtomically(item.id);showToast('Comunicados','El comunicado fue eliminado.','success')}catch(error){console.error('No se pudo eliminar el comunicado:',error);showToast('Comunicados','No se pudo eliminar. No se aplicaron cambios parciales.','error');button.disabled=false}};table.append(row)})}
         function subscribeNotices(){if(!window.appState.firebaseEnabled||unsubscribeNotices)return;unsubscribeNotices=onSnapshot(noticeCollection(),snapshot=>{window.appState.notices=snapshot.docs.map(item=>({id:item.id,...item.data()}));renderNoticeTable()},error=>{console.error('Error sincronizando comunicados:',error);document.getElementById('notice-message').textContent='No se pudieron sincronizar los comunicados.'})}
         const uppercaseNoticeInput=event=>{const start=event.target.selectionStart,end=event.target.selectionEnd,upper=event.target.value.toLocaleUpperCase('es-AR');if(event.target.value!==upper){event.target.value=upper;event.target.setSelectionRange(start,end)}};document.getElementById('notice-title').addEventListener('input',uppercaseNoticeInput);document.getElementById('notice-text').addEventListener('input',uppercaseNoticeInput);document.getElementById('notice-form').addEventListener('input',renderNoticePreview);document.getElementById('notice-search').addEventListener('input',renderNoticeTable);document.getElementById('notice-cancel').addEventListener('click',resetNoticeForm);
         document.getElementById('notice-form').addEventListener('submit',()=>{const title=document.getElementById('notice-title'),text=document.getElementById('notice-text');title.value=title.value.toLocaleUpperCase('es-AR');text.value=text.value.toLocaleUpperCase('es-AR')},{capture:true});

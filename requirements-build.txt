@@ -1,0 +1,7 @@
+# Dependencias comunes de compilación para Windows x86 y x64.
+# PyInstaller usa la arquitectura del intérprete que ejecuta la compilación.
+pyinstaller==6.21.0
+pyinstaller-hooks-contrib==2026.6
+pywebview==6.2.1
+pythonnet==3.1.0
+cffi==2.1.1

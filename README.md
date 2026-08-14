@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.1` — formulario de afiliados alineado y mantenimiento conjunto obligatorio de Windows x86/x64.
+`1.4.2` — auditoría integral de estabilidad, exportaciones, comunicados y sincronización x86/x64.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.4.0 (x86 y x64)
 - 1.4.1 (x86 y x64)
+- 1.4.2 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 

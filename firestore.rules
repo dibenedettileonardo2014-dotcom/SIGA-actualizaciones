@@ -127,9 +127,15 @@ service cloud.firestore {
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasAll(['noticeId', 'kind', 'index', 'total', 'data'])
         && request.resource.data.kind in ['image', 'thumbnail', 'pdf']
+        && request.resource.data.noticeId is string
+        && request.resource.data.noticeId.size() > 0
+        && request.resource.data.noticeId.size() <= 100
         && request.resource.data.index is int
         && request.resource.data.total is int
         && request.resource.data.total > 0
+        && request.resource.data.total <= 64
+        && request.resource.data.index >= 0
+        && request.resource.data.index < request.resource.data.total
         && request.resource.data.data is string
         && request.resource.data.data.size() <= 360000;
       allow delete: if isAdmin();

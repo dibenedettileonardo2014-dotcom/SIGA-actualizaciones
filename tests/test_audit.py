@@ -38,10 +38,11 @@ class LauncherTests(unittest.TestCase):
             "packageUrl": "https://example.test/SIGA.zip",
             "packageSha256": "b" * 64,
         }
-        self.assertTrue(desktop_launcher.valid_update_manifest(valid))
-        self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "url": "http://example.test/SIGA.exe"}))
-        self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "sha256": "bad"}))
-        self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "urls": ["http://example.test/SIGA.exe"]}))
+        self.assertTrue(desktop_launcher.valid_update_manifest(valid, "x64"))
+        self.assertFalse(desktop_launcher.valid_update_manifest(valid, "x86"))
+        self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "url": "http://example.test/SIGA.exe"}, "x64"))
+        self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "sha256": "bad"}, "x64"))
+        self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "urls": ["http://example.test/SIGA.exe"]}, "x64"))
 
     def test_update_manifest_selects_only_matching_architecture(self):
         artifact = {
@@ -53,6 +54,15 @@ class LauncherTests(unittest.TestCase):
         self.assertTrue(desktop_launcher.valid_update_manifest(manifest, "x86"))
         self.assertFalse(desktop_launcher.valid_update_manifest(manifest, "x64"))
         self.assertEqual(desktop_launcher.update_metadata(manifest, "x86")["architecture"], "x86")
+
+    def test_native_export_types_are_explicitly_limited(self):
+        source = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
+        self.assertIn('{".xlsx", ".pdf", ".csv", ".json"}', source)
+        self.assertIn("64 * 1024 * 1024", source)
+
+    def test_cross_architecture_update_is_rejected_before_download(self):
+        other_architecture = "x86" if desktop_launcher.APP_ARCH == "x64" else "x64"
+        self.assertFalse(desktop_launcher.install_update({"architecture": other_architecture}))
 
 
 class ApplicationSourceTests(unittest.TestCase):
@@ -150,6 +160,18 @@ class ApplicationSourceTests(unittest.TestCase):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         self.assertIn("watchedNoticesUid===user.uid&&stopNoticesWatch&&stopReadsWatch", mobile)
         self.assertGreaterEqual(mobile.count("stopNoticeWatches()"), 4)
+
+    def test_exports_and_notice_files_handle_large_or_partial_operations(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
+        for marker in ("textToBase64", "downloadTextFile", "new Blob([text]", "deleteNoticeAtomically", "No se aplicaron cambios parciales"):
+            self.assertIn(marker, desktop)
+        self.assertNotIn('data:text/csv', desktop)
+        self.assertNotIn('data:text/json', desktop)
+        self.assertIn("expectedTotal!==chunks.length", mobile)
+        self.assertIn("request.resource.data.total <= 64", rules)
+        self.assertIn("request.resource.data.index < request.resource.data.total", rules)
 
     def test_global_maintenance_contract(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
