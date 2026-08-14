@@ -228,14 +228,18 @@ class ApplicationSourceTests(unittest.TestCase):
             'id="affiliate-result-count"',
             "affiliateRegisterHtml",
             "previewAffiliateRegister",
+            'id="affiliate-print-modal"',
+            'id="affiliate-print-frame"',
+            "frame.contentWindow.print()",
             "@page{size:A4 portrait",
             "thead{display:table-header-group}",
             "Página <span class=\"page-number\"",
             "assets/logo-sindicato.png",
         ):
             self.assertIn(marker, desktop)
-        self.assertNotIn('<option value="">Todos los sectores</option>', desktop)
-        self.assertIn("return matchQuery && matchCompany && matchSector && matchPayment && matchStatus", desktop)
+        self.assertNotIn('id="filter-sector"', desktop)
+        self.assertNotIn("window.open('', '_blank')", desktop)
+        self.assertIn("return matchQuery && matchCompany && matchPayment && matchStatus", desktop)
         self.assertIn("String(a.company || '').localeCompare", desktop)
 
     def test_automatic_biometric_lifecycle_contract(self):

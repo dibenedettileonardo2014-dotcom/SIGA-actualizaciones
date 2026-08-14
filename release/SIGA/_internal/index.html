@@ -388,16 +388,12 @@
                             </span>
                             <input type="text" id="filter-search" oninput="scheduleFilters()" placeholder="Buscar por apellido, nombre, DNI, número, sector u otros datos..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-10 p-3 transition-all">
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div class="relative">
                                 <i class="fa-solid fa-building absolute left-3 top-3.5 text-slate-400"></i>
                                 <input id="filter-company" type="search" list="company-filter-options" oninput="scheduleFilters()" placeholder="Buscar o elegir empresa" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl py-3 pl-9 pr-3 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                                 <datalist id="company-filter-options"></datalist>
                             </div>
-                            <!-- Filtro de Sector -->
-                            <select id="filter-sector" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
-                                <option value="">Filtrar por sector</option>
-                            </select>
                             <!-- Filtro de Cuota -->
                             <select id="filter-payment" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
                                 <option value="">Todas las cuotas</option>
@@ -1158,6 +1154,19 @@
 
 
     <!-- Módulos de Firebase y Script Principal de Aplicación -->
+    <div id="affiliate-print-modal" class="hidden fixed inset-0 z-[100] bg-slate-950/70 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="affiliate-print-title">
+        <div class="bg-white h-full max-w-6xl mx-auto rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-4 py-3 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h2 id="affiliate-print-title" class="font-bold"><i class="fa-solid fa-file-pdf mr-2 text-emerald-400"></i>Vista previa del Padrón de Afiliados</h2>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="printAffiliateRegister()" class="px-3 py-2 bg-white text-slate-900 rounded-lg text-xs font-bold"><i class="fa-solid fa-download mr-1"></i> Guardar PDF / Imprimir</button>
+                    <button type="button" onclick="closeAffiliateRegisterPreview()" class="px-3 py-2 bg-slate-700 text-white rounded-lg text-xs font-bold"><i class="fa-solid fa-xmark mr-1"></i> Cerrar</button>
+                </div>
+            </div>
+            <iframe id="affiliate-print-frame" title="Vista previa imprimible del Padrón de Afiliados" class="w-full flex-1 border-0 bg-slate-200"></iframe>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp, getApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -1998,18 +2007,6 @@ window.__firebase_config = {
                 if (a.company) window.appState.companies.add(a.company.trim());
             });
 
-            // Actualizar select de filtros de sector
-            const sectorFilter = document.getElementById('filter-sector');
-            const savedSelected = sectorFilter.value;
-            sectorFilter.innerHTML = '<option value="">Filtrar por sector</option>';
-            Array.from(window.appState.sectors).sort().forEach(sector => {
-                const opt = document.createElement('option');
-                opt.value = sector;
-                opt.textContent = sector;
-                sectorFilter.appendChild(opt);
-            });
-            sectorFilter.value = savedSelected;
-
             const companyOptions = document.getElementById('company-filter-options');
             companyOptions.replaceChildren();
             Array.from(window.appState.companies).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })).forEach(company => {
@@ -2039,7 +2036,6 @@ window.__firebase_config = {
             const normalizeSearch = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es-AR').trim();
             const searchQuery = normalizeSearch(document.getElementById('filter-search').value);
             const companyVal = normalizeSearch(document.getElementById('filter-company').value);
-            const sectorVal = document.getElementById('filter-sector').value;
             const paymentVal = document.getElementById('filter-payment').value;
             const statusVal = document.getElementById('filter-status').value;
 
@@ -2052,11 +2048,10 @@ window.__firebase_config = {
                 const matchQuery = !searchQuery || a.__searchText.includes(searchQuery);
                 const matchCompany = !companyVal || normalizeSearch(a.company).includes(companyVal);
 
-                const matchSector = !sectorVal || a.sector === sectorVal;
                 const matchPayment = !paymentVal || (String(Boolean(a.hasPaid)) === paymentVal);
                 const matchStatus = !statusVal || a.status === statusVal;
 
-                return matchQuery && matchCompany && matchSector && matchPayment && matchStatus;
+                return matchQuery && matchCompany && matchPayment && matchStatus;
             }).sort((a, b) => String(a.company || '').localeCompare(String(b.company || ''), 'es', { sensitivity: 'base' }) || String(a.name || '').localeCompare(String(b.name || ''), 'es', { sensitivity: 'base' }));
 
             window.appState.currentPage = 1;
@@ -2189,7 +2184,7 @@ window.__firebase_config = {
         };
 
         window.clearAffiliateFilters = function() {
-            ['filter-search', 'filter-company', 'filter-sector', 'filter-payment', 'filter-status'].forEach(id => {
+            ['filter-search', 'filter-company', 'filter-payment', 'filter-status'].forEach(id => {
                 document.getElementById(id).value = '';
             });
             applyFilters();
@@ -3451,18 +3446,26 @@ window.__firebase_config = {
             const generatedAt = new Date().toLocaleString('es-AR');
             const rows = affiliates.map(a => `<tr><td>${escapePrintHtml(a.number || '—')}</td><td>${escapePrintHtml(a.name || '—')}</td><td>${escapePrintHtml(a.dni || '—')}</td><td>${escapePrintHtml(a.company || 'Sin empresa')}</td><td>${escapePrintHtml(a.sector || '—')}</td></tr>`).join('');
             return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Padrón de Afiliados</title><style>
-                @page{size:A4 portrait;margin:18mm 10mm 15mm}@media print{.toolbar{display:none!important}body{padding:0}.report{box-shadow:none}.page-number:after{content:counter(page)}}
-                *{box-sizing:border-box}body{margin:0;background:#e2e8f0;color:#1e293b;font-family:Arial,sans-serif;padding:18px}.toolbar{position:sticky;top:0;display:flex;justify-content:center;gap:10px;padding:10px;background:#0f172a;z-index:2}.toolbar button{border:0;border-radius:7px;padding:9px 14px;font-weight:bold;cursor:pointer}.primary{background:#059669;color:white}.secondary{background:white;color:#0f172a}.report{max-width:190mm;margin:auto;background:white;padding:10mm;box-shadow:0 4px 20px #0002}.header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #059669;padding-bottom:9px}.header img{width:46px;height:46px;object-fit:contain}.brand{font-size:12px;font-weight:bold;color:#047857}.header h1{font-size:22px;margin:2px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;font-size:10px;margin:10px 0}.meta b{color:#334155}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}thead{display:table-header-group}tr{break-inside:avoid}th,td{border:1px solid #94a3b8;padding:5px 4px;vertical-align:top;overflow-wrap:anywhere}th{background:#d1fae5;color:#064e3b;text-align:left}th:nth-child(1){width:14%}th:nth-child(2){width:29%}th:nth-child(3){width:16%}th:nth-child(4){width:25%}th:nth-child(5){width:16%}.footer{position:fixed;bottom:3mm;right:10mm;font-size:8px;color:#64748b}.empty{text-align:center;padding:30px;color:#64748b}
-            </style></head><body><div class="toolbar"><button class="secondary" onclick="window.print()">Guardar PDF</button><button class="primary" onclick="window.print()">Imprimir directamente</button><button class="secondary" onclick="window.close()">Cerrar vista previa</button></div><main class="report"><header class="header"><img src="assets/logo-sindicato.png" alt="Logo SIGA"><div><div class="brand">SIGA · Sistema Integral de Gestión de Afiliados</div><h1>Padrón de Afiliados</h1></div></header><section class="meta"><div><b>Empresa:</b> ${escapePrintHtml(selectedCompany || 'Todas las empresas')}</div><div><b>Generado:</b> ${escapePrintHtml(generatedAt)}</div><div><b>Cantidad total:</b> ${affiliates.length}</div><div><b>Búsqueda:</b> ${escapePrintHtml(document.getElementById('filter-search').value.trim() || 'Sin búsqueda general')}</div></section><table><thead><tr><th>N.º de afiliado</th><th>Apellido y nombre</th><th>DNI</th><th>Empresa</th><th>Sector</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">No hay afiliados para los filtros seleccionados.</td></tr>'}</tbody></table><footer class="footer">Página <span class="page-number"></span></footer></main></body></html>`;
+                @page{size:A4 portrait;margin:18mm 10mm 15mm}@media print{body{padding:0}.report{box-shadow:none}.page-number:after{content:counter(page)}}
+                *{box-sizing:border-box}body{margin:0;background:#e2e8f0;color:#1e293b;font-family:Arial,sans-serif;padding:18px}.report{max-width:190mm;margin:auto;background:white;padding:10mm;box-shadow:0 4px 20px #0002}.header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #059669;padding-bottom:9px}.header img{width:46px;height:46px;object-fit:contain}.brand{font-size:12px;font-weight:bold;color:#047857}.header h1{font-size:22px;margin:2px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;font-size:10px;margin:10px 0}.meta b{color:#334155}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}thead{display:table-header-group}tr{break-inside:avoid}th,td{border:1px solid #94a3b8;padding:5px 4px;vertical-align:top;overflow-wrap:anywhere}th{background:#d1fae5;color:#064e3b;text-align:left}th:nth-child(1){width:14%}th:nth-child(2){width:29%}th:nth-child(3){width:16%}th:nth-child(4){width:25%}th:nth-child(5){width:16%}.footer{position:fixed;bottom:3mm;right:10mm;font-size:8px;color:#64748b}.empty{text-align:center;padding:30px;color:#64748b}
+            </style></head><body><main class="report"><header class="header"><img src="assets/logo-sindicato.png" alt="Logo SIGA"><div><div class="brand">SIGA · Sistema Integral de Gestión de Afiliados</div><h1>Padrón de Afiliados</h1></div></header><section class="meta"><div><b>Empresa:</b> ${escapePrintHtml(selectedCompany || 'Todas las empresas')}</div><div><b>Generado:</b> ${escapePrintHtml(generatedAt)}</div><div><b>Cantidad total:</b> ${affiliates.length}</div><div><b>Búsqueda:</b> ${escapePrintHtml(document.getElementById('filter-search').value.trim() || 'Sin búsqueda general')}</div></section><table><thead><tr><th>N.º de afiliado</th><th>Apellido y nombre</th><th>DNI</th><th>Empresa</th><th>Sector</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">No hay afiliados para los filtros seleccionados.</td></tr>'}</tbody></table><footer class="footer">Página <span class="page-number"></span></footer></main></body></html>`;
         }
 
         window.previewAffiliateRegister = function() {
             if (!window.appState.filteredAffiliates.length) return showToast('Sin datos', 'No hay afiliados para generar con los filtros activos.', 'warning');
-            const preview = window.open('', '_blank');
-            if (!preview) return showToast('Vista previa bloqueada', 'Habilitá las ventanas emergentes para ver e imprimir el padrón.', 'warning');
-            preview.document.open();
-            preview.document.write(affiliateRegisterHtml());
-            preview.document.close();
+            document.getElementById('affiliate-print-frame').srcdoc = affiliateRegisterHtml();
+            document.getElementById('affiliate-print-modal').classList.remove('hidden');
+        };
+
+        window.closeAffiliateRegisterPreview = function() {
+            document.getElementById('affiliate-print-modal').classList.add('hidden');
+            document.getElementById('affiliate-print-frame').srcdoc = '';
+        };
+
+        window.printAffiliateRegister = function() {
+            const frame = document.getElementById('affiliate-print-frame');
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
         };
 
         window.printConvention = function() {
@@ -3707,7 +3710,7 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
         const APP_VERSION = "1.4.11";
-        const APP_REVISION = "20260814-03";
+        const APP_REVISION = "20260814-04";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
