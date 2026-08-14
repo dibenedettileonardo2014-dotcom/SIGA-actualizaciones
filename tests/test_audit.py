@@ -70,8 +70,8 @@ class LauncherTests(unittest.TestCase):
     def test_updater_waits_for_exit_and_uses_verified_installer(self):
         source = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
         self.assertIn('installerSha256', source)
-        self.assertIn('Wait-Process -Id {os.getpid()}', source)
         self.assertIn('start "" /wait "%INSTALLER%"', source)
+        self.assertIn('/CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS', source)
         self.assertIn('if errorlevel 1 exit /b 1', source)
         self.assertNotIn('timeout /t 2 /nobreak', source)
 
@@ -179,6 +179,8 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertNotIn(removed_marker, mobile)
         self.assertIn("signInWithEmailAndPassword", mobile)
         self.assertIn('type="password"', mobile)
+        for marker in ('id="password-eye"', "input.type=show?'text':'password'", "aria-label", "aria-pressed"):
+            self.assertIn(marker, mobile)
 
     def test_mobile_notice_watchers_are_reused_and_stopped(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")

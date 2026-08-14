@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.9"
+APP_VERSION = "1.4.10"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -199,8 +199,7 @@ def install_update(manifest: dict) -> bool:
                 f"set \"INSTALLER={update_installer}\"\n"
                 f"set \"TARGET={executable}\"\n"
                 f"set \"LOG={update_log}\"\n"
-                f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Wait-Process -Id {os.getpid()} -Timeout 120 -ErrorAction SilentlyContinue"\n'
-                'start "" /wait "%INSTALLER%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LOG="%LOG%"\n'
+                'start "" /wait "%INSTALLER%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CURRENTUSER /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS /LOG="%LOG%"\n'
                 "if errorlevel 1 exit /b 1\n"
                 'start "" "%TARGET%"\n'
                 'del /q "%INSTALLER%"\n'
