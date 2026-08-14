@@ -3,6 +3,7 @@ import hashlib
 import re
 import subprocess
 import unittest
+import zipfile
 from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
@@ -123,6 +124,13 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("object-fit:contain", mobile)
         self.assertNotIn("object-fit:cover", mobile)
 
+    def test_affiliate_form_layout_contract(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn('class="grid grid-cols-1 sm:grid-cols-3 gap-4"', desktop)
+        self.assertIn('>Trabaja por consultora</span>', desktop)
+        self.assertIn('class="grid grid-cols-1 sm:grid-cols-6 gap-3"', desktop)
+        self.assertIn('class="sm:col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">Fecha de nacimiento</label><input type="date" id="form-partner-birthdate"', desktop)
+
     def test_automatic_biometric_lifecycle_contract(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         for marker in ("BIOMETRIC_RELOCK_MS=5*60*1000", "biometricPromptActive", "isInitialAuthenticatedSession", "Confirmá tu identidad para continuar", "localStorage.removeItem(BIOMETRIC_KEY)"):
@@ -197,6 +205,16 @@ class ApplicationSourceTests(unittest.TestCase):
                 with self.subTest(architecture=architecture, artifact=path.name):
                     digest = hashlib.sha256(path.read_bytes()).hexdigest().upper()
                     self.assertEqual(metadata[key], digest)
+
+    def test_x86_x64_packages_share_the_current_source(self):
+        source = (ROOT / "index.html").read_bytes()
+        expected_machine = {"x86": 0x014C, "x64": 0x8664}
+        for architecture, machine in expected_machine.items():
+            executable = (ROOT / f"SIGA-{architecture}.exe").read_bytes()
+            pe_offset = int.from_bytes(executable[60:64], "little")
+            self.assertEqual(int.from_bytes(executable[pe_offset + 4:pe_offset + 6], "little"), machine)
+            with zipfile.ZipFile(ROOT / f"SIGA-update-{architecture}.zip") as package:
+                self.assertEqual(package.read("_internal/index.html"), source)
 
 
 if __name__ == "__main__":
