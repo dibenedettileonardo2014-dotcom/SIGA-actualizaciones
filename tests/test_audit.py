@@ -134,16 +134,18 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("object-fit:contain", mobile)
         self.assertNotIn("object-fit:cover", mobile)
 
-    def test_operator_can_publish_but_not_modify_existing_notices(self):
+    def test_admin_and_operator_can_manage_existing_notices(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
         self.assertNotIn('body[data-role="operador"] #btn-tab-comunicados', desktop)
         self.assertIn("['admin','operador'].includes(window.appState.currentUserRole)", desktop)
         for action in ("notice-edit", "notice-toggle", "notice-delete"):
-            self.assertIn(f'body[data-role="operador"] #notice-table .{action}', desktop)
+            self.assertNotIn(f'body[data-role="operador"] #notice-table .{action}', desktop)
         notice_rules = rules[rules.index("match /artifacts/{appId}/public/data/comunicados/{noticeId}"):]
         self.assertIn("allow create: if isStaffOperational(appId)", notice_rules)
-        self.assertIn("allow update, delete: if isAdmin();", notice_rules)
+        self.assertGreaterEqual(notice_rules.count("allow update, delete: if isStaffOperational(appId);"), 2)
+        for marker in ("notice-edit-id", "setDoc(doc(noticeCollection(),id),data)", "deleteNoticeAtomically(item.id)", "if(!confirm(`¿Eliminar definitivamente", "onSnapshot(noticeCollection()"):
+            self.assertIn(marker, desktop)
 
     def test_affiliate_form_layout_contract(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")

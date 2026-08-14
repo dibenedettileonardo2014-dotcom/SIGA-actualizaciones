@@ -121,7 +121,7 @@ service cloud.firestore {
         && request.resource.data.publishedAt is string
         && request.resource.data.important is bool
         && request.resource.data.published == true;
-      allow update, delete: if isAdmin();
+      allow update, delete: if isStaffOperational(appId);
     }
 
     match /artifacts/{appId}/public/data/comunicado_files/{chunkId} {
@@ -140,7 +140,7 @@ service cloud.firestore {
         && request.resource.data.index < request.resource.data.total
         && request.resource.data.data is string
         && request.resource.data.data.size() <= 360000;
-      allow update, delete: if isAdmin();
+      allow update, delete: if isStaffOperational(appId);
     }
 
     match /artifacts/{appId}/mobile_reads/{userId}/items/{noticeId} {
