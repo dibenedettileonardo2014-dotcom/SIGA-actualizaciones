@@ -79,6 +79,15 @@ class LauncherTests(unittest.TestCase):
 
 
 class ApplicationSourceTests(unittest.TestCase):
+    def test_mobile_entrypoint_is_not_cached_by_hosting(self):
+        firebase_config = json.loads((ROOT / "firebase.json").read_text(encoding="utf-8"))
+        headers = {
+            item["source"]: {header["key"]: header["value"] for header in item["headers"]}
+            for item in firebase_config["hosting"]["headers"]
+        }
+        self.assertEqual(headers["/"]["Cache-Control"], "no-cache")
+        self.assertEqual(headers["/sw.js"]["Cache-Control"], "no-cache")
+
     def test_mobile_shell_assets_exist(self):
         service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
         shell_match = re.search(r"const APP_SHELL = \[([\s\S]*?)\];", service_worker)

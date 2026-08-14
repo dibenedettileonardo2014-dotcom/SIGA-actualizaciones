@@ -32,8 +32,7 @@ Hosting fueron publicadas el 7 de agosto de 2026. Para entregar un acceso:
    abrir **Credencial
    Digital**, seleccionar al afiliado, escribir una contraseña inicial de ocho
    caracteres o más y pulsar **Crear acceso**.
-2. Entregar al afiliado la URL pública, su DNI y la contraseña
-   inicial. Desde **Mis datos** podrá cambiarla.
+2. Entregar al afiliado la URL pública, su DNI y la contraseña inicial.
 
 ## Seguridad y funcionamiento
 
@@ -56,7 +55,7 @@ Hosting fueron publicadas el 7 de agosto de 2026. Para entregar un acceso:
 
 ## Recuperación de acceso
 
-La primera versión permite que el afiliado cambie su contraseña mientras tiene
-la sesión abierta. Para una recuperación automática por olvido se debe cargar
-y verificar un correo real por afiliado, o agregar una función de servidor que
-permita al administrador emitir un restablecimiento temporal.
+Mi SIGA no permite cambiar ni recuperar la contraseña desde el teléfono. Si el
+afiliado pierde el acceso, un administrador u operador debe deshabilitar la
+credencial anterior y crear un acceso nuevo desde SIGA. Este procedimiento usa
+Firebase Authentication dentro del plan Spark y no requiere servicios pagos.
