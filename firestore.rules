@@ -89,10 +89,12 @@ service cloud.firestore {
 
     match /artifacts/{appId}/public/data/unique_affiliates/{uniqueKey} {
       allow read, delete: if isStaffOperational(appId);
-      allow create, update: if isStaffOperational(appId)
+      allow create: if isStaffOperational(appId)
         && request.resource.data.keys().hasOnly(['affiliateId', 'type'])
         && request.resource.data.affiliateId is string
-        && request.resource.data.type in ['dni', 'number'];
+        && request.resource.data.type in ['dni', 'number']
+        && getAfter(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.id == request.resource.data.affiliateId;
+      allow update: if false;
     }
 
     match /artifacts/{appId}/mobile_credentials/{userId} {
@@ -148,6 +150,18 @@ service cloud.firestore {
         && request.resource.data.noticeId == noticeId
         && request.resource.data.readAt is string
         && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/comunicados/$(noticeId));
+      allow delete: if false;
+    }
+
+    match /artifacts/{appId}/public/config/affiliate_sequence/state {
+      allow read: if isStaffOperational(appId);
+      allow create, update: if isStaffOperational(appId)
+        && request.resource.data.keys().hasOnly(['nextNumber', 'updatedAt'])
+        && request.resource.data.nextNumber is int
+        && request.resource.data.nextNumber > 0
+        && request.resource.data.updatedAt is timestamp
+        && (!exists(/databases/$(database)/documents/artifacts/$(appId)/public/config/affiliate_sequence/state)
+          || request.resource.data.nextNumber >= resource.data.nextNumber);
       allow delete: if false;
     }
 

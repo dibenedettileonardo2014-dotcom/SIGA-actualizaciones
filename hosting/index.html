@@ -45,7 +45,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.4.2</p>
+      <p class="app-version">Versión 1.4.4</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -105,7 +105,7 @@
     function maintenanceRef(){return doc(db,'artifacts',networkId,'public','config','maintenance','state')}
     function showMaintenance(data={}){if(!maintenanceBlocked)maintenanceEpoch++;maintenanceBlocked=true;$('maintenance-title').textContent=data.title||DEFAULT_MAINTENANCE_TITLE;$('maintenance-message').textContent=data.message||DEFAULT_MAINTENANCE_MESSAGE;const estimate=$('maintenance-estimate');estimate.textContent=data.estimatedReturn?`Regreso estimado: ${data.estimatedReturn}`:'';estimate.classList.toggle('hidden',!data.estimatedReturn);$('maintenance-screen').classList.remove('hidden');appView.classList.add('hidden');loginView.classList.add('hidden');document.querySelectorAll('.notice-dialog-backdrop').forEach(element=>element.remove());if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches()}
     function hideMaintenance(){maintenanceBlocked=false;$('maintenance-screen').classList.add('hidden')}
-    function watchMaintenance(user){stopMaintenanceWatch?.();stopMaintenanceWatch=null;return new Promise(resolve=>{let initial=true;stopMaintenanceWatch=onSnapshot(maintenanceRef(),{includeMetadataChanges:true},snapshot=>{const data=snapshot.exists()?snapshot.data():{enabled:false},wasBlocked=maintenanceBlocked;if(data.enabled)showMaintenance(data);else if(snapshot.metadata.fromCache)showMaintenance({title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});else hideMaintenance();if(initial){initial=false;resolve()}else if(wasBlocked&&!maintenanceBlocked&&auth.currentUser?.uid===user.uid){void handleAuthState(auth.currentUser)}},()=>{showMaintenance({title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});if(initial){initial=false;resolve()}})})}
+    function watchMaintenance(){stopMaintenanceWatch?.();stopMaintenanceWatch=null;return new Promise(resolve=>{let initial=true;stopMaintenanceWatch=onSnapshot(maintenanceRef(),{includeMetadataChanges:true},snapshot=>{const data=snapshot.exists()?snapshot.data():{enabled:false},wasBlocked=maintenanceBlocked;if(data.enabled)showMaintenance(data);else if(snapshot.metadata.fromCache)showMaintenance({title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});else hideMaintenance();if(initial){initial=false;resolve()}else if(wasBlocked&&!maintenanceBlocked){void handleAuthState(auth.currentUser)}},()=>{showMaintenance({title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});if(initial){initial=false;resolve()}})})}
 
     function supportsBiometrics(){return window.isSecureContext&&'PublicKeyCredential'in window&&'credentials'in navigator}
     function toBase64Url(buffer){return btoa(String.fromCharCode(...new Uint8Array(buffer))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
@@ -308,7 +308,8 @@
       if(mustUnlock){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Abriendo la verificación de Android…';await updateBiometricUi(user);if(automaticUnlockUid!==user.uid){automaticUnlockUid=user.uid;try{await unlockWithBiometric(user);return}catch{$('login-message').textContent='No se pudo abrir automáticamente. Tocá el botón de huella o ingresá tu contraseña.'}}return}
       loadCredential(user);await updateBiometricUi(user);authUiReadyUid=user.uid;if(pendingBiometricOfferUid===user.uid&&!maintenanceBlocked){pendingBiometricOfferUid=null;await offerBiometricSetup(user)}
     }
-    onAuthStateChanged(auth,user=>{void(async()=>{if(!user){stopMaintenanceWatch?.();stopMaintenanceWatch=null;hideMaintenance();await handleAuthState(null);return}await watchMaintenance(user);if(!maintenanceBlocked)await handleAuthState(user)})()});
+    void watchMaintenance();
+    onAuthStateChanged(auth,user=>{if(!maintenanceBlocked)void handleAuthState(user)});
     $('logout-button').addEventListener('click',async()=>{const user=auth.currentUser;localStorage.removeItem('siga_mobile_credential');localStorage.removeItem(BIOMETRIC_KEY);if(user)localStorage.removeItem(INVITE_KEY_PREFIX+user.uid);sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;await signOut(auth)});
     $('maintenance-logout').addEventListener('click',()=>{$('logout-button').click()});
     $('print-button').addEventListener('click',()=>window.print());
