@@ -470,6 +470,11 @@
                                 <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
                                 <span>Tu rol de <b>Lector</b> no permite registrar pagos. Solicita permisos a un administrador.</span>
                             </div>
+                            <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3 space-y-2">
+                                <label for="payment-company-filter" class="block text-xs font-semibold text-emerald-800 uppercase tracking-wider">Empresa</label>
+                                <input id="payment-company-filter" type="search" list="company-filter-options" oninput="schedulePaymentCompanyFilter()" placeholder="Buscar o seleccionar empresa" autocomplete="off" class="w-full bg-white border border-emerald-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500">
+                                <div class="flex items-center justify-between gap-2"><p id="payment-company-summary" class="text-xs font-bold text-emerald-800" aria-live="polite">Todas las empresas · 0 afiliados</p><button type="button" onclick="clearPaymentCompanyFilter()" class="text-xs font-bold text-slate-600 hover:text-slate-900">Limpiar</button></div>
+                            </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Seleccionar Afiliado</label>
                                 <select id="payment-affiliate-select" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
@@ -500,6 +505,10 @@
                                 </div>
                             </div>
                             <div>
+                                <label for="payment-concept" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Concepto</label>
+                                <input id="payment-concept" type="text" value="CUOTA SINDICAL" maxlength="80" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500">
+                            </div>
+                            <div>
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Monto Cobrado ($)</label>
                                 <input type="number" id="payment-amount" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 block transition-all">
                             </div>
@@ -510,12 +519,15 @@
                             <button id="btn-submit-payment" onclick="registerPayment()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/15 transition-all text-sm mt-2">
                                 <i class="fa-solid fa-receipt mr-2"></i> Registrar Pago
                             </button>
+                            <button id="btn-submit-company-payment" onclick="registerCompanyPayments()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/15 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fa-solid fa-building-circle-check mr-2"></i> Registrar para la empresa seleccionada
+                            </button>
                         </div>
 
                         <!-- Lista de Cobros Recientes / Historial -->
                         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm md:col-span-2 flex flex-col">
                             <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                                <h4 class="font-bold text-slate-800">Historial Reciente de Cobros (Red Compartida)</h4>
+                                <div><h4 class="font-bold text-slate-800">Historial Reciente de Cobros (Red Compartida)</h4><p id="payment-history-summary" class="text-xs text-slate-500 mt-1">Mostrando todos los cobros</p></div>
                                 <button id="btn-clear-payments" onclick="triggerClearPaymentHistory()" class="text-xs text-rose-500 hover:text-rose-600 font-semibold"><i class="fa-solid fa-trash mr-1"></i> Borrar Todo</button>
                             </div>
                             <div class="flex-1 overflow-y-auto max-h-96 custom-scrollbar">
@@ -524,6 +536,7 @@
                                         <tr class="bg-slate-50 text-[10px] font-bold text-slate-400 border-b border-slate-100 uppercase">
                                             <th class="py-2 px-4">Fecha</th>
                                             <th class="py-2 px-4">Afiliado</th>
+                                            <th class="py-2 px-4">Empresa</th>
                                             <th class="py-2 px-4">Período</th>
                                             <th class="py-2 px-4 text-right">Monto</th>
                                             <th class="py-2 px-4 text-right">Acciones</th>
@@ -1564,6 +1577,24 @@ window.__firebase_config = {
             }
         }
 
+        async function sendPaymentTransaction(change, paymentRef) {
+            if (change.type === 'delete') {
+                await deleteDoc(paymentRef);
+                return;
+            }
+            return runTransaction(window.appState.db, async transaction => {
+                const existing = await transaction.get(paymentRef);
+                if (existing.exists()) {
+                    if (existing.data().clientMutationId === change.data.clientMutationId) return existing.data();
+                    const error = new Error('Ya existe una cuota para este afiliado, período y concepto.');
+                    error.code = 'payment-duplicate';
+                    throw error;
+                }
+                transaction.set(paymentRef, change.data);
+                return change.data;
+            });
+        }
+
         async function sendChangeToFirestore(change) {
             if (change.collection === 'mobile_credentials') {
                 const credentialRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'mobile_credentials', change.id);
@@ -1574,6 +1605,9 @@ window.__firebase_config = {
             const docRef = doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', change.collection, change.id);
             if (change.collection === 'afiliados') {
                 return sendAffiliateTransaction(change, docRef);
+            }
+            if (change.collection === 'pagos') {
+                return sendPaymentTransaction(change, docRef);
             }
             if (change.type === 'delete') {
                 await deleteDoc(docRef);
@@ -1774,6 +1808,10 @@ window.__firebase_config = {
                                 localStateChanged = true;
                             }
                             showToast('Edición simultánea detectada', error.message, 'warning');
+                        } else if (error?.code === 'payment-duplicate') {
+                            window.appState.payments = window.appState.payments.filter(item => item.id !== change.id || item.clientMutationId !== change.data?.clientMutationId);
+                            localStateChanged = true;
+                            showToast('Cuota duplicada omitida', error.message, 'warning');
                         } else {
                             remaining.push(change);
                         }
@@ -1790,6 +1828,7 @@ window.__firebase_config = {
                 if (localStateChanged) {
                     saveLocalData();
                     processStateChange();
+                    if (window.appState.currentTab === 'pagos') renderPaymentsList();
                 }
             } finally {
                 isFlushingPendingChanges = false;
@@ -3094,10 +3133,10 @@ window.__firebase_config = {
         // --- SISTEMA DE DROPDOWNS SINCRO ---
         function populateDropdowns() {
             const selects = [
-                document.getElementById('payment-affiliate-select'),
                 document.getElementById('card-affiliate-select')
             ];
 
+            renderPaymentCompanyFilter();
             if (dropdownRevision === stateRevision) return;
             dropdownRevision = stateRevision;
             const sorted = getDerivedState().sortedByName;
@@ -3117,7 +3156,6 @@ window.__firebase_config = {
 
                 select.value = prevValue;
             });
-
             // La lista se reconstruye luego de cada sincronización. Volvemos a
             // pintar la credencial seleccionada para reflejar los cambios guardados.
             const selectedCredential = document.getElementById('card-affiliate-select');
@@ -3127,6 +3165,107 @@ window.__firebase_config = {
         }
 
         // --- CONTROL DE PAGOS Y CUOTAS ---
+        let paymentCompanyFilterTimer = null;
+        window.schedulePaymentCompanyFilter = function() {
+            clearTimeout(paymentCompanyFilterTimer);
+            paymentCompanyFilterTimer = setTimeout(renderPaymentCompanyFilter, 100);
+        };
+
+        function normalizePaymentText(value) {
+            return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleUpperCase('es-AR').trim();
+        }
+
+        function paymentCompanyAffiliates() {
+            const companyQuery = normalizePaymentText(document.getElementById('payment-company-filter').value);
+            return getDerivedState().sortedByName.filter(affiliate => !companyQuery || normalizePaymentText(affiliate.company).includes(companyQuery));
+        }
+
+        function selectedPaymentCompany() {
+            const query = normalizePaymentText(document.getElementById('payment-company-filter').value);
+            return Array.from(window.appState.companies).find(company => normalizePaymentText(company) === query) || '';
+        }
+
+        function renderPaymentCompanyFilter() {
+            const select = document.getElementById('payment-affiliate-select');
+            if (!select) return;
+            const previous = select.value;
+            const affiliates = paymentCompanyAffiliates();
+            const companyText = document.getElementById('payment-company-filter').value.trim();
+            select.replaceChildren();
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = '-- Seleccionar un Afiliado --';
+            select.appendChild(placeholder);
+            affiliates.forEach(affiliate => {
+                const option = document.createElement('option');
+                option.value = affiliate.id;
+                option.textContent = `${affiliate.name} (N.º ${affiliate.number || 'S/N'} · DNI ${affiliate.dni || 'S/D'})`;
+                select.appendChild(option);
+            });
+            if (affiliates.some(item => item.id === previous)) select.value = previous;
+            const selectedCompany = selectedPaymentCompany();
+            const scopeLabel = selectedCompany ? `Empresa seleccionada: ${selectedCompany}` : companyText ? `Búsqueda: ${companyText}` : 'Todas las empresas';
+            document.getElementById('payment-company-summary').textContent = `${scopeLabel} · ${affiliates.length} ${affiliates.length === 1 ? 'afiliado' : 'afiliados'}`;
+            document.getElementById('btn-submit-company-payment').disabled = !selectedCompany || affiliates.length === 0;
+            renderPaymentsList();
+        }
+
+        window.clearPaymentCompanyFilter = function() {
+            document.getElementById('payment-company-filter').value = '';
+            renderPaymentCompanyFilter();
+        };
+
+        function paymentIdentity(affiliateId, period, concept) {
+            return `${affiliateId}\u0000${normalizePaymentText(period)}\u0000${normalizePaymentText(concept || 'CUOTA SINDICAL')}`;
+        }
+
+        function paymentAlreadyExists(affiliateId, period, concept) {
+            const identity = paymentIdentity(affiliateId, period, concept);
+            return window.appState.payments.some(payment => paymentIdentity(payment.affiliateId, payment.period, payment.concept) === identity);
+        }
+
+        function paymentDocumentId(affiliateId, period, concept) {
+            const safe = normalizePaymentText(`${period}_${concept}`).replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
+            return `cuota_${affiliateId}_${safe}`;
+        }
+
+        function validatePaymentInputs() {
+            const month = document.getElementById('payment-month').value;
+            const year = document.getElementById('payment-year').value;
+            const amount = document.getElementById('payment-amount').value;
+            const concept = uppercaseText(document.getElementById('payment-concept').value) || 'CUOTA SINDICAL';
+            if (!amount || Number(amount) <= 0 || !Number.isFinite(Number(amount)) || Number(amount) > 1000000000000) throw new Error('Ingresá un monto válido.');
+            if (!/^\d{4}$/.test(year) || Number(year) < 1900 || Number(year) > 2100) throw new Error('Ingresá un año entre 1900 y 2100.');
+            if (concept.length > 80) throw new Error('El concepto no puede superar 80 caracteres.');
+            return { period: uppercaseText(`${month} ${year}`), amount: Number(amount), concept };
+        }
+
+        async function buildAndSavePayment(affiliate, values, attachments = []) {
+            const selectedCompany = normalizePaymentText(document.getElementById('payment-company-filter').value);
+            if (selectedCompany && !normalizePaymentText(affiliate.company).includes(selectedCompany)) throw new Error(`${affiliate.name} no pertenece a la empresa seleccionada.`);
+            if (paymentAlreadyExists(affiliate.id, values.period, values.concept)) return false;
+            const now = new Date();
+            const payment = {
+                id: paymentDocumentId(affiliate.id, values.period, values.concept),
+                affiliateId: affiliate.id,
+                affiliateNumber: String(affiliate.number || ''),
+                dni: String(affiliate.dni || ''),
+                name: uppercaseText(affiliate.name),
+                company: String(affiliate.company || ''),
+                period: values.period,
+                concept: values.concept,
+                uniquenessKey: paymentIdentity(affiliate.id, values.period, values.concept),
+                clientMutationId: crypto.randomUUID(),
+                amount: values.amount,
+                attachments,
+                date: now.toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+                timestamp: now.toISOString()
+            };
+            if (!affiliate.hasPaid) await commitToDatabase({ ...affiliate, hasPaid: true });
+            await commitPaymentToDatabase(payment);
+            return true;
+        }
+
         window.registerPayment = async function() {
             if (window.appState.currentUserRole === 'lector') return;
 
@@ -3134,73 +3273,76 @@ window.__firebase_config = {
             if (button.dataset.busy === 'true') return;
 
             const affiliateId = document.getElementById('payment-affiliate-select').value;
-            const month = document.getElementById('payment-month').value;
-            const year = document.getElementById('payment-year').value;
-            const amount = document.getElementById('payment-amount').value;
-
             if (!affiliateId) {
                 showToast('Advertencia', 'Por favor selecciona un afiliado para registrar el pago.', 'warning');
                 return;
             }
-            if (!amount || amount <= 0) {
-                showToast('Advertencia', 'Por favor ingresa un monto válido.', 'warning');
-                return;
-            }
-            if (!/^\d{4}$/.test(year) || Number(year) < 1900 || Number(year) > 2100) {
-                showToast('Año inválido', 'Ingresá un año entre 1900 y 2100.', 'warning');
-                return;
-            }
-            if (!Number.isFinite(Number(amount)) || Number(amount) > 1000000000000) {
-                showToast('Monto inválido', 'El monto ingresado está fuera del rango permitido.', 'warning');
-                return;
-            }
-
-            let affiliate = window.appState.affiliates.find(a => a.id === affiliateId);
+            const affiliate = window.appState.affiliates.find(a => a.id === affiliateId);
             if (!affiliate) return;
-
-            const paymentId = crypto.randomUUID();
-            let attachments;
             try {
                 button.dataset.busy = 'true';
                 button.disabled = true;
-                attachments = await uploadAttachments(document.getElementById('payment-attachments').files, 'pagos', paymentId);
+                const values = validatePaymentInputs();
+                if (paymentAlreadyExists(affiliate.id, values.period, values.concept)) throw new Error('Ya existe una cuota para este afiliado, período y concepto.');
+                const paymentId = paymentDocumentId(affiliate.id, values.period, values.concept);
+                const attachments = await uploadAttachments(document.getElementById('payment-attachments').files, 'pagos', paymentId);
+                await buildAndSavePayment(affiliate, values, attachments);
+                showToast('Pago registrado', `Cobro para ${affiliate.name} guardado correctamente.`, 'success');
+                document.getElementById('payment-amount').value = '';
+                document.getElementById('payment-attachments').value = '';
             } catch (error) {
+                showToast('No se registró la cuota', error.message || 'No se pudo guardar.', 'warning');
+            } finally {
                 button.dataset.busy = 'false';
                 button.disabled = false;
-                showToast('Adjuntos no guardados', error.message || 'No se pudieron subir los archivos.', 'error');
-                return;
             }
+        };
 
-            // Evitar una escritura extra si la ficha ya estaba marcada al día.
-            if (!affiliate.hasPaid) {
-                affiliate = { ...affiliate, hasPaid: true };
-                await commitToDatabase(affiliate);
+        window.registerCompanyPayments = async function() {
+            if (window.appState.currentUserRole === 'lector') return;
+            const button = document.getElementById('btn-submit-company-payment');
+            if (button.dataset.busy === 'true') return;
+            const company = selectedPaymentCompany();
+            const affiliates = getDerivedState().sortedByName.filter(affiliate => normalizePaymentText(affiliate.company) === normalizePaymentText(company));
+            if (!company || !affiliates.length) return showToast('Seleccioná una empresa', 'Elegí una empresa con afiliados antes de realizar una carga grupal.', 'warning');
+            try {
+                button.dataset.busy = 'true';
+                button.disabled = true;
+                const values = validatePaymentInputs();
+                const eligible = affiliates.filter(affiliate => !paymentAlreadyExists(affiliate.id, values.period, values.concept));
+                let skipped = affiliates.length - eligible.length;
+                if (!eligible.length) {
+                    showToast('Sin cuotas nuevas', 'Todos los afiliados de la empresa ya tienen ese período y concepto.', 'warning');
+                    return;
+                }
+                const attachments = await uploadAttachments(document.getElementById('payment-attachments').files, 'pagos', `empresa_${crypto.randomUUID()}`);
+                let created = 0;
+                for (const affiliate of eligible) {
+                    if (await buildAndSavePayment(affiliate, values, attachments)) created += 1;
+                    else skipped += 1;
+                }
+                document.getElementById('payment-amount').value = '';
+                document.getElementById('payment-attachments').value = '';
+                showToast('Carga por empresa completada', `${created} cuotas registradas${skipped ? ` · ${skipped} existentes omitidas` : ''}.`, 'success');
+            } catch (error) {
+                showToast('No se completó la carga', error.message || 'No se pudieron guardar las cuotas.', 'error');
+            } finally {
+                button.dataset.busy = 'false';
+                button.disabled = false;
             }
-
-            const paymentObj = {
-                id: paymentId,
-                affiliateId: affiliateId,
-                name: uppercaseText(affiliate.name),
-                period: uppercaseText(`${month} ${year}`),
-                amount: parseFloat(amount),
-                attachments,
-                date: new Date().toLocaleDateString('es-ES', {hour: '2-digit', minute:'2-digit'}),
-                timestamp: new Date().toISOString()
-            };
-
-            await commitPaymentToDatabase(paymentObj);
-            showToast('Pago Registrado', `Cobro para ${affiliate.name} guardado correctamente en red.`, 'success');
-            document.getElementById('payment-amount').value = '';
-            document.getElementById('payment-attachments').value = '';
-            button.dataset.busy = 'false';
-            button.disabled = false;
         };
 
         function renderPaymentsList() {
-            const list = window.appState.payments;
+            const companyQuery = normalizePaymentText(document.getElementById('payment-company-filter')?.value);
+            const list = window.appState.payments.filter(payment => {
+                if (!companyQuery) return true;
+                const affiliate = window.appState.affiliates.find(item => item.id === payment.affiliateId);
+                return normalizePaymentText(payment.company || affiliate?.company).includes(companyQuery);
+            });
             const body = document.getElementById('payment-history-body');
             const noPayments = document.getElementById('no-payments');
             body.innerHTML = '';
+            document.getElementById('payment-history-summary').textContent = `${companyQuery ? `Empresa: ${document.getElementById('payment-company-filter').value.trim()}` : 'Todas las empresas'} · ${list.length} ${list.length === 1 ? 'cobro' : 'cobros'}`;
 
             if (list.length === 0) {
                 noPayments.classList.remove('hidden');
@@ -3214,7 +3356,8 @@ window.__firebase_config = {
                 tr.innerHTML = `
                     <td class="py-2.5 px-4 text-xs font-semibold text-slate-400">${escapePrintHtml(p.date)}</td>
                     <td class="py-2.5 px-4 font-bold text-slate-700">${escapePrintHtml(p.name)}</td>
-                    <td class="py-2.5 px-4 text-xs font-medium text-emerald-700">${escapePrintHtml(p.period)}</td>
+                    <td class="py-2.5 px-4 text-xs text-slate-600">${escapePrintHtml(p.company || window.appState.affiliates.find(item => item.id === p.affiliateId)?.company || '—')}</td>
+                    <td class="py-2.5 px-4 text-xs font-medium text-emerald-700"><div>${escapePrintHtml(p.period)}</div><div class="text-[10px] text-slate-400 mt-0.5">${escapePrintHtml(p.concept || 'CUOTA SINDICAL')}</div></td>
                     <td class="py-2.5 px-4 font-bold text-right text-slate-800">$${Number(p.amount || 0).toLocaleString('es-AR')}</td>
                     <td class="py-2.5 px-4 text-right whitespace-nowrap">
                         ${p.attachments?.length ? `<span title="${p.attachments.length} archivo(s) adjunto(s)" class="inline-flex items-center text-emerald-600 mr-2"><i class="fa-solid fa-paperclip"></i></span>` : ''}
@@ -3553,7 +3696,8 @@ window.__firebase_config = {
             const payment = window.appState.payments.find(item => item.id === id);
             if (!payment) return;
             const attachments = (payment.attachments || []).length ? (payment.attachments || []).map(file => `<li>${escapePrintHtml(file.name)}</li>`).join('') : '<li>Sin adjuntos</li>';
-            printHtmlDocument(`<!doctype html><html><head><title>Comprobante de pago</title><style>body{font-family:Arial,sans-serif;color:#1e293b;margin:34px;max-width:540px}h1{color:#065f46;font-size:22px;border-bottom:2px solid #10b981;padding-bottom:10px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:10px 0;font-size:14px}.total{font-size:20px;font-weight:bold;color:#065f46;margin-top:22px}</style></head><body><h1>SIGA · Comprobante de pago</h1><div class="row"><span>Afiliado</span><strong>${escapePrintHtml(payment.name)}</strong></div><div class="row"><span>Período</span><strong>${escapePrintHtml(payment.period)}</strong></div><div class="row"><span>Fecha</span><strong>${escapePrintHtml(payment.date)}</strong></div><p class="total">Total: $${Number(payment.amount).toLocaleString('es-AR')}</p><p><strong>Adjuntos:</strong></p><ul>${attachments}</ul></body></html>`);
+            const affiliate = window.appState.affiliates.find(item => item.id === payment.affiliateId);
+            printHtmlDocument(`<!doctype html><html><head><title>Comprobante de pago</title><style>body{font-family:Arial,sans-serif;color:#1e293b;margin:34px;max-width:540px}h1{color:#065f46;font-size:22px;border-bottom:2px solid #10b981;padding-bottom:10px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:10px 0;font-size:14px}.total{font-size:20px;font-weight:bold;color:#065f46;margin-top:22px}</style></head><body><h1>SIGA · Comprobante de pago</h1><div class="row"><span>Afiliado</span><strong>${escapePrintHtml(payment.name)}</strong></div><div class="row"><span>N.º de afiliado</span><strong>${escapePrintHtml(payment.affiliateNumber || affiliate?.number || '—')}</strong></div><div class="row"><span>DNI</span><strong>${escapePrintHtml(payment.dni || affiliate?.dni || '—')}</strong></div><div class="row"><span>Empresa</span><strong>${escapePrintHtml(payment.company || affiliate?.company || '—')}</strong></div><div class="row"><span>Concepto</span><strong>${escapePrintHtml(payment.concept || 'CUOTA SINDICAL')}</strong></div><div class="row"><span>Período</span><strong>${escapePrintHtml(payment.period)}</strong></div><div class="row"><span>Fecha</span><strong>${escapePrintHtml(payment.date)}</strong></div><p class="total">Total: $${Number(payment.amount).toLocaleString('es-AR')}</p><p><strong>Adjuntos:</strong></p><ul>${attachments}</ul></body></html>`);
         };
 
         window.printCard = function() {
@@ -3710,7 +3854,7 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
         const APP_VERSION = "1.4.11";
-        const APP_REVISION = "20260814-04";
+        const APP_REVISION = "20260814-05";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -4069,9 +4213,24 @@ window.__firebase_config = {
             });
         };
 
+        let recoveredConnectivityUpdateCheck = false;
+        async function checkUpdateAfterConnectivityRecovery() {
+            if (recoveredConnectivityUpdateCheck || !window.pywebview?.api?.install_available_update) return;
+            recoveredConnectivityUpdateCheck = true;
+            try {
+                const result = await window.pywebview.api.install_available_update();
+                if (result?.ok) showToast('Actualización lista', 'SIGA se reiniciará para aplicar los cambios verificados.', 'info');
+            } catch (error) {
+                console.info('La actualización se reintentará más adelante:', error);
+            } finally {
+                setTimeout(() => { recoveredConnectivityUpdateCheck = false; }, 60000);
+            }
+        }
+
         window.addEventListener('online', async () => {
             if (window.appState.firebaseEnabled) setupRealtimeSync();
             await flushPendingChanges();
+            await checkUpdateAfterConnectivityRecovery();
         });
 
         window.onload = function() {

@@ -242,6 +242,35 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("return matchQuery && matchCompany && matchPayment && matchStatus", desktop)
         self.assertIn("String(a.company || '').localeCompare", desktop)
 
+    def test_payments_support_company_scope_and_unique_period_concept(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
+        for marker in (
+            'id="payment-company-filter"',
+            'id="payment-company-summary"',
+            'id="btn-submit-company-payment"',
+            'id="payment-concept"',
+            "paymentCompanyAffiliates",
+            "selectedPaymentCompany",
+            "paymentAlreadyExists",
+            "paymentDocumentId",
+            "sendPaymentTransaction",
+            "payment-duplicate",
+            "registerCompanyPayments",
+            "affiliateNumber: String(affiliate.number || '')",
+            "company: String(affiliate.company || '')",
+        ):
+            self.assertIn(marker, desktop)
+        for marker in ("affiliateNumber", "uniquenessKey", "clientMutationId", ".data.company == request.resource.data.company"):
+            self.assertIn(marker, rules)
+
+    def test_connectivity_recovery_rechecks_native_update(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn("checkUpdateAfterConnectivityRecovery", desktop)
+        self.assertIn("await flushPendingChanges();", desktop)
+        self.assertIn("await checkUpdateAfterConnectivityRecovery();", desktop)
+        self.assertLess(desktop.rindex("await flushPendingChanges();"), desktop.rindex("await checkUpdateAfterConnectivityRecovery();"))
+
     def test_automatic_biometric_lifecycle_contract(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         for marker in ("BIOMETRIC_RELOCK_MS=5*60*1000", "biometricPromptActive", "isInitialAuthenticatedSession", "Confirmá tu identidad para continuar", "localStorage.removeItem(BIOMETRIC_KEY)"):

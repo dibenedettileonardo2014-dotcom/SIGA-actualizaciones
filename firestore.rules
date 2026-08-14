@@ -57,16 +57,30 @@ service cloud.firestore {
     }
 
     function validPayment(paymentId, appId) {
-      return request.resource.data.keys().hasAll(['id', 'affiliateId', 'name', 'period', 'amount', 'timestamp'])
+      return request.resource.data.keys().hasAll(['id', 'affiliateId', 'affiliateNumber', 'dni', 'name', 'company', 'period', 'concept', 'uniquenessKey', 'clientMutationId', 'amount', 'timestamp'])
         && request.resource.data.id == paymentId
         && request.resource.data.affiliateId is string
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
+        && request.resource.data.affiliateNumber is string
+        && request.resource.data.dni is string
+        && request.resource.data.company is string
         && request.resource.data.period is string
+        && request.resource.data.concept is string
+        && request.resource.data.concept.size() > 0
+        && request.resource.data.concept.size() <= 80
+        && request.resource.data.uniquenessKey is string
+        && request.resource.data.clientMutationId is string
+        && request.resource.data.clientMutationId.size() >= 16
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
         && request.resource.data.timestamp is string
-        && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId));
+        && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId))
+        && get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.number == request.resource.data.affiliateNumber
+        && get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.dni == request.resource.data.dni
+        && ((!get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.keys().hasAll(['company']) && request.resource.data.company == '')
+          || (get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.keys().hasAll(['company'])
+            && get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.company == request.resource.data.company));
     }
 
     // Solo las cuentas administrativas autorizadas pueden acceder al padrón.
