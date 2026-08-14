@@ -13,6 +13,7 @@ import ctypes
 import hashlib
 import json
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -24,12 +25,14 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.3.9"
+APP_VERSION = "1.4.0"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
     "https://siga-85bdd.web.app/version.json",
 )
+
+APP_ARCH = "x64" if platform.architecture()[0] == "64bit" else "x86"
 
 
 class LocalAppServer(ThreadingHTTPServer):
@@ -76,8 +79,29 @@ def version_key(value: str) -> tuple[int, ...]:
     return tuple(int(part) for part in value.strip().split("."))
 
 
-def valid_update_manifest(manifest: object) -> bool:
+def update_metadata(manifest: object, architecture: str = APP_ARCH) -> dict | None:
+    """Return only the update metadata matching this executable's architecture."""
+    if not isinstance(manifest, dict):
+        return None
+    architectures = manifest.get("architectures")
+    if architectures is None:
+        # Every pre-1.4 desktop release was x64. An x86 executable must never
+        # consume that legacy channel because its packages contain x64 DLLs.
+        return manifest if architecture == "x64" else None
+    if not isinstance(architectures, dict):
+        return None
+    metadata = architectures.get(architecture)
+    if not isinstance(metadata, dict):
+        return None
+    merged = {"version": manifest.get("version"), **metadata}
+    if metadata.get("architecture") != architecture:
+        return None
+    return merged
+
+
+def valid_update_manifest(manifest: object, architecture: str = APP_ARCH) -> bool:
     """Reject incomplete or unsafe update metadata before downloading files."""
+    manifest = update_metadata(manifest, architecture)
     if not isinstance(manifest, dict):
         return False
     if not isinstance(manifest.get("version"), str):
@@ -108,12 +132,12 @@ def fetch_update_manifest() -> dict | None:
             try:
                 request = Request(
                     f"{manifest_url}?installed={APP_VERSION}&attempt={attempt}",
-                    headers={"User-Agent": f"SIGA/{APP_VERSION}"},
+                    headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})"},
                 )
                 with urlopen(request, timeout=20) as response:
                     manifest = json.load(response)
                 if valid_update_manifest(manifest):
-                    return manifest
+                    return update_metadata(manifest)
             except (OSError, ValueError, json.JSONDecodeError):
                 time.sleep(1)
     return None
@@ -121,6 +145,8 @@ def fetch_update_manifest() -> dict | None:
 
 def install_update(manifest: dict) -> bool:
     """Download a verified package and schedule its installation after exit."""
+    if manifest.get("architecture", APP_ARCH) != APP_ARCH:
+        return False
     executable = Path(sys.executable)
     temp_folder = Path(tempfile.gettempdir()) / "SIGA-updater"
     temp_folder.mkdir(parents=True, exist_ok=True)
@@ -143,7 +169,7 @@ def install_update(manifest: dict) -> bool:
             for attempt in range(3):
                 try:
                     digest = hashlib.sha256()
-                    request = Request(download_url, headers={"User-Agent": f"SIGA/{APP_VERSION}"})
+                    request = Request(download_url, headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})"})
                     with urlopen(request, timeout=120) as response, partial.open("wb") as output:
                         while chunk := response.read(1024 * 1024):
                             output.write(chunk)

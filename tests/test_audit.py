@@ -42,6 +42,17 @@ class LauncherTests(unittest.TestCase):
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "sha256": "bad"}))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "urls": ["http://example.test/SIGA.exe"]}))
 
+    def test_update_manifest_selects_only_matching_architecture(self):
+        artifact = {
+            "architecture": "x86", "url": "https://example.test/SIGA-x86.exe",
+            "sha256": "A" * 64, "packageUrl": "https://example.test/SIGA-x86.zip",
+            "packageSha256": "B" * 64,
+        }
+        manifest = {"version": "1.4.0", "architectures": {"x86": artifact}}
+        self.assertTrue(desktop_launcher.valid_update_manifest(manifest, "x86"))
+        self.assertFalse(desktop_launcher.valid_update_manifest(manifest, "x64"))
+        self.assertEqual(desktop_launcher.update_metadata(manifest, "x86")["architecture"], "x86")
+
 
 class ApplicationSourceTests(unittest.TestCase):
     def test_mobile_shell_assets_exist(self):
@@ -168,12 +179,24 @@ class ApplicationSourceTests(unittest.TestCase):
         artifacts = {
             "sha256": ROOT / "SIGA.exe",
             "packageSha256": ROOT / "SIGA-update.zip",
-            "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['version']}.exe",
+            "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['version']}-x64.exe",
         }
         for key, path in artifacts.items():
             with self.subTest(artifact=path.name):
                 digest = hashlib.sha256(path.read_bytes()).hexdigest().upper()
                 self.assertEqual(manifest[key], digest)
+        self.assertEqual(set(manifest["architectures"]), {"x86", "x64"})
+        for architecture, metadata in manifest["architectures"].items():
+            self.assertEqual(metadata["architecture"], architecture)
+            architecture_artifacts = {
+                "sha256": ROOT / f"SIGA-{architecture}.exe",
+                "packageSha256": ROOT / f"SIGA-update-{architecture}.zip",
+                "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['version']}-{architecture}.exe",
+            }
+            for key, path in architecture_artifacts.items():
+                with self.subTest(architecture=architecture, artifact=path.name):
+                    digest = hashlib.sha256(path.read_bytes()).hexdigest().upper()
+                    self.assertEqual(metadata[key], digest)
 
 
 if __name__ == "__main__":

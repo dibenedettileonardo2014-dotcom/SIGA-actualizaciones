@@ -27,9 +27,12 @@ a = Analysis(
     optimize=2,
 )
 
-# The desktop build is x64/WebView2-only. PyWebView's generic hook also adds
-# Android, x86, ARM64, legacy-MSHTML and documentation files that SIGA cannot
-# load on this target.
+# PyInstaller follows the architecture of the Python interpreter running this
+# file. Keep only the matching native WebView2 and CLR loaders in each build.
+import struct
+build_arch = 'x64' if struct.calcsize('P') == 8 else 'x86'
+other_arch = 'x86' if build_arch == 'x64' else 'x64'
+other_clr_arch = 'x86' if build_arch == 'x64' else 'amd64'
 unused_runtime_files = {
     'pythonnet\\runtime\\Python.Runtime.xml',
     'setuptools\\_vendor\\jaraco\\text\\Lorem ipsum.txt',
@@ -37,8 +40,8 @@ unused_runtime_files = {
     'webview\\lib\\WebBrowserInterop.x64.dll',
     'webview\\lib\\WebBrowserInterop.x86.dll',
     'webview\\lib\\runtimes\\win-arm64\\native\\WebView2Loader.dll',
-    'webview\\lib\\runtimes\\win-x86\\native\\WebView2Loader.dll',
-    'clr_loader\\ffi\\dlls\\x86\\ClrLoader.dll',
+    f'webview\\lib\\runtimes\\win-{other_arch}\\native\\WebView2Loader.dll',
+    f'clr_loader\\ffi\\dlls\\{other_clr_arch}\\ClrLoader.dll',
 }
 a.datas = [entry for entry in a.datas if entry[0] not in unused_runtime_files]
 a.binaries = [entry for entry in a.binaries if entry[0] not in unused_runtime_files]

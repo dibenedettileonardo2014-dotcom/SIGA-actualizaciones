@@ -2,6 +2,8 @@
 build/
 build-*/
 dist/
+release/x86/
+release/x64/
 *.egg-info/
 __pycache__/
 *.pyc
@@ -11,6 +13,7 @@ env/
 .tools/
 .firebase/
 hosting/SIGA-update.zip
+hosting/SIGA-update-*.zip
 *.log
 .DS_Store
 Thumbs.db
