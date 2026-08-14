@@ -256,6 +256,15 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertEqual(int.from_bytes(executable[pe_offset + 4:pe_offset + 6], "little"), machine)
             with zipfile.ZipFile(ROOT / f"SIGA-update-{architecture}.zip") as package:
                 self.assertEqual(package.read("_internal/index.html"), source)
+                names = set(package.namelist())
+                self.assertIn(
+                    "_internal/webview/lib/runtimes/win-arm64/native/WebView2Loader.dll",
+                    names,
+                )
+                self.assertIn(
+                    f"_internal/webview/lib/runtimes/win-{architecture}/native/WebView2Loader.dll",
+                    names,
+                )
 
 
 if __name__ == "__main__":
