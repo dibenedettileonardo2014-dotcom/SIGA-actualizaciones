@@ -804,7 +804,10 @@
                             <p class="font-semibold text-slate-700">Creado en 2026</p>
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.12 · Actualización preparada en segundo plano</p>
+                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.12</span><span id="about-installed-architecture"></span>
+                        · Actualización preparada en segundo plano
+                    </p>
                     </section>
                 </div>
 
@@ -3932,7 +3935,22 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
         const APP_VERSION = "1.4.12";
-        const APP_REVISION = "20260815-02";
+        const APP_REVISION = "20260815-03";
+
+        async function showInstalledVersion() {
+            let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
+            try {
+                if (window.pywebview?.api?.get_installed_version) installed = await window.pywebview.api.get_installed_version();
+            } catch (error) {
+                console.info('No se pudo consultar la versión nativa:', error);
+            }
+            const revision = installed?.revision ? ` (revisión ${installed.revision})` : '';
+            const architecture = installed?.architecture ? ` · ${installed.architecture}` : '';
+            document.getElementById('about-installed-version').textContent = `${installed?.version || APP_VERSION}${revision}`;
+            document.getElementById('about-installed-architecture').textContent = architecture;
+        }
+
+        window.addEventListener('pywebviewready', showInstalledVersion);
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -4359,6 +4377,7 @@ window.__firebase_config = {
             setupFirebase();
 
             checkForUpdatesOnStartup();
+            showInstalledVersion();
         };
 
     </script>

@@ -26,7 +26,7 @@ import webview
 
 LOCAL_PORT = 18765
 APP_VERSION = "1.4.12"
-APP_REVISION = "20260815-02"
+APP_REVISION = "20260815-03"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -392,6 +392,10 @@ def automatic_update_on_startup() -> bool:
 
 class DesktopApi:
     """Native operations explicitly requested from the desktop interface."""
+
+    def get_installed_version(self) -> dict:
+        """Return the version embedded in the running executable."""
+        return {"version": APP_VERSION, "revision": APP_REVISION, "architecture": APP_ARCH}
 
     def report_sync_error(self, code: str, message: str) -> dict:
         """Persist a sanitized Firestore diagnostic without record contents."""

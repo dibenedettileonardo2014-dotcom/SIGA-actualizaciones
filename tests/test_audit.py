@@ -386,6 +386,13 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("window.appState.currentUserRole === 'admin'", desktop)
         self.assertIn("['credenciales', 'actualizaciones'].includes(tabId)", desktop)
 
+    def test_about_reads_the_version_from_the_running_executable(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
+        self.assertIn('id="about-installed-version"', desktop)
+        self.assertIn("window.pywebview.api.get_installed_version()", desktop)
+        self.assertIn("def get_installed_version(self)", launcher)
+
     def test_update_is_staged_and_relaunched_from_canonical_install(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
