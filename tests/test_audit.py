@@ -82,6 +82,8 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('automatic_update_on_startup()', source)
         self.assertIn('Local\\\\SIGA-Update', source)
         self.assertIn('UPDATE_LOG_MAX_BYTES', source)
+        self.assertIn('Cache-Control", "no-store, no-cache, must-revalidate, max-age=0', source)
+        self.assertIn('index.html?revision={APP_REVISION}', source)
 
     def test_same_visible_version_is_repaired_by_hash(self):
         with tempfile.TemporaryDirectory() as folder:

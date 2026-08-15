@@ -26,7 +26,7 @@ import webview
 
 LOCAL_PORT = 18765
 APP_VERSION = "1.4.12"
-APP_REVISION = "20260815-01"
+APP_REVISION = "20260815-02"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -50,6 +50,13 @@ class QuietRequestHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, format: str, *args: object) -> None:
         pass
+
+    def end_headers(self) -> None:
+        if self.path.split("?", 1)[0].endswith((".html", ".js", ".json")):
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+        super().end_headers()
 
 
 def bundled_path() -> Path:
@@ -493,7 +500,7 @@ def main() -> None:
     host, port = server.server_address
     window = webview.create_window(
         "SIGA - Sistema de Gestión Sindical",
-        f"http://{host}:{port}/index.html",
+        f"http://{host}:{port}/index.html?revision={APP_REVISION}",
         js_api=DesktopApi(),
         width=1440,
         height=900,

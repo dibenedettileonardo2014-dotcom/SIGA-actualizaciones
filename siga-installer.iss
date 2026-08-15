@@ -54,8 +54,8 @@ Type: files; Name: "{app}\_internal\assets\siga-app-icon.ico"
 Type: files; Name: "{app}\_internal\assets\siga-app-icon.png"
 
 [Icons]
-Name: "{autoprograms}\SIGA"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\siga-app-icon.ico"
-Name: "{autodesktop}\SIGA"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\siga-app-icon.ico"
+Name: "{userprograms}\SIGA"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\siga-app-icon.ico"
+Name: "{userdesktop}\SIGA"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\siga-app-icon.ico"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Abrir SIGA"; Flags: nowait postinstall skipifsilent
