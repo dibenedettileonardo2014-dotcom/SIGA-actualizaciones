@@ -444,6 +444,8 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn('<body data-role="operador"', desktop)
         self.assertIn("const VERIFIED_ROLE_KEY = 'siga_last_verified_role'", desktop)
         self.assertIn("if (cachedRole === 'admin' || cachedRole === 'operador')", desktop)
+        self.assertIn("if (!window.__sigaRoleVisualReady) document.body.style.visibility = 'hidden'", desktop)
+        self.assertIn("document.body.style.visibility = ''", desktop)
         self.assertIn("window.appState.auth?.currentUser?.email !== roleAuthEmails[role]", desktop)
         self.assertIn("localStorage.removeItem(VERIFIED_ROLE_KEY)", desktop)
         self.assertIn("window.appState.currentUserRole === 'admin'", desktop)

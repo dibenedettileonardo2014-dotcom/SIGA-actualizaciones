@@ -64,10 +64,16 @@
         (() => {
             const key = 'siga_last_verified_role';
             let role = 'operador';
+            let hasVerifiedRole = false;
             try {
                 const cachedRole = localStorage.getItem(key);
-                if (cachedRole === 'admin' || cachedRole === 'operador') role = cachedRole;
+                if (cachedRole === 'admin' || cachedRole === 'operador') {
+                    role = cachedRole;
+                    hasVerifiedRole = true;
+                }
             } catch (_) {}
+            window.__sigaRoleVisualReady = hasVerifiedRole;
+            if (!window.__sigaRoleVisualReady) document.body.style.visibility = 'hidden';
             window.__sigaInitialVisualRole = role;
             document.body.dataset.role = role;
         })();
@@ -2455,6 +2461,8 @@ window.__firebase_config = {
 
         function applyRoleIdentityVisual(role) {
             document.body.dataset.role = role;
+            document.body.style.visibility = '';
+            window.__sigaRoleVisualReady = true;
             window.__sigaInitialVisualRole = role;
 
             // Ajustes visuales de Avatar e información en el Sidebar
@@ -4123,7 +4131,7 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
         const APP_VERSION = "1.4.12";
-        const APP_REVISION = "20260815-06";
+        const APP_REVISION = "20260815-07";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
