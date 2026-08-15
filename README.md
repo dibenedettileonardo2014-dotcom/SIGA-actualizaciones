@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.11` — paquetes de actualización inmutables para evitar versiones en caché.
+`1.4.12` — actualizaciones verificadas en segundo plano y acceso móvil simplificado.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.4.10 (x86 y x64)
 - 1.4.11 (x86 y x64)
+- 1.4.12 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 
@@ -47,15 +47,9 @@ La aplicación de escritorio consulta `version.json` al iniciar. La PWA fuerza
 la comprobación de su service worker al abrir y recarga cuando hay una edición
 nueva.
 
-### Revisiones compatibles de 1.4.11
+### Actualización fluida desde 1.4.12
 
-La versión visible continúa siendo `1.4.11`. El manifiesto también publica una
-revisión técnica y los tamaños y hashes SHA-256 de cada artefacto x86/x64. Al
-iniciar, SIGA obtiene el manifiesto sin caché y compara el ejecutable local con
-el hash de su arquitectura. Una diferencia compatible se descarga a un archivo
-temporal, se valida y se instala después de cerrar el proceso. Un mutex impide
-preparaciones simultáneas y el registro técnico rota automáticamente.
-
-El campo heredado `version` puede incluir un cuarto componente exclusivamente
-para que los primeros binarios 1.4.11 detecten la reparación inicial. La
-interfaz usa `displayVersion` y siempre presenta `1.4.11` al usuario.
+SIGA consulta el manifiesto sin caché, descarga en segundo plano el instalador
+de su arquitectura y muestra **Reiniciar y actualizar** solamente después de
+validar tamaño y SHA-256. Si la preparación falla, la versión instalada sigue
+operativa. El relanzamiento usa siempre `%LOCALAPPDATA%\SIGA\SIGA.exe`.

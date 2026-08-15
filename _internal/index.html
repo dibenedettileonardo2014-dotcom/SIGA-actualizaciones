@@ -48,14 +48,22 @@
         body[data-role="operador"] #btn-tab-usuarios,
         body[data-role="operador"] #btn-tab-configuracion,
         body[data-role="operador"] #btn-tab-mantenimiento,
+        body[data-role="operador"] #btn-tab-credenciales,
+        body[data-role="operador"] #btn-tab-actualizaciones,
         body[data-role="operador"] #firebase-accounts-link {
             display: none !important;
         }
+        #update-ready-banner { position:fixed; right:20px; bottom:20px; z-index:10000; max-width:390px; }
         #notice-table td:nth-child(2) { font-weight: 700; text-transform: uppercase; }
         #notice-preview strong, #notice-preview > p { text-transform: uppercase; }
     </style>
 </head>
 <body class="h-full overflow-hidden flex flex-col">
+    <aside id="update-ready-banner" class="hidden bg-slate-900 text-white rounded-2xl shadow-2xl p-4 border border-emerald-400/40" role="status" aria-live="polite">
+        <p class="text-xs text-emerald-300 font-bold uppercase">Actualización lista</p>
+        <p class="text-sm mt-1">SIGA descargó y verificó la nueva versión.</p>
+        <button id="restart-update-button" class="mt-3 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl">Reiniciar y actualizar</button>
+    </aside>
 
     <!-- Elemento para notificaciones flotantes -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
@@ -608,7 +616,7 @@
                     <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-4xl mx-auto">
                         <div class="border-b border-slate-100 pb-4 mb-6">
                             <h4 class="font-bold text-slate-800">Generar Credencial Digital del Afiliado</h4>
-                            <p class="text-xs text-slate-500">Selecciona un afiliado para visualizar, descargar o imprimir su credencial de membresía oficial.</p>
+                            <p class="text-xs text-slate-500">Selecciona un afiliado para visualizar o guardar su credencial de membresía oficial en JPG.</p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                             <!-- Selector y Opciones -->
@@ -620,12 +628,12 @@
                                     </select>
                                 </div>
                                 <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs text-amber-800 space-y-1">
-                                    <p class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Consejo de impresión:</p>
-                                    <p>Para imprimir la credencial de forma individual, haz clic en "Imprimir Credencial". Se abrirá en formato optimizado tamaño tarjeta estándar.</p>
+                                    <p class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Imagen de alta calidad:</p>
+                                    <p>La credencial se genera completa en formato JPG, lista para guardar y abrir desde la galería.</p>
                                 </div>
                                 <div class="flex gap-3">
-                                    <button onclick="printCard()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs transition-all flex items-center justify-center gap-2">
-                                        <i class="fa-solid fa-print"></i> Imprimir Credencial
+                                    <button onclick="saveCredentialJpeg()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-image"></i> Guardar credencial en galería
                                     </button>
                                 </div>
                                 <div class="border-t border-slate-100 pt-4 space-y-3">
@@ -652,6 +660,7 @@
                                     <div class="absolute -right-10 -bottom-10 text-white/5 text-9xl pointer-events-none">
                                         <i class="fa-solid fa-users-gear"></i>
                                     </div>
+                                    <img src="assets/logo-spiqyp-rosario.png" alt="" class="absolute right-4 top-12 w-28 h-28 rounded-full object-cover opacity-10 pointer-events-none">
                                     <div class="flex justify-between items-start z-10">
                                         <div>
                                             <p class="text-[9px] font-bold tracking-widest text-emerald-400 uppercase">SINDICATO DE TRABAJADORES</p>
@@ -713,7 +722,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.11</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.12</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -734,7 +743,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.11</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.12</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -795,7 +804,7 @@
                             <p class="font-semibold text-slate-700">Creado en 2026</p>
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.11 · Actualización directa a la última versión</p>
+                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.12 · Actualización preparada en segundo plano</p>
                     </section>
                 </div>
 
@@ -2654,8 +2663,18 @@ window.__firebase_config = {
             };
 
             await commitToDatabase(affiliate);
+            let mobileAccessCreated = false;
+            if (!existing && window.appState.firebaseEnabled) {
+                try {
+                    await provisionMobileAccess(affiliate, 'sindicatoquimico');
+                    mobileAccessCreated = true;
+                } catch (error) {
+                    console.error('El afiliado se guardó pero no se pudo crear su acceso móvil:', error);
+                    showToast('Acceso móvil pendiente', 'El afiliado fue guardado, pero no se pudo crear su acceso móvil. El administrador podrá reintentarlo.', 'warning');
+                }
+            }
             closeAffiliateModal();
-            showToast('Afiliado guardado', 'Los datos quedaron guardados en esta PC y enviados a sincronización.', 'success');
+            showToast('Afiliado guardado', mobileAccessCreated ? 'Datos sincronizados. Ya puede ingresar a Mi SIGA con su DNI y la contraseña inicial.' : 'Los datos quedaron guardados en esta PC y enviados a sincronización.', 'success');
             } finally {
                 affiliateSaveInProgress = false;
             if (submitButton) {
@@ -3481,9 +3500,30 @@ window.__firebase_config = {
         }
 
         function canManageMobileAccess() {
-            const role = window.appState.currentUserRole;
-            return (role === 'admin' || role === 'operador')
-                && window.appState.auth?.currentUser?.email === roleAuthEmails[role];
+            return window.appState.currentUserRole === 'admin'
+                && window.appState.auth?.currentUser?.email === roleAuthEmails.admin;
+        }
+
+        async function provisionMobileAccess(affiliate, password) {
+            if (affiliate.mobileAccess?.uid) { syncMobileCredential(affiliate); return affiliate; }
+            let secondaryApp;
+            try {
+                secondaryApp = initializeApp(window.__firebase_config, `mobile-provision-${Date.now()}-${crypto.randomUUID()}`);
+                const secondaryAuth = getAuth(secondaryApp);
+                let credential;
+                try {
+                    credential = await createUserWithEmailAndPassword(secondaryAuth, mobileLoginEmail(affiliate.dni), password);
+                } catch (error) {
+                    if (error?.code !== 'auth/email-already-in-use') throw error;
+                    credential = await signInWithEmailAndPassword(secondaryAuth, mobileLoginEmail(affiliate.dni), password);
+                }
+                await signOut(secondaryAuth);
+                const updated = { ...affiliate, mobileAccess: { uid: credential.user.uid, enabled: true, createdAt: new Date().toISOString() } };
+                await commitToDatabase(updated);
+                return updated;
+            } finally {
+                if (secondaryApp) await deleteApp(secondaryApp).catch(() => {});
+            }
         }
 
         window.createMobileAccess = async function() {
@@ -3494,7 +3534,7 @@ window.__firebase_config = {
             const affiliate = window.appState.affiliates.find(item => item.id === affiliateId);
             if (!affiliate) return showToast('Acceso móvil', 'Seleccioná un afiliado.', 'warning');
             if (!canManageMobileAccess()) {
-                return showToast('Acceso restringido', 'Autorizá el rol Administrador u Operador con su contraseña.', 'warning');
+                return showToast('Acceso restringido', 'Esta función está disponible solamente para el administrador.', 'warning');
             }
             if (!/^\d{7,9}$/.test(String(affiliate.dni || '').replace(/\D/g, ''))) {
                 return showToast('DNI inválido', 'El afiliado debe tener un DNI válido.', 'warning');
@@ -3547,7 +3587,7 @@ window.__firebase_config = {
             if (actionButton.disabled) return;
             if (!affiliate?.mobileAccess?.uid) return;
             if (!canManageMobileAccess()) {
-                return showToast('Acceso restringido', 'Autorizá el rol Administrador u Operador con su contraseña.', 'warning');
+                return showToast('Acceso restringido', 'Esta función está disponible solamente para el administrador.', 'warning');
             }
             const updated = { ...affiliate, mobileAccess: { ...affiliate.mobileAccess, enabled: affiliate.mobileAccess.enabled === false } };
             try {
@@ -3707,6 +3747,37 @@ window.__firebase_config = {
             printHtmlDocument(`<!doctype html><html><head><title>Comprobante de pago</title><style>body{font-family:Arial,sans-serif;color:#1e293b;margin:34px;max-width:540px}h1{color:#065f46;font-size:22px;border-bottom:2px solid #10b981;padding-bottom:10px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:10px 0;font-size:14px}.total{font-size:20px;font-weight:bold;color:#065f46;margin-top:22px}</style></head><body><h1>SIGA · Comprobante de pago</h1><div class="row"><span>Afiliado</span><strong>${escapePrintHtml(payment.name)}</strong></div><div class="row"><span>N.º de afiliado</span><strong>${escapePrintHtml(payment.affiliateNumber || affiliate?.number || '—')}</strong></div><div class="row"><span>DNI</span><strong>${escapePrintHtml(payment.dni || affiliate?.dni || '—')}</strong></div><div class="row"><span>Empresa</span><strong>${escapePrintHtml(payment.company || affiliate?.company || '—')}</strong></div><div class="row"><span>Concepto</span><strong>${escapePrintHtml(payment.concept || 'CUOTA SINDICAL')}</strong></div><div class="row"><span>Período</span><strong>${escapePrintHtml(payment.period)}</strong></div><div class="row"><span>Fecha</span><strong>${escapePrintHtml(payment.date)}</strong></div><p class="total">Total: $${Number(payment.amount).toLocaleString('es-AR')}</p><p><strong>Adjuntos:</strong></p><ul>${attachments}</ul></body></html>`);
         };
 
+        window.saveCredentialJpeg = async function() {
+            const affiliateId = document.getElementById('card-affiliate-select').value;
+            if (!affiliateId) {
+                showToast('Advertencia', 'Por favor selecciona un afiliado primero.', 'warning');
+                return;
+            }
+            const a = window.appState.affiliates.find(item => item.id === affiliateId);
+            if (!a) return;
+            try {
+                const canvas = document.createElement('canvas'); canvas.width = 1712; canvas.height = 1080;
+                const context = canvas.getContext('2d', {alpha: false});
+                const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height); gradient.addColorStop(0, '#0f172a'); gradient.addColorStop(1, '#022c22'); context.fillStyle = gradient; context.fillRect(0, 0, canvas.width, canvas.height);
+                context.strokeStyle = '#334155'; context.lineWidth = 5; context.strokeRect(3, 3, 1706, 1074);
+                const draw = (value, x, y, color, font, align = 'left') => { context.fillStyle = color; context.font = font; context.textAlign = align; context.fillText(String(value || ''), x, y); };
+                const fit = (value, maxWidth, size, minimum = 30) => { while (size > minimum) { context.font = `bold ${size}px Arial,sans-serif`; if (context.measureText(value).width <= maxWidth) break; size -= 2; } return size; };
+                const logo = new Image(); logo.src = 'assets/logo-spiqyp-rosario.png'; if (!logo.complete) await logo.decode(); context.save(); context.globalAlpha = .11; context.beginPath(); context.arc(1415, 400, 220, 0, Math.PI * 2); context.clip(); context.drawImage(logo, 1195, 180, 440, 440); context.restore();
+                draw('SIGA - ASOCIACIÓN GREMIAL', 80, 125, '#10b981', 'bold 40px Arial,sans-serif'); draw('Sindicato Integral', 80, 185, '#cbd5e1', '42px Arial,sans-serif');
+                context.fillStyle = '#10b981'; context.fillRect(1420, 75, 210, 72); draw('AFILIADO', 1525, 124, '#0f172a', 'bold 32px Arial,sans-serif', 'center');
+                const name = String(a.name || '—').toUpperCase(); draw(name, 80, 500, '#f8fafc', `bold ${fit(name, 1552, 76)}px Arial,sans-serif`); draw(`Nº AFILIADO: ${a.number || 'S/N'}`, 80, 570, '#94a3b8', '42px Arial,sans-serif');
+                const representation = [a.isDelegate ? 'DELEGADO/A' : '', a.isInternalCommission ? 'COMISIÓN INTERNA' : '', a.isDirectiveCommission ? 'COMISIÓN DIRECTIVA' : ''].filter(Boolean).join(' · '); if (representation) draw(representation, 80, 635, '#fcd34d', 'bold 34px Arial,sans-serif');
+                context.strokeStyle = 'rgba(148,163,184,.35)'; context.lineWidth = 3; context.beginPath(); context.moveTo(80, 790); context.lineTo(1632, 790); context.stroke();
+                draw('DNI:', 80, 865, '#94a3b8', '36px Arial,sans-serif'); draw(a.dni || '—', 180, 865, '#f8fafc', 'bold 36px Arial,sans-serif'); draw('Empresa:', 80, 925, '#94a3b8', '36px Arial,sans-serif'); draw(a.company || 'Sin Empresa', 255, 925, '#f8fafc', `bold ${fit(a.company || 'Sin Empresa', 970, 36, 27)}px Arial,sans-serif`); draw('Consultora:', 80, 985, '#94a3b8', '36px Arial,sans-serif'); draw(a.consultant || 'Sin Consultora', 290, 985, '#f8fafc', `bold ${fit(a.consultant || 'Sin Consultora', 935, 36, 27)}px Arial,sans-serif`);
+                const bars = [42,55,36,50,55,36,50,44,58,39,52]; let barX = 1400; context.fillStyle = '#fff'; bars.forEach((height, index) => { const width = index % 3 === 1 ? 8 : 4; context.fillRect(barX, 930 - height, width, height); barX += width + 7; }); draw('SIGA-RED', 1515, 970, '#94a3b8', '24px Arial,sans-serif', 'center');
+                const blob = await new Promise((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('jpg-generation-failed')), 'image/jpeg', .96));
+                const url = URL.createObjectURL(blob), link = document.createElement('a'); link.href = url; link.download = `credencial-siga-${String(a.number || a.dni || 'afiliado').replace(/[^a-z0-9_-]+/gi, '-')}.jpg`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast('Credencial', 'Credencial guardada correctamente en la galería o carpeta de descargas.', 'success');
+            } catch (error) {
+                console.error('No se pudo guardar la credencial:', error); showToast('Credencial', 'No se pudo guardar la credencial. Verificá los permisos del dispositivo e intentá nuevamente.', 'error');
+            }
+        };
+
         window.printCard = function() {
             const affiliateId = document.getElementById('card-affiliate-select').value;
             if (!affiliateId) {
@@ -3860,8 +3931,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.11";
-        const APP_REVISION = "20260814-07";
+        const APP_VERSION = "1.4.12";
+        const APP_REVISION = "20260815-01";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3947,7 +4018,8 @@ window.__firebase_config = {
                 const result = await window.pywebview.api.install_available_update();
                 if (!result?.ok) throw new Error(result?.error || 'No se pudo instalar la actualización.');
                 document.getElementById('progress-bar').style.width = '100%';
-                document.getElementById('progress-text').textContent = `Versión ${result.version || manifest.version} verificada. Reiniciando SIGA...`;
+                document.getElementById('progress-text').textContent = `Versión ${result.version || manifest.version} descargada y verificada.`;
+                document.getElementById('update-ready-banner').classList.remove('hidden');
             } catch (error) {
                 console.error('Error descargando actualización:', error);
                 showToast('Error', 'No se pudo descargar la actualización. Intenta más tarde.', 'error');
@@ -3972,7 +4044,21 @@ window.__firebase_config = {
             return 0;
         }
 
-        // Verificación automática liviana al iniciar; solo descarga el manifiesto.
+        document.getElementById('restart-update-button').addEventListener('click', async event => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            button.textContent = 'Reiniciando…';
+            try {
+                const result = await window.pywebview?.api?.apply_prepared_update();
+                if (!result?.ok) throw new Error(result?.error || 'No se pudo iniciar la actualización.');
+            } catch (error) {
+                button.disabled = false;
+                button.textContent = 'Reiniciar y actualizar';
+                showToast('Actualización', error.message, 'error');
+            }
+        });
+
+        // Verifica y prepara en segundo plano; nunca interrumpe el trabajo.
         const checkForUpdatesOnStartup = () => {
             setTimeout(() => {
                 fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
@@ -3987,7 +4073,7 @@ window.__firebase_config = {
                                 badge.textContent = 'NUEVA';
                                 badge.classList.remove('hidden');
                             }
-                            showToast('Actualización disponible', `La versión ${remoteVersion} tiene una revisión corregida. Abrí Actualizaciones para instalarla.`, 'info');
+                            void window.downloadAndInstallUpdate();
                         }
                     })
                     .catch(() => {});
@@ -4138,6 +4224,9 @@ window.__firebase_config = {
         document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
+            if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones'].includes(tabId)) {
+                tabId = 'dashboard';
+            }
             window.appState.currentTab = tabId;
             
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));

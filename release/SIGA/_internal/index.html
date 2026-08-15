@@ -48,14 +48,22 @@
         body[data-role="operador"] #btn-tab-usuarios,
         body[data-role="operador"] #btn-tab-configuracion,
         body[data-role="operador"] #btn-tab-mantenimiento,
+        body[data-role="operador"] #btn-tab-credenciales,
+        body[data-role="operador"] #btn-tab-actualizaciones,
         body[data-role="operador"] #firebase-accounts-link {
             display: none !important;
         }
+        #update-ready-banner { position:fixed; right:20px; bottom:20px; z-index:10000; max-width:390px; }
         #notice-table td:nth-child(2) { font-weight: 700; text-transform: uppercase; }
         #notice-preview strong, #notice-preview > p { text-transform: uppercase; }
     </style>
 </head>
 <body class="h-full overflow-hidden flex flex-col">
+    <aside id="update-ready-banner" class="hidden bg-slate-900 text-white rounded-2xl shadow-2xl p-4 border border-emerald-400/40" role="status" aria-live="polite">
+        <p class="text-xs text-emerald-300 font-bold uppercase">Actualización lista</p>
+        <p class="text-sm mt-1">SIGA descargó y verificó la nueva versión.</p>
+        <button id="restart-update-button" class="mt-3 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl">Reiniciar y actualizar</button>
+    </aside>
 
     <!-- Elemento para notificaciones flotantes -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
@@ -714,7 +722,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.11</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.12</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -735,7 +743,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.11</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.12</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -796,7 +804,7 @@
                             <p class="font-semibold text-slate-700">Creado en 2026</p>
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
-                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.11 · Actualización directa a la última versión</p>
+                    <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">Versión 1.4.12 · Actualización preparada en segundo plano</p>
                     </section>
                 </div>
 
@@ -2655,8 +2663,18 @@ window.__firebase_config = {
             };
 
             await commitToDatabase(affiliate);
+            let mobileAccessCreated = false;
+            if (!existing && window.appState.firebaseEnabled) {
+                try {
+                    await provisionMobileAccess(affiliate, 'sindicatoquimico');
+                    mobileAccessCreated = true;
+                } catch (error) {
+                    console.error('El afiliado se guardó pero no se pudo crear su acceso móvil:', error);
+                    showToast('Acceso móvil pendiente', 'El afiliado fue guardado, pero no se pudo crear su acceso móvil. El administrador podrá reintentarlo.', 'warning');
+                }
+            }
             closeAffiliateModal();
-            showToast('Afiliado guardado', 'Los datos quedaron guardados en esta PC y enviados a sincronización.', 'success');
+            showToast('Afiliado guardado', mobileAccessCreated ? 'Datos sincronizados. Ya puede ingresar a Mi SIGA con su DNI y la contraseña inicial.' : 'Los datos quedaron guardados en esta PC y enviados a sincronización.', 'success');
             } finally {
                 affiliateSaveInProgress = false;
             if (submitButton) {
@@ -3482,9 +3500,30 @@ window.__firebase_config = {
         }
 
         function canManageMobileAccess() {
-            const role = window.appState.currentUserRole;
-            return (role === 'admin' || role === 'operador')
-                && window.appState.auth?.currentUser?.email === roleAuthEmails[role];
+            return window.appState.currentUserRole === 'admin'
+                && window.appState.auth?.currentUser?.email === roleAuthEmails.admin;
+        }
+
+        async function provisionMobileAccess(affiliate, password) {
+            if (affiliate.mobileAccess?.uid) { syncMobileCredential(affiliate); return affiliate; }
+            let secondaryApp;
+            try {
+                secondaryApp = initializeApp(window.__firebase_config, `mobile-provision-${Date.now()}-${crypto.randomUUID()}`);
+                const secondaryAuth = getAuth(secondaryApp);
+                let credential;
+                try {
+                    credential = await createUserWithEmailAndPassword(secondaryAuth, mobileLoginEmail(affiliate.dni), password);
+                } catch (error) {
+                    if (error?.code !== 'auth/email-already-in-use') throw error;
+                    credential = await signInWithEmailAndPassword(secondaryAuth, mobileLoginEmail(affiliate.dni), password);
+                }
+                await signOut(secondaryAuth);
+                const updated = { ...affiliate, mobileAccess: { uid: credential.user.uid, enabled: true, createdAt: new Date().toISOString() } };
+                await commitToDatabase(updated);
+                return updated;
+            } finally {
+                if (secondaryApp) await deleteApp(secondaryApp).catch(() => {});
+            }
         }
 
         window.createMobileAccess = async function() {
@@ -3495,7 +3534,7 @@ window.__firebase_config = {
             const affiliate = window.appState.affiliates.find(item => item.id === affiliateId);
             if (!affiliate) return showToast('Acceso móvil', 'Seleccioná un afiliado.', 'warning');
             if (!canManageMobileAccess()) {
-                return showToast('Acceso restringido', 'Autorizá el rol Administrador u Operador con su contraseña.', 'warning');
+                return showToast('Acceso restringido', 'Esta función está disponible solamente para el administrador.', 'warning');
             }
             if (!/^\d{7,9}$/.test(String(affiliate.dni || '').replace(/\D/g, ''))) {
                 return showToast('DNI inválido', 'El afiliado debe tener un DNI válido.', 'warning');
@@ -3548,7 +3587,7 @@ window.__firebase_config = {
             if (actionButton.disabled) return;
             if (!affiliate?.mobileAccess?.uid) return;
             if (!canManageMobileAccess()) {
-                return showToast('Acceso restringido', 'Autorizá el rol Administrador u Operador con su contraseña.', 'warning');
+                return showToast('Acceso restringido', 'Esta función está disponible solamente para el administrador.', 'warning');
             }
             const updated = { ...affiliate, mobileAccess: { ...affiliate.mobileAccess, enabled: affiliate.mobileAccess.enabled === false } };
             try {
@@ -3892,8 +3931,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.11";
-        const APP_REVISION = "20260814-10";
+        const APP_VERSION = "1.4.12";
+        const APP_REVISION = "20260815-01";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3979,7 +4018,8 @@ window.__firebase_config = {
                 const result = await window.pywebview.api.install_available_update();
                 if (!result?.ok) throw new Error(result?.error || 'No se pudo instalar la actualización.');
                 document.getElementById('progress-bar').style.width = '100%';
-                document.getElementById('progress-text').textContent = `Versión ${result.version || manifest.version} verificada. Reiniciando SIGA...`;
+                document.getElementById('progress-text').textContent = `Versión ${result.version || manifest.version} descargada y verificada.`;
+                document.getElementById('update-ready-banner').classList.remove('hidden');
             } catch (error) {
                 console.error('Error descargando actualización:', error);
                 showToast('Error', 'No se pudo descargar la actualización. Intenta más tarde.', 'error');
@@ -4004,7 +4044,21 @@ window.__firebase_config = {
             return 0;
         }
 
-        // Verificación automática liviana al iniciar; solo descarga el manifiesto.
+        document.getElementById('restart-update-button').addEventListener('click', async event => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            button.textContent = 'Reiniciando…';
+            try {
+                const result = await window.pywebview?.api?.apply_prepared_update();
+                if (!result?.ok) throw new Error(result?.error || 'No se pudo iniciar la actualización.');
+            } catch (error) {
+                button.disabled = false;
+                button.textContent = 'Reiniciar y actualizar';
+                showToast('Actualización', error.message, 'error');
+            }
+        });
+
+        // Verifica y prepara en segundo plano; nunca interrumpe el trabajo.
         const checkForUpdatesOnStartup = () => {
             setTimeout(() => {
                 fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
@@ -4019,7 +4073,7 @@ window.__firebase_config = {
                                 badge.textContent = 'NUEVA';
                                 badge.classList.remove('hidden');
                             }
-                            showToast('Actualización disponible', `La versión ${remoteVersion} tiene una revisión corregida. Abrí Actualizaciones para instalarla.`, 'info');
+                            void window.downloadAndInstallUpdate();
                         }
                     })
                     .catch(() => {});
@@ -4170,6 +4224,9 @@ window.__firebase_config = {
         document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
+            if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones'].includes(tabId)) {
+                tabId = 'dashboard';
+            }
             window.appState.currentTab = tabId;
             
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));

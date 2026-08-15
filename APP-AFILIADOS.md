@@ -28,10 +28,9 @@ computadoras reciben el cambio mediante la sincronización en tiempo real.
 La configuración de Authentication, las reglas de `firestore.rules` y Firebase
 Hosting fueron publicadas el 7 de agosto de 2026. Para entregar un acceso:
 
-1. En SIGA, autorizar el rol **Administrador** u **Operador** con su contraseña,
-   abrir **Credencial
-   Digital**, seleccionar al afiliado, escribir una contraseña inicial de ocho
-   caracteres o más y pulsar **Crear acceso**.
+1. Al guardar un afiliado nuevo, SIGA crea automáticamente su acceso con la
+   contraseña inicial `sindicatoquimico`. El rol **Administrador** puede
+   administrar posteriormente ese acceso desde **Credencial Digital**.
 2. Entregar al afiliado la URL pública, su DNI y la contraseña inicial.
 
 ## Seguridad y funcionamiento

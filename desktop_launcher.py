@@ -25,8 +25,8 @@ from urllib.request import Request, urlopen
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.11"
-APP_REVISION = "20260814-10"
+APP_VERSION = "1.4.12"
+APP_REVISION = "20260815-01"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -105,7 +105,7 @@ class UpdateMutex:
     def __enter__(self) -> bool:
         if os.name != "nt":
             return True
-        self.handle = ctypes.windll.kernel32.CreateMutexW(None, False, "Local\\SIGA-Update-1.4.11")
+        self.handle = ctypes.windll.kernel32.CreateMutexW(None, False, "Local\\SIGA-Update")
         return bool(self.handle) and ctypes.windll.kernel32.GetLastError() != 183
 
     def __exit__(self, *_args: object) -> None:
@@ -318,75 +318,46 @@ def install_update(manifest: dict) -> bool:
                 break
         if last_error is not None:
             raise last_error
-        script = temp_folder / f"{executable.stem}.update.cmd"
-        if is_installer_update:
-            installer_log = temp_folder / f"{executable.stem}.update.log"
-            script_contents = (
-                "@echo off\nsetlocal\n"
-                f"set \"INSTALLER={update_installer}\"\n"
-                f"set \"TARGET={executable}\"\n"
-                f"set \"LOG={installer_log}\"\n"
-                'start "" /wait "%INSTALLER%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CURRENTUSER /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS /LOG="%LOG%"\n'
-                "if errorlevel 1 exit /b 1\n"
-                'start "" "%TARGET%"\n'
-                'del /q "%INSTALLER%"\n'
-                'del "%~f0"\n'
-            )
-        elif is_package_update:
-            script_contents = (
-                "@echo off\nsetlocal\n"
-                f"set \"PACKAGE={update_package}\"\n"
-                f"set \"TARGETDIR={executable.parent}\"\n"
-                f"set \"TARGET={executable}\"\n"
-                f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Wait-Process -Id {os.getpid()} -Timeout 120 -ErrorAction SilentlyContinue"\n'
-                "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Expand-Archive -LiteralPath $env:PACKAGE -DestinationPath $env:TARGETDIR -Force; if (-not $?) { exit 1 }\"\n"
-                "if errorlevel 1 exit /b 1\n"
-                "if exist \"%PACKAGE%\" del /q \"%PACKAGE%\"\n"
-                "start \"\" \"%TARGET%\"\n"
-                "del \"%~f0\"\n"
-            )
-        else:
-            script_contents = (
-                "@echo off\nsetlocal\n"
-                f"set \"SOURCE={legacy_replacement}\"\n"
-                f"set \"TARGET={executable}\"\n"
-                "for /L %%i in (1,1,30) do (\n"
-                "  move /Y \"%SOURCE%\" \"%TARGET%\" >nul 2>&1\n"
-                "  if not exist \"%SOURCE%\" goto launch\n"
-                "  timeout /t 1 /nobreak >nul\n)\nexit /b 1\n:launch\n"
-                "start \"\" \"%TARGET%\"\ndel \"%~f0\"\n"
-            )
-        script.write_text(script_contents, encoding="utf-8")
-        permission_probe = executable.parent / ".siga-update-permission"
-        requires_elevation = False
-        try:
-            permission_probe.write_text("ok", encoding="ascii")
-            permission_probe.unlink(missing_ok=True)
-        except OSError:
-            requires_elevation = True
-        if requires_elevation:
-            result = ctypes.windll.shell32.ShellExecuteW(
-                None, "runas", "cmd.exe", f'/d /c "{script}"', None, 0
-            )
-            if result <= 32:
-                raise OSError("Windows no autorizo la instalacion de la actualizacion.")
-        else:
-            subprocess.Popen(
-                ["cmd.exe", "/d", "/c", str(script)],
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
+        prepared = {
+            "kind": "installer" if is_installer_update else "package" if is_package_update else "executable",
+            "path": str(destination), "sha256": expected_hash, "architecture": APP_ARCH,
+            "version": manifest.get("displayVersion", manifest.get("version", "")),
+            "revision": manifest.get("revision", ""),
+        }
+        (temp_folder / "prepared-update.json").write_text(json.dumps(prepared), encoding="utf-8")
+        update_log("update-prepared", revision=prepared["revision"], kind=prepared["kind"])
         return True
     except (OSError, ValueError, zipfile.BadZipFile) as error:
         update_log("update-failed", error=type(error).__name__)
         update_package.unlink(missing_ok=True)
         legacy_replacement.unlink(missing_ok=True)
         update_installer.unlink(missing_ok=True)
-        ctypes.windll.user32.MessageBoxW(
-            None,
-            "No se pudo descargar la actualizacion. Intenta nuevamente mas tarde.",
-            "SIGA",
-            0x10,
-        )
+        return False
+
+
+def apply_prepared_update() -> bool:
+    """Apply a verified staged update and relaunch only the canonical installation."""
+    state = update_state_path() / "prepared-update.json"
+    try:
+        prepared = json.loads(state.read_text(encoding="utf-8"))
+        source = Path(prepared["path"])
+        if prepared.get("architecture") != APP_ARCH or file_sha256(source) != str(prepared.get("sha256", "")).upper():
+            raise ValueError("Actualizacion preparada invalida.")
+        target = webview_storage_path().parent / "SIGA.exe"
+        script = update_state_path() / "SIGA.apply-update.cmd"
+        log = update_state_path() / "SIGA.update-installer.log"
+        if prepared["kind"] == "installer":
+            action = f'start "" /wait "{source}" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CURRENTUSER /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS /LOG="{log}"\n'
+        elif prepared["kind"] == "package":
+            action = f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath \'{source}\' -DestinationPath \'{target.parent}\' -Force; if (-not $?) {{ exit 1 }}"\n'
+        else:
+            action = f'copy /Y "{source}" "{target}" >nul\n'
+        script.write_text("@echo off\nsetlocal\n" + f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Wait-Process -Id {os.getpid()} -Timeout 120 -ErrorAction SilentlyContinue"\n' + action + "if errorlevel 1 exit /b 1\n" + f'start "" "{target}"\ndel /q "{source}"\ndel /q "{state}"\ndel "%~f0"\n', encoding="utf-8")
+        subprocess.Popen(["cmd.exe", "/d", "/c", str(script)], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        update_log("update-apply-start", revision=prepared.get("revision", ""))
+        return True
+    except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+        update_log("update-apply-failed", error=type(error).__name__)
         return False
 
 
@@ -408,18 +379,8 @@ def validate_update_package(path: Path, architecture: str) -> None:
 
 
 def automatic_update_on_startup() -> bool:
-    """Repair an installed build before opening its web interface."""
-    if not getattr(sys, "frozen", False):
-        return False
-    with UpdateMutex() as acquired:
-        if not acquired:
-            update_log("update-skipped-lock")
-            return False
-        manifest = fetch_update_manifest()
-        if not manifest or not update_required(manifest):
-            return False
-        update_log("update-required", revision=manifest.get("revision", ""))
-        return install_update(manifest)
+    """Startup must never close the app; the UI stages updates in background."""
+    return False
 
 
 class DesktopApi:
@@ -462,8 +423,15 @@ class DesktopApi:
             return {"ok": False, "error": "SIGA ya tiene la última versión."}
         if not install_update(manifest):
             return {"ok": False, "error": "No se pudo preparar la actualización."}
+        return {"ok": True, "ready": True, "version": manifest["version"]}
+
+    def apply_prepared_update(self) -> dict:
+        if not getattr(sys, "frozen", False):
+            return {"ok": False, "error": "La instalación solo está disponible en SIGA compilado."}
+        if not apply_prepared_update():
+            return {"ok": False, "error": "No se pudo iniciar la actualización preparada."}
         threading.Timer(0.6, self._close_window).start()
-        return {"ok": True, "version": manifest["version"]}
+        return {"ok": True}
 
     def save_and_open_file(self, filename: str, content_base64: str) -> dict:
         """Save an exported document in Documents and open its default Windows app."""

@@ -73,14 +73,14 @@ class LauncherTests(unittest.TestCase):
     def test_updater_waits_for_exit_and_uses_verified_installer(self):
         source = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
         self.assertIn('installerSha256', source)
-        self.assertIn('start "" /wait "%INSTALLER%"', source)
+        self.assertIn('start "" /wait "{source}"', source)
         self.assertIn('/CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS', source)
         self.assertIn('if errorlevel 1 exit /b 1', source)
         self.assertNotIn('timeout /t 2 /nobreak', source)
         self.assertIn('cache_safe_url', source)
         self.assertIn('"Cache-Control": "no-cache, no-store"', source)
         self.assertIn('automatic_update_on_startup()', source)
-        self.assertIn('Local\\\\SIGA-Update-1.4.11', source)
+        self.assertIn('Local\\\\SIGA-Update', source)
         self.assertIn('UPDATE_LOG_MAX_BYTES', source)
 
     def test_same_visible_version_is_repaired_by_hash(self):
@@ -88,18 +88,18 @@ class LauncherTests(unittest.TestCase):
             executable = Path(folder) / "SIGA.exe"
             executable.write_bytes(b"old build")
             digest = hashlib.sha256(b"corrected build").hexdigest().upper()
-            manifest = {"displayVersion": "1.4.11", "sha256": digest, "revision": desktop_launcher.APP_REVISION}
+            manifest = {"displayVersion": desktop_launcher.APP_VERSION, "sha256": digest, "revision": desktop_launcher.APP_REVISION}
             self.assertTrue(desktop_launcher.update_required(manifest, executable))
             executable.write_bytes(b"corrected build")
             self.assertFalse(desktop_launcher.update_required(manifest, executable))
-            self.assertFalse(desktop_launcher.update_required({"displayVersion": "1.4.11", "sha256": "0" * 64}, executable))
+            self.assertFalse(desktop_launcher.update_required({"displayVersion": desktop_launcher.APP_VERSION, "sha256": "0" * 64, "revision": "20260814-99"}, executable))
 
     def test_interrupted_download_retries_without_leaving_partial_file(self):
         payload = b"corrected executable"
         response = io.BytesIO(payload)
         response.status = 200
         manifest = {
-            "version": "1.4.11.1", "displayVersion": "1.4.11", "revision": "20260814-02",
+            "version": "1.4.12", "displayVersion": "1.4.12", "revision": desktop_launcher.APP_REVISION,
             "architecture": desktop_launcher.APP_ARCH,
             "url": "https://example.test/SIGA.exe", "urls": ["https://example.test/SIGA.exe"],
             "sha256": hashlib.sha256(payload).hexdigest(), "size": len(payload),
@@ -107,10 +107,9 @@ class LauncherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder, \
                 mock.patch.object(desktop_launcher, "update_state_path", return_value=Path(folder)), \
                 mock.patch.object(desktop_launcher, "urlopen", side_effect=[OSError("connection lost"), response]), \
-                mock.patch.object(desktop_launcher.time, "sleep"), \
-                mock.patch.object(desktop_launcher.subprocess, "Popen") as popen:
+                mock.patch.object(desktop_launcher.time, "sleep"):
             self.assertTrue(desktop_launcher.install_update(manifest))
-            self.assertTrue(popen.called)
+            self.assertTrue((Path(folder) / "prepared-update.json").exists())
             self.assertFalse(any(Path(folder).glob("*.part")))
 
     def test_packages_are_validated_for_their_own_architecture(self):
@@ -360,8 +359,8 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_mobile_maintenance_starts_before_authentication(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
-        self.assertIn("void watchMaintenance();", mobile)
-        self.assertIn("onAuthStateChanged(auth,user=>{if(!maintenanceBlocked)void handleAuthState(user)})", mobile)
+        self.assertIn("const initialMaintenanceCheck=watchMaintenance();", mobile)
+        self.assertIn("initialMaintenanceCheck.then", mobile)
         self.assertNotIn("stopMaintenanceWatch?.();stopMaintenanceWatch=null;hideMaintenance()", mobile)
         self.assertRegex(rules, r"match /artifacts/\{appId\}/public/config/maintenance/state \{\s*(?://[^\n]*\n\s*)*allow read: if true;")
 
@@ -378,10 +377,33 @@ class ApplicationSourceTests(unittest.TestCase):
         body = maintenance_function.group(1)
         self.assertLess(body.index("classList.remove('hidden')"), body.index("stopNoticeWatches()"))
 
+    def test_automatic_mobile_access_and_admin_only_credentials(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn("provisionMobileAccess(affiliate, 'sindicatoquimico')", desktop)
+        self.assertIn('body[data-role="operador"] #btn-tab-credenciales', desktop)
+        self.assertIn("window.appState.currentUserRole === 'admin'", desktop)
+        self.assertIn("['credenciales', 'actualizaciones'].includes(tabId)", desktop)
+
+    def test_update_is_staged_and_relaunched_from_canonical_install(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
+        self.assertIn('id="update-ready-banner"', desktop)
+        self.assertIn('id="restart-update-button"', desktop)
+        self.assertIn("void window.downloadAndInstallUpdate()", desktop)
+        self.assertIn("def apply_prepared_update()", launcher)
+        self.assertIn('webview_storage_path().parent / "SIGA.exe"', launcher)
+        self.assertNotIn('f"set \\"TARGET={executable}\\"', launcher)
+
+    def test_mobile_uses_device_screen_lock(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        self.assertIn('Usar bloqueo del dispositivo', mobile)
+        self.assertIn('patrón, PIN, contraseña, huella o rostro', mobile)
+        self.assertIn('platformAuthenticatorPromise', mobile)
+
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.11")
+        self.assertEqual(manifest["displayVersion"], "1.4.12")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")
