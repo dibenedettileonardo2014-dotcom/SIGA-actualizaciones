@@ -57,7 +57,7 @@
           <div class="card-foot"><div>DNI: <b id="card-dni">—</b><br>Empresa: <b id="card-company">—</b></div><div id="card-updated"></div></div>
         </div>
         <div class="status"><div class="pill">Estado<b id="affiliate-status">—</b></div><div class="pill">Cuota informada<b id="payment-status">—</b></div></div>
-        <div class="actions"><button class="secondary" id="print-button">Imprimir / guardar credencial</button></div>
+        <div class="actions"><button class="secondary" id="save-credential-button" type="button">Guardar credencial en galería</button><p id="save-credential-message" class="muted" role="status" aria-live="polite" style="margin:0;text-align:center"></p></div>
       </section>
       <section id="family-view" class="hidden white-card"><h2 class="section-title">Grupo Familiar</h2><p class="muted">Datos registrados en el padrón de SIGA.</p><h3 class="subsection-title" style="border:0;padding-top:0">Datos del afiliado</h3><div id="data-list"></div><h3 class="subsection-title">Integrantes del Grupo Familiar</h3><div id="family-list"></div><div class="actions"><button id="biometric-setup" class="secondary hidden" type="button">Activar huella, rostro o PIN</button><p id="biometric-status" class="muted hidden" style="margin:0;text-align:center"></p></div></section>
       <section id="notices-view" class="hidden"><h2 class="section-title">Comunicados</h2><p id="notices-status" class="muted">Cargando comunicados…</p><div id="notices-list" class="notice-list"></div><button id="notices-more" class="secondary load-more hidden" type="button">Mostrar más</button></section>
@@ -214,6 +214,35 @@
       $('data-list').replaceChildren(...rows.map(([label,value])=>{const row=document.createElement('div');row.className='row';const a=document.createElement('span');a.textContent=label;const b=document.createElement('b');b.textContent=value||'—';row.append(a,b);return row}));
       showFamily(data.familyGroup);
     }
+    function credentialCanvas(){
+      const canvas=document.createElement('canvas');canvas.width=1712;canvas.height=1080;const context=canvas.getContext('2d',{alpha:false});
+      const gradient=context.createLinearGradient(0,0,canvas.width,canvas.height);gradient.addColorStop(0,'#111827');gradient.addColorStop(1,'#064e3b');context.fillStyle=gradient;context.fillRect(0,0,canvas.width,canvas.height);
+      context.strokeStyle='#334155';context.lineWidth=5;context.strokeRect(3,3,canvas.width-6,canvas.height-6);
+      context.fillStyle='rgba(255,255,255,.035)';context.font='900 340px Arial,sans-serif';context.textAlign='right';context.fillText('SIGA',canvas.width+25,canvas.height+55);context.textAlign='left';
+      const text=(id,fallback='—')=>$(id).textContent.trim()||fallback;
+      context.fillStyle='#34d399';context.font='800 38px Arial,sans-serif';context.fillText('SINDICATO DE TRABAJADORES',80,125);
+      context.fillStyle='#cbd5e1';context.font='42px Arial,sans-serif';context.fillText('Asociación Gremial · SIGA',80,180);
+      context.fillStyle='#34d399';context.beginPath();context.roundRect(1415,73,215,75,18);context.fill();context.fillStyle='#052e16';context.font='900 34px Arial,sans-serif';context.textAlign='center';context.fillText('AFILIADO',1522,123);context.textAlign='left';
+      const fitText=(value,maxWidth,startSize,minSize=36)=>{let size=startSize;do{context.font=`850 ${size}px Arial,sans-serif`;if(context.measureText(value).width<=maxWidth)return size;size-=2}while(size>minSize);return minSize};
+      const name=text('card-name');fitText(name,1552,76);context.fillStyle='#f8fafc';context.fillText(name,80,505);
+      context.fillStyle='#94a3b8';context.font='42px Arial,sans-serif';context.fillText(text('card-number'),80,570);
+      const role=text('card-role','');if(role&&role!=='—'){context.fillStyle='#fcd34d';context.font='800 34px Arial,sans-serif';context.fillText(role,80,630)}
+      context.strokeStyle='rgba(255,255,255,.1)';context.lineWidth=3;context.beginPath();context.moveTo(80,800);context.lineTo(1632,800);context.stroke();
+      context.font='38px Arial,sans-serif';context.fillStyle='#94a3b8';context.fillText('DNI:',80,885);context.fillStyle='#e2e8f0';context.font='700 38px Arial,sans-serif';context.fillText(text('card-dni'),185,885);
+      context.fillStyle='#94a3b8';context.font='38px Arial,sans-serif';context.fillText('Empresa:',80,950);context.fillStyle='#e2e8f0';context.font='700 38px Arial,sans-serif';const company=text('card-company');fitText(company,1060,38,28);context.fillText(company,260,950);
+      context.fillStyle='#94a3b8';context.font='34px Arial,sans-serif';context.textAlign='right';context.fillText(text('card-updated',''),1632,950);return canvas;
+    }
+    function canvasToJpeg(canvas){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('jpg-generation-failed')),'image/jpeg',.96))}
+    function downloadCredential(file){const url=URL.createObjectURL(file),link=document.createElement('a');link.href=url;link.download=file.name;link.style.display='none';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+    async function saveCredential(){
+      const button=$('save-credential-button'),message=$('save-credential-message');button.disabled=true;message.textContent='Generando credencial en alta calidad…';
+      try{
+        const blob=await canvasToJpeg(credentialCanvas()),number=textContentForFilename($('card-number').textContent),file=new File([blob],`credencial-siga-${number}.jpg`,{type:'image/jpeg'});const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+        if(isiOS&&navigator.canShare?.({files:[file]})){message.textContent='Elegí “Guardar imagen” para agregarla a Fotos.';await navigator.share({files:[file],title:'Credencial digital SIGA'});message.textContent='Credencial enviada correctamente a Fotos.'}
+        else{downloadCredential(file);message.textContent='Credencial guardada correctamente. Podés abrirla desde Galería o Descargas.'}
+      }catch(error){if(error?.name==='AbortError')message.textContent='No se guardó la credencial: se canceló la operación.';else{console.error('No se pudo guardar la credencial:',error);message.textContent='No se pudo guardar la credencial. Verificá los permisos de Fotos o Descargas e intentá nuevamente.'}}finally{button.disabled=false}
+    }
+    function textContentForFilename(value){return String(value||'afiliado').replace(/^.*?:\s*/,'').replace(/[^a-z0-9_-]+/gi,'-').replace(/^-|-$/g,'')||'afiliado'}
     function showFamily(family={}){
       const list=$('family-list'),partner=family?.partner,children=Array.isArray(family?.children)?family.children:[];
       list.replaceChildren();
@@ -312,7 +341,7 @@
     onAuthStateChanged(auth,user=>{if(!maintenanceBlocked)void handleAuthState(user)});
     $('logout-button').addEventListener('click',async()=>{const user=auth.currentUser;localStorage.removeItem('siga_mobile_credential');localStorage.removeItem(BIOMETRIC_KEY);if(user)localStorage.removeItem(INVITE_KEY_PREFIX+user.uid);sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;await signOut(auth)});
     $('maintenance-logout').addEventListener('click',()=>{$('logout-button').click()});
-    $('print-button').addEventListener('click',()=>window.print());
+    $('save-credential-button').addEventListener('click',saveCredential);
      $('password-eye').addEventListener('click',()=>{const input=$('password'),button=$('password-eye'),show=input.type==='password';input.type=show?'text':'password';button.setAttribute('aria-pressed',String(show));button.setAttribute('aria-label',show?'Ocultar contraseña':'Mostrar contraseña');button.textContent=show?'🙈':'👁'});
      $('notices-more').addEventListener('click',()=>{visibleNotices+=NOTICE_PAGE_SIZE;renderNotices()});
      document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('#credential-view,#family-view,#notices-view,#convention-view').forEach(view=>view.classList.add('hidden'));$(button.dataset.view).classList.remove('hidden');document.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===button))}));

@@ -302,6 +302,20 @@ class ApplicationSourceTests(unittest.TestCase):
         for marker in ('id="password-eye"', "input.type=show?'text':'password'", "aria-label", "aria-pressed"):
             self.assertIn(marker, mobile)
 
+    def test_mobile_credential_exports_high_quality_jpeg(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        for marker in (
+            "Guardar credencial en galería",
+            "canvas.width=1712;canvas.height=1080",
+            "'image/jpeg',.96",
+            "navigator.canShare?.({files:[file]})",
+            "Elegí “Guardar imagen”",
+            "URL.revokeObjectURL(url)",
+        ):
+            self.assertIn(marker, mobile)
+        self.assertNotIn('id="print-button"', mobile)
+        self.assertNotIn("window.print()", mobile)
+
     def test_mobile_notice_watchers_are_reused_and_stopped(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         self.assertIn("watchedNoticesUid===user.uid&&stopNoticesWatch&&stopReadsWatch", mobile)
