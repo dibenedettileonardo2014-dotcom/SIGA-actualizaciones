@@ -196,7 +196,7 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertIn(marker, desktop)
         self.assertIn("['Localidad',data.locality]", mobile)
         self.assertIn("object-fit:contain", mobile)
-        self.assertNotIn("object-fit:cover", mobile)
+        self.assertIn(".notice-thumb{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain", mobile)
 
     def test_admin_and_operator_can_manage_existing_notices(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
@@ -315,6 +315,16 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertIn(marker, mobile)
         self.assertNotIn('id="print-button"', mobile)
         self.assertNotIn("window.print()", mobile)
+
+    def test_digital_credential_includes_spiqyp_logo(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
+        for source in (desktop, mobile, service_worker):
+            self.assertIn("assets/logo-spiqyp-rosario.png", source)
+        self.assertIn("context.drawImage(logo", desktop)
+        self.assertIn("context.drawImage(logo", mobile)
+        self.assertTrue((ROOT / "assets" / "logo-spiqyp-rosario.png").exists())
 
     def test_mobile_notice_watchers_are_reused_and_stopped(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
