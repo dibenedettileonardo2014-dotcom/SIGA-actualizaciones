@@ -83,6 +83,23 @@ service cloud.firestore {
             && get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.company == request.resource.data.company));
     }
 
+    function validMobileCredential(appId) {
+      return request.resource.data.keys().hasAll(['affiliateId', 'name', 'number', 'dni', 'status', 'familyGroup', 'enabled', 'updatedAt'])
+        && request.resource.data.affiliateId is string
+        && request.resource.data.name is string
+        && request.resource.data.number is string
+        && request.resource.data.dni is string
+        && request.resource.data.dni.matches('^[0-9 .-]{7,15}$')
+        && request.resource.data.status in ['Activo', 'Jubilado', 'Inactivo']
+        && request.resource.data.familyGroup is map
+        && request.resource.data.enabled is bool
+        && request.resource.data.updatedAt is string
+        && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId))
+        && get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.name == request.resource.data.name
+        && get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.number == request.resource.data.number
+        && get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.dni == request.resource.data.dni;
+    }
+
     // Solo las cuentas administrativas autorizadas pueden acceder al padrón.
     // Las sesiones anónimas y las cuentas móviles quedan excluidas.
     match /artifacts/{appId}/public/data/afiliados/{affiliateId} {
@@ -116,7 +133,7 @@ service cloud.firestore {
         && request.auth.uid == userId
         && resource.data.enabled == true
         && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(resource.data.affiliateId));
-      allow create, update: if isStaffOperational(appId);
+      allow create, update: if isStaffOperational(appId) && validMobileCredential(appId);
       allow delete: if false;
     }
 

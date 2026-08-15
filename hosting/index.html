@@ -102,14 +102,17 @@
     let installPrompt=null,automaticUnlockUid=null,biometricPromptActive=false,passwordLoginPending=false,pendingBiometricOfferUid=null,authUiReadyUid=null,initialAuthResolved=false,hiddenAt=0,stopMaintenanceWatch=null,maintenanceBlocked=false,maintenanceEpoch=0,platformAuthenticatorPromise=null;
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
-    const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
+    const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.',MAINTENANCE_CACHE_KEY=`siga_mobile_verified_maintenance_${networkId}`;
     const requestedDni=new URLSearchParams(location.search).get('dni')?.replace(/\D/g,'')||'';
     if(/^\d{7,9}$/.test(requestedDni))$('dni').value=requestedDni;
 
     function maintenanceRef(){return doc(db,'artifacts',networkId,'public','config','maintenance','state')}
     function showMaintenance(data={}){if(!maintenanceBlocked)maintenanceEpoch++;maintenanceBlocked=true;$('maintenance-title').textContent=data.title||DEFAULT_MAINTENANCE_TITLE;$('maintenance-message').textContent=data.message||DEFAULT_MAINTENANCE_MESSAGE;const estimate=$('maintenance-estimate');estimate.textContent=data.estimatedReturn?`Regreso estimado: ${data.estimatedReturn}`:'';estimate.classList.toggle('hidden',!data.estimatedReturn);$('maintenance-screen').classList.remove('hidden');appView.classList.add('hidden');loginView.classList.add('hidden');document.querySelectorAll('.notice-dialog-backdrop').forEach(element=>element.remove());if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches()}
     function hideMaintenance(){maintenanceBlocked=false;$('maintenance-screen').classList.add('hidden')}
-    function watchMaintenance(){stopMaintenanceWatch?.();stopMaintenanceWatch=null;return new Promise(resolve=>{let initial=true;stopMaintenanceWatch=onSnapshot(maintenanceRef(),{includeMetadataChanges:true},snapshot=>{const data=snapshot.exists()?snapshot.data():{enabled:false},wasBlocked=maintenanceBlocked;if(data.enabled)showMaintenance(data);else if(snapshot.metadata.fromCache)showMaintenance({title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});else hideMaintenance();if(initial){initial=false;resolve()}else if(wasBlocked&&!maintenanceBlocked){void handleAuthState(auth.currentUser)}},()=>{showMaintenance({title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});if(initial){initial=false;resolve()}})})}
+    function readVerifiedMaintenance(){try{const cached=JSON.parse(localStorage.getItem(MAINTENANCE_CACHE_KEY)||'null');return cached&&typeof cached.enabled==='boolean'?cached:null}catch{return null}}
+    function cacheVerifiedMaintenance(data){try{localStorage.setItem(MAINTENANCE_CACHE_KEY,JSON.stringify({enabled:data?.enabled===true,title:data?.title||DEFAULT_MAINTENANCE_TITLE,message:data?.message||DEFAULT_MAINTENANCE_MESSAGE,estimatedReturn:data?.estimatedReturn||'',verifiedAt:new Date().toISOString()}))}catch{}}
+    function applyMaintenanceState(data){if(data?.enabled)showMaintenance(data);else hideMaintenance()}
+    function watchMaintenance(){stopMaintenanceWatch?.();stopMaintenanceWatch=null;return new Promise(resolve=>{let initial=true;stopMaintenanceWatch=onSnapshot(maintenanceRef(),{includeMetadataChanges:true},snapshot=>{const networkData=snapshot.exists()?snapshot.data():{enabled:false},wasBlocked=maintenanceBlocked;if(!snapshot.metadata.fromCache)cacheVerifiedMaintenance(networkData);applyMaintenanceState(snapshot.metadata.fromCache?(readVerifiedMaintenance()||{enabled:true,title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'}):networkData);if(initial){initial=false;resolve()}else if(wasBlocked&&!maintenanceBlocked){void handleAuthState(auth.currentUser)}},()=>{applyMaintenanceState(readVerifiedMaintenance()||{enabled:true,title:'SIGA TEMPORALMENTE NO DISPONIBLE',message:'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.'});if(initial){initial=false;resolve()}})})}
 
     function supportsBiometrics(){return window.isSecureContext&&'PublicKeyCredential'in window&&'credentials'in navigator}
     function toBase64Url(buffer){return btoa(String.fromCharCode(...new Uint8Array(buffer))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
@@ -262,8 +265,9 @@
       $('login-message').textContent=message; signOut(auth).catch(()=>{});
     }
     const NOTICE_PAGE_SIZE=20;
-    let notices=[],readNoticeIds=new Set(),visibleNotices=NOTICE_PAGE_SIZE,stopNoticesWatch=null,stopReadsWatch=null,watchedNoticesUid=null;
-    function stopNoticeWatches(){stopNoticesWatch?.();stopReadsWatch?.();stopNoticesWatch=null;stopReadsWatch=null;watchedNoticesUid=null}
+    let notices=[],readNoticeIds=new Set(),visibleNotices=NOTICE_PAGE_SIZE,stopNoticesWatch=null,stopReadsWatch=null,watchedNoticesUid=null,noticeThumbnailCache=new Map();
+    function clearNoticeThumbnailCache(){noticeThumbnailCache.forEach(entry=>{entry.disposed=true;if(entry.url)URL.revokeObjectURL(entry.url)});noticeThumbnailCache.clear()}
+    function stopNoticeWatches(){stopNoticesWatch?.();stopReadsWatch?.();stopNoticesWatch=null;stopReadsWatch=null;watchedNoticesUid=null;clearNoticeThumbnailCache()}
     function noticeDate(value){const date=new Date(value||0);return Number.isNaN(date.getTime())?'—':date.toLocaleDateString('es-AR')}
     function yieldForPrioritySignal(){if(globalThis.scheduler?.yield)return globalThis.scheduler.yield();return new Promise(resolve=>{const channel=new MessageChannel();channel.port1.onmessage=()=>{channel.port1.close();channel.port2.close();resolve()};channel.port2.postMessage(null)})}
     function updateNoticeBadge(){const unread=notices.filter(item=>!readNoticeIds.has(item.id)).length,badge=$('notices-badge');badge.textContent=String(unread);badge.classList.toggle('hidden',unread===0)}
@@ -285,6 +289,7 @@
       if(maintenanceBlocked||requestedEpoch!==maintenanceEpoch)throw new Error('maintenance-active');
       return URL.createObjectURL(new Blob(parts,{type:mimeType}));
     }
+    function noticeThumbnailUrl(item){const key=`${item.id}:${item.updatedAt||item.publishedAt||''}`,cached=noticeThumbnailCache.get(key);if(cached)return cached.promise;const entry={url:'',promise:null,disposed:false};entry.promise=loadNoticeFile(item.id,'thumbnail','image/jpeg').then(url=>{if(entry.disposed){URL.revokeObjectURL(url);throw new Error('thumbnail-cache-cleared')}entry.url=url;return url}).catch(error=>{noticeThumbnailCache.delete(key);throw error});noticeThumbnailCache.set(key,entry);return entry.promise}
     async function openNotice(item){
       if(!readNoticeIds.has(item.id)&&auth.currentUser){readNoticeIds.add(item.id);updateNoticeBadge();renderNotices();await setDoc(doc(db,'artifacts',networkId,'mobile_reads',auth.currentUser.uid,'items',item.id),{noticeId:item.id,readAt:new Date().toISOString()}).catch(()=>{})}
       const backdrop=document.createElement('div');backdrop.className='dialog-backdrop notice-dialog-backdrop';const dialog=document.createElement('article');dialog.className='dialog';
@@ -297,14 +302,14 @@
     }
     function renderNotices(){
       const list=$('notices-list'),status=$('notices-status');list.replaceChildren();const sorted=[...notices].sort((a,b)=>(Number(b.important)-Number(a.important))||(new Date(b.publishedAt)-new Date(a.publishedAt)));status.textContent=sorted.length?'Publicaciones recientes del sindicato.':'No hay comunicados publicados.';
-       sorted.slice(0,visibleNotices).forEach(item=>{const card=document.createElement('article');const unread=!readNoticeIds.has(item.id);card.className=`notice-card${unread?' unread':''}${item.important?' important':''}`;card.tabIndex=0;const summary=(item.text||'').slice(0,150);card.innerHTML=`<div class="notice-meta"><span>${noticeDate(item.publishedAt)}</span>${unread?'<span class="notice-label">NUEVO</span>':''}${item.important?'<span class="notice-label important">IMPORTANTE</span>':''}${item.hasPdf?'<span title="Incluye PDF">📄 PDF</span>':''}</div><h3></h3><p></p>`;card.querySelector('h3').textContent=item.title;card.querySelector('p').textContent=summary+(item.text?.length>150?'…':'');if(item.hasImage){loadNoticeFile(item.id,'thumbnail','image/jpeg').then(url=>{if(!card.isConnected)return URL.revokeObjectURL(url);const image=document.createElement('img');image.className='notice-thumb';image.loading='lazy';image.alt='';image.src=url;image.onload=()=>URL.revokeObjectURL(url);card.append(image)}).catch(()=>{})}card.onclick=()=>openNotice(item);card.onkeydown=event=>{if(event.key==='Enter')openNotice(item)};list.append(card)});
+       sorted.slice(0,visibleNotices).forEach(item=>{const card=document.createElement('article');const unread=!readNoticeIds.has(item.id);card.className=`notice-card${unread?' unread':''}${item.important?' important':''}`;card.tabIndex=0;const summary=(item.text||'').slice(0,150);card.innerHTML=`<div class="notice-meta"><span>${noticeDate(item.publishedAt)}</span>${unread?'<span class="notice-label">NUEVO</span>':''}${item.important?'<span class="notice-label important">IMPORTANTE</span>':''}${item.hasPdf?'<span title="Incluye PDF">📄 PDF</span>':''}</div><h3></h3><p></p>`;card.querySelector('h3').textContent=item.title;card.querySelector('p').textContent=summary+(item.text?.length>150?'…':'');if(item.hasImage){noticeThumbnailUrl(item).then(url=>{if(!card.isConnected)return;const image=document.createElement('img');image.className='notice-thumb';image.loading='lazy';image.alt='';image.src=url;card.append(image)}).catch(()=>{})}card.onclick=()=>openNotice(item);card.onkeydown=event=>{if(event.key==='Enter')openNotice(item)};list.append(card)});
       $('notices-more').classList.toggle('hidden',visibleNotices>=sorted.length);updateNoticeBadge();
     }
     function watchNotices(user){
       if(watchedNoticesUid===user.uid&&stopNoticesWatch&&stopReadsWatch)return;
       stopNoticeWatches();visibleNotices=NOTICE_PAGE_SIZE;
       watchedNoticesUid=user.uid;
-      stopNoticesWatch=onSnapshot(collection(db,'artifacts',networkId,'public','data','comunicados'),snapshot=>{notices=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.published!==false);renderNotices()},()=>{$('notices-status').textContent='Sin conexión. Se mostrará la copia disponible cuando vuelva la red.'});
+      stopNoticesWatch=onSnapshot(collection(db,'artifacts',networkId,'public','data','comunicados'),snapshot=>{notices=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.published!==false);const activeKeys=new Set(notices.map(item=>`${item.id}:${item.updatedAt||item.publishedAt||''}`));for(const[key,entry]of noticeThumbnailCache)if(!activeKeys.has(key)){if(entry.url)URL.revokeObjectURL(entry.url);noticeThumbnailCache.delete(key)}renderNotices()},()=>{$('notices-status').textContent='Sin conexión. Se mostrará la copia disponible cuando vuelva la red.'});
       stopReadsWatch=onSnapshot(collection(db,'artifacts',networkId,'mobile_reads',user.uid,'items'),snapshot=>{readNoticeIds=new Set(snapshot.docs.map(item=>item.id));renderNotices()},()=>{});
     }
     function handleCredentialWatchError(error,user){
@@ -320,14 +325,16 @@
       $('login-message').textContent='No hay conexión y todavía no existe una credencial guardada en este dispositivo.';
       appView.classList.add('hidden');loginView.classList.remove('hidden');
     }
+    function readCachedCredential(user){try{const cached=JSON.parse(localStorage.getItem('siga_mobile_credential')||'null');return cached?.uid===user?.uid&&cached?.data?.enabled!==false?cached.data:null}catch{return null}}
     function loadCredential(user){
       if(stopCredentialWatch)stopCredentialWatch();
+      const cached=readCachedCredential(user);if(cached){showCredential(cached);loginView.classList.add('hidden');appView.classList.remove('hidden');$('welcome').textContent+=navigator.onLine?' · sincronizando':' · copia sin conexión'}
       stopCredentialWatch=onSnapshot(doc(db,'artifacts',networkId,'mobile_credentials',user.uid),snapshot=>{
         if(maintenanceBlocked)return;
-        if(!snapshot.exists())return revokeCurrentSession('La cuenta no tiene una credencial habilitada.');
+        if(!snapshot.exists()){if(snapshot.metadata.fromCache&&cached)return;return revokeCurrentSession('La cuenta no tiene una credencial habilitada.')}
         const data=snapshot.data();
         if(data.enabled===false)return revokeCurrentSession('Tu acceso está bloqueado. Comunicate con el sindicato.');
-       localStorage.setItem('siga_mobile_credential',JSON.stringify(data)); showCredential(data); watchNotices(user); loginView.classList.add('hidden'); appView.classList.remove('hidden');
+       localStorage.setItem('siga_mobile_credential',JSON.stringify({uid:user.uid,data})); showCredential(data); watchNotices(user); loginView.classList.add('hidden'); appView.classList.remove('hidden');
       },error=>handleCredentialWatchError(error,user));
     }
     $('login-form').addEventListener('submit',async event=>{event.preventDefault();const dni=$('dni').value.replace(/\D/g,'');const password=$('password').value;const button=$('login-button');$('login-message').textContent='';if(!/^\d{7,9}$/.test(dni)){$('login-message').textContent='Ingresá un DNI válido.';return}button.disabled=true;button.textContent='Ingresando…';passwordLoginPending=true;try{const result=await signInWithEmailAndPassword(auth,loginEmail(dni),password);sessionStorage.setItem(UNLOCK_KEY,result.user.uid);automaticUnlockUid=result.user.uid;pendingBiometricOfferUid=result.user.uid;$('password').value='';if(authUiReadyUid===result.user.uid&&!maintenanceBlocked){pendingBiometricOfferUid=null;await offerBiometricSetup(result.user)}}catch{$('login-message').textContent='DNI o contraseña incorrectos.'}finally{passwordLoginPending=false;button.disabled=false;button.textContent='Ingresar'}});

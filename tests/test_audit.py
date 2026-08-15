@@ -114,6 +114,16 @@ class LauncherTests(unittest.TestCase):
             self.assertTrue((Path(folder) / "prepared-update.json").exists())
             self.assertFalse(any(Path(folder).glob("*.part")))
 
+    def test_sync_diagnostics_preserve_recent_history(self):
+        with tempfile.TemporaryDirectory() as folder, \
+                mock.patch.object(desktop_launcher, "webview_storage_path", return_value=Path(folder) / "webview"):
+            api = desktop_launcher.DesktopApi()
+            self.assertTrue(api.report_sync_error("offline", "primer error")["ok"])
+            self.assertTrue(api.report_sync_error("retry", "segundo error")["ok"])
+            log = (Path(folder) / "sync-error.log").read_text(encoding="utf-8")
+            self.assertIn("primer error", log)
+            self.assertIn("segundo error", log)
+
     def test_packages_are_validated_for_their_own_architecture(self):
         desktop_launcher.validate_update_package(ROOT / "SIGA-update-x86.zip", "x86")
         desktop_launcher.validate_update_package(ROOT / "SIGA-update-x64.zip", "x64")
@@ -130,6 +140,26 @@ class ApplicationSourceTests(unittest.TestCase):
         }
         self.assertEqual(headers["/"]["Cache-Control"], "no-cache")
         self.assertEqual(headers["/sw.js"]["Cache-Control"], "no-cache")
+
+    def test_cache_revision_matches_current_internal_revision(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
+        revision = re.search(r'const APP_REVISION = "([^"]+)"', desktop).group(1)
+        self.assertIn(f"r{revision}", service_worker)
+        self.assertEqual(service_worker, (ROOT / "hosting" / "sw.js").read_text(encoding="utf-8"))
+
+    def test_last_verified_maintenance_state_supports_offline_recovery(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        for marker in ("maintenanceCacheKey", "readVerifiedMaintenance", "cacheVerifiedMaintenance"):
+            self.assertIn(marker, desktop)
+        for marker in ("MAINTENANCE_CACHE_KEY", "readVerifiedMaintenance", "cacheVerifiedMaintenance", "applyMaintenanceState"):
+            self.assertIn(marker, mobile)
+
+    def test_corrupt_pending_queue_is_preserved_for_recovery(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn("_corrupt_${Date.now()}", desktop)
+        self.assertIn("se conserva un respaldo para recuperación", desktop)
 
     def test_mobile_shell_assets_exist(self):
         service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
@@ -178,8 +208,22 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertIn(marker, desktop_html)
         self.assertIn("handleCredentialWatchError", mobile_html)
         self.assertIn("validAffiliate", rules)
+        self.assertIn("validMobileCredential", rules)
+        self.assertIn("isStaffOperational(appId) && validMobileCredential(appId)", rules)
         self.assertIn("validPayment", rules)
         self.assertIn("request.resource.data.revision == resource.data.revision + 1", rules)
+
+    def test_payments_confirm_before_marking_affiliate_paid(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        payment_save = desktop.index("await commitPaymentToDatabase(payment);")
+        affiliate_update = desktop.index("if (!affiliate.hasPaid) await commitToDatabase", payment_save)
+        self.assertLess(payment_save, affiliate_update)
+
+    def test_notice_replacements_are_committed_atomically(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn("async function saveNoticeAtomically", desktop)
+        self.assertIn("obsoleteDocs.forEach(item=>batch.delete(item.ref))", desktop)
+        self.assertIn("batch.set(doc(noticeCollection(),noticeId),data);await batch.commit()", desktop)
 
     def test_lgdb_signature_is_consistent(self):
         for filename in ("index.html", "afiliado.html"):
@@ -209,7 +253,7 @@ class ApplicationSourceTests(unittest.TestCase):
         notice_rules = rules[rules.index("match /artifacts/{appId}/public/data/comunicados/{noticeId}"):]
         self.assertIn("allow create: if isStaffOperational(appId)", notice_rules)
         self.assertGreaterEqual(notice_rules.count("allow update, delete: if isStaffOperational(appId);"), 2)
-        for marker in ("notice-edit-id", "setDoc(doc(noticeCollection(),id),data)", "deleteNoticeAtomically(item.id)", "if(!confirm(`¿Eliminar definitivamente", "onSnapshot(noticeCollection()"):
+        for marker in ("notice-edit-id", "saveNoticeAtomically(id,data,replacements)", "deleteNoticeAtomically(item.id)", "if(!confirm(`¿Eliminar definitivamente", "onSnapshot(noticeCollection()"):
             self.assertIn(marker, desktop)
 
     def test_affiliate_form_layout_contract(self):
@@ -331,6 +375,19 @@ class ApplicationSourceTests(unittest.TestCase):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         self.assertIn("watchedNoticesUid===user.uid&&stopNoticesWatch&&stopReadsWatch", mobile)
         self.assertGreaterEqual(mobile.count("stopNoticeWatches()"), 4)
+
+    def test_mobile_thumbnail_fragments_are_cached_per_notice_revision(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        for marker in ("noticeThumbnailCache", "noticeThumbnailUrl(item)", "activeKeys", "clearNoticeThumbnailCache"):
+            self.assertIn(marker, mobile)
+
+    def test_mobile_offline_credential_cache_is_scoped_to_authenticated_uid(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        self.assertIn("function readCachedCredential(user)", mobile)
+        self.assertIn("cached?.uid===user?.uid", mobile)
+        self.assertIn("JSON.stringify({uid:user.uid,data})", mobile)
+        self.assertIn("copia sin conexión", mobile)
+        self.assertIn("snapshot.metadata.fromCache&&cached", mobile)
 
     def test_exports_and_notice_files_handle_large_or_partial_operations(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")

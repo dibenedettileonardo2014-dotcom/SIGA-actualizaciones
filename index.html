@@ -1266,6 +1266,30 @@
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
         const maintenanceAuditCollection = () => collection(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'maintenance_audit');
+        const maintenanceCacheKey = () => `siga_verified_maintenance_${window.appState.appId}`;
+
+        function readVerifiedMaintenance() {
+            try {
+                const cached = JSON.parse(localStorage.getItem(maintenanceCacheKey()) || 'null');
+                return cached && typeof cached.enabled === 'boolean' ? cached : null;
+            } catch {
+                return null;
+            }
+        }
+
+        function cacheVerifiedMaintenance(data) {
+            try {
+                localStorage.setItem(maintenanceCacheKey(), JSON.stringify({
+                    enabled: data?.enabled === true,
+                    title: data?.title || DEFAULT_MAINTENANCE_TITLE,
+                    message: data?.message || DEFAULT_MAINTENANCE_MESSAGE,
+                    estimatedReturn: data?.estimatedReturn || '',
+                    verifiedAt: new Date().toISOString()
+                }));
+            } catch (error) {
+                console.info('No se pudo guardar el último estado de mantenimiento:', error);
+            }
+        }
 
         function stopOperationalSync() {
             unsubscribeAffiliates?.(); unsubscribeAffiliates = null;
@@ -1310,8 +1334,10 @@
                     const wasBlocked = window.appState.maintenance?.enabled === true && window.appState.currentUserRole !== 'admin';
                     const data = snapshot.exists() ? snapshot.data() : { enabled: false };
                     maintenanceConfigVerified = !snapshot.metadata.fromCache;
-                    window.appState.maintenance = snapshot.metadata.fromCache && !data.enabled && window.appState.currentUserRole !== 'admin'
-                        ? { enabled: true, title: 'SIGA TEMPORALMENTE NO DISPONIBLE', message: 'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.' }
+                    if (maintenanceConfigVerified) cacheVerifiedMaintenance(data);
+                    const verifiedCache = readVerifiedMaintenance();
+                    window.appState.maintenance = snapshot.metadata.fromCache
+                        ? (verifiedCache || { enabled: true, title: 'SIGA TEMPORALMENTE NO DISPONIBLE', message: 'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.' })
                         : data;
                     renderMaintenanceState();
                     const blocked = window.appState.maintenance.enabled === true && window.appState.currentUserRole !== 'admin';
@@ -1320,9 +1346,8 @@
                 }, error => {
                     console.error('No se pudo verificar el modo mantenimiento:', error);
                     maintenanceConfigVerified = false;
-                    if (window.appState.currentUserRole !== 'admin') {
-                        window.appState.maintenance = { enabled: true, title: 'SIGA TEMPORALMENTE NO DISPONIBLE', message: 'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.' };
-                    }
+                    const verifiedCache = readVerifiedMaintenance();
+                    if (window.appState.currentUserRole !== 'admin') window.appState.maintenance = verifiedCache || { enabled: true, title: 'SIGA TEMPORALMENTE NO DISPONIBLE', message: 'NO PUDIMOS VERIFICAR EL ESTADO DEL SISTEMA. REINTENTAREMOS AUTOMÁTICAMENTE CUANDO VUELVA LA CONEXIÓN.' };
                     renderMaintenanceState();
                     if (initial) { initial = false; resolve(); }
                 });
@@ -1557,12 +1582,19 @@ window.__firebase_config = {
         }
 
         function readPendingChanges() {
+            const key = pendingChangesKey();
             try {
-                const value = JSON.parse(localStorage.getItem(pendingChangesKey()) || '[]');
+                const value = JSON.parse(localStorage.getItem(key) || '[]');
                 return Array.isArray(value) ? value : [];
             } catch (error) {
-                console.error('La cola local estaba dañada y fue reiniciada:', error);
-                localStorage.removeItem(pendingChangesKey());
+                console.error('La cola local está dañada; se conserva un respaldo para recuperación:', error);
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (raw) localStorage.setItem(`${key}_corrupt_${Date.now()}`, raw);
+                    localStorage.removeItem(key);
+                } catch (backupError) {
+                    console.error('No se pudo respaldar la cola dañada:', backupError);
+                }
                 return [];
             }
         }
@@ -3397,8 +3429,8 @@ window.__firebase_config = {
                 date: now.toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }),
                 timestamp: now.toISOString()
             };
-            if (!affiliate.hasPaid) await commitToDatabase({ ...affiliate, hasPaid: true });
             await commitPaymentToDatabase(payment);
+            if (!affiliate.hasPaid) await commitToDatabase({ ...affiliate, hasPaid: true });
             return true;
         }
 
@@ -4053,7 +4085,7 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
         const APP_VERSION = "1.4.12";
-        const APP_REVISION = "20260815-04";
+        const APP_REVISION = "20260815-05";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4351,13 +4383,15 @@ window.__firebase_config = {
         async function deleteNoticeFiles(noticeId,kind=null){const constraints=[where('noticeId','==',noticeId)];if(kind)constraints.push(where('kind','==',kind));const snapshot=await getDocs(query(noticeFilesCollection(),...constraints));for(let offset=0;offset<snapshot.docs.length;offset+=450){const batch=writeBatch(window.appState.db);snapshot.docs.slice(offset,offset+450).forEach(item=>batch.delete(item.ref));await batch.commit()}}
         async function deleteNoticeAtomically(noticeId){const snapshot=await getDocs(query(noticeFilesCollection(),where('noticeId','==',noticeId)));if(snapshot.docs.length>448)throw new Error('El comunicado tiene demasiados fragmentos para eliminar de forma segura.');const batch=writeBatch(window.appState.db);snapshot.docs.forEach(item=>batch.delete(item.ref));batch.delete(doc(noticeCollection(),noticeId));await batch.commit()}
         async function uploadNoticeFile(noticeId,kind,file){const base64=await fileToBase64(file),chunks=[];for(let offset=0;offset<base64.length;offset+=NOTICE_CHUNK_BYTES)chunks.push(base64.slice(offset,offset+NOTICE_CHUNK_BYTES));for(let offset=0;offset<chunks.length;offset+=450){const batch=writeBatch(window.appState.db);chunks.slice(offset,offset+450).forEach((data,localIndex)=>{const index=offset+localIndex;batch.set(doc(noticeFilesCollection(),`${noticeId}_${kind}_${String(index).padStart(4,'0')}`),{noticeId,kind,index,total:chunks.length,data})});await batch.commit()}}
+        async function noticeFileChunks(noticeId,kind,file){if(!file)return[];const base64=await fileToBase64(file),chunks=[];for(let offset=0;offset<base64.length;offset+=NOTICE_CHUNK_BYTES)chunks.push(base64.slice(offset,offset+NOTICE_CHUNK_BYTES));if(!chunks.length||chunks.length>64)throw new Error('El adjunto no puede guardarse de forma segura.');return chunks.map((data,index)=>({id:`${noticeId}_${kind}_${String(index).padStart(4,'0')}`,data:{noticeId,kind,index,total:chunks.length,data}}))}
+        async function saveNoticeAtomically(noticeId,data,replacements){const affectedKinds=Object.keys(replacements),existing=affectedKinds.length?await getDocs(query(noticeFilesCollection(),where('noticeId','==',noticeId))):null,newChunks=[];for(const kind of affectedKinds)newChunks.push(...await noticeFileChunks(noticeId,kind,replacements[kind]));const newIds=new Set(newChunks.map(item=>item.id)),obsoleteDocs=existing?existing.docs.filter(item=>affectedKinds.includes(item.data().kind)&&!newIds.has(item.id)):[];if(obsoleteDocs.length+newChunks.length+1>499)throw new Error('El comunicado supera el límite de una operación segura.');const batch=writeBatch(window.appState.db);obsoleteDocs.forEach(item=>batch.delete(item.ref));newChunks.forEach(item=>batch.set(doc(noticeFilesCollection(),item.id),item.data));batch.set(doc(noticeCollection(),noticeId),data);await batch.commit()}
         function renderNoticePreview(){const title=document.getElementById('notice-title').value.trim()||'Título del comunicado',text=document.getElementById('notice-text').value.trim(),important=document.getElementById('notice-important').checked,image=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0],preview=document.getElementById('notice-preview');if(noticePreviewUrl){URL.revokeObjectURL(noticePreviewUrl);noticePreviewUrl=''}preview.innerHTML=`<div class="flex gap-2 mb-2">${important?'<span class="px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">IMPORTANTE</span>':''}<span class="text-xs text-slate-400">${new Date().toLocaleDateString('es-AR')}</span></div><strong class="block text-slate-800 font-extrabold"></strong><p class="mt-2 whitespace-pre-wrap"></p><div class="notice-preview-media"></div><p class="mt-2 text-xs text-slate-500">${image?'🖼️ '+safeNoticeName(image.name):''}${image&&pdf?' · ':''}${pdf?'📄 '+safeNoticeName(pdf.name):''}</p>`;preview.querySelector('strong').textContent=title;preview.querySelector('p').textContent=text||'Sin texto adjunto.';if(image){noticePreviewUrl=URL.createObjectURL(image);const element=document.createElement('img');element.src=noticePreviewUrl;element.alt='Vista previa de la fotografía';element.className='block w-full h-auto max-h-80 object-contain object-center mx-auto mt-3 rounded-xl bg-white';preview.querySelector('.notice-preview-media').append(element)}}
         function resetNoticeForm(){document.getElementById('notice-form').reset();document.getElementById('notice-edit-id').value='';document.getElementById('notice-form-title').textContent='Nuevo Comunicado';document.getElementById('notice-submit').textContent='PUBLICAR COMUNICADO';document.getElementById('notice-cancel').classList.add('hidden');document.getElementById('notice-message').textContent='';renderNoticePreview()}
         function renderNoticeTable(){const search=document.getElementById('notice-search').value.trim().toLowerCase(),items=[...window.appState.notices].filter(item=>!search||`${item.title} ${item.text}`.toLowerCase().includes(search)).sort((a,b)=>Number(b.important)-Number(a.important)||new Date(b.publishedAt)-new Date(a.publishedAt)),table=document.getElementById('notice-table');table.replaceChildren();document.getElementById('notice-empty').classList.toggle('hidden',items.length>0);items.forEach(item=>{const row=document.createElement('tr'),content=[item.text?'Texto':'',item.hasImage?'Imagen':'',item.hasPdf?'PDF':''].filter(Boolean).join(' + ')||'—';row.className='text-slate-600';row.innerHTML=`<td class="p-3 whitespace-nowrap">${new Date(item.publishedAt).toLocaleDateString('es-AR')}</td><td class="p-3 font-semibold text-slate-800"></td><td class="p-3">${content}</td><td class="p-3">${item.hasImage?'Sí':'No'}</td><td class="p-3">${item.hasPdf?'Sí':'No'}</td><td class="p-3">${item.important?'Sí':'No'}</td><td class="p-3 text-emerald-700 font-semibold">Publicado</td><td class="p-3"><div class="flex flex-wrap gap-2"><button class="notice-view text-emerald-700 font-bold">Ver</button><button class="notice-edit text-blue-700 font-bold">Editar</button><button class="notice-toggle text-amber-700 font-bold">${item.important?'Desmarcar':'Marcar'}</button><button class="notice-delete text-rose-700 font-bold">Eliminar</button></div></td>`;row.children[1].textContent=item.title;row.querySelector('.notice-view').onclick=()=>alert(`${item.title}\n\n${item.text||'(Sin texto)'}\n\n${item.hasImage?'Incluye imagen. ':''}${item.hasPdf?`Incluye PDF: ${item.pdfName}.`:''}`);row.querySelector('.notice-edit').onclick=()=>{document.getElementById('notice-edit-id').value=item.id;document.getElementById('notice-title').value=item.title;document.getElementById('notice-text').value=item.text||'';document.getElementById('notice-important').checked=Boolean(item.important);document.getElementById('notice-form-title').textContent='Editar Comunicado';document.getElementById('notice-submit').textContent='GUARDAR CAMBIOS';document.getElementById('notice-cancel').classList.remove('hidden');renderNoticePreview()};row.querySelector('.notice-toggle').onclick=async event=>{const button=event.currentTarget;button.disabled=true;try{await setDoc(doc(noticeCollection(),item.id),{...item,important:!item.important,updatedAt:new Date().toISOString()})}catch(error){console.error('No se pudo cambiar la prioridad del comunicado:',error);showToast('Comunicados','No se pudo actualizar el comunicado. Verificá la conexión.','error')}finally{button.disabled=false}};row.querySelector('.notice-delete').onclick=async event=>{if(!confirm(`¿Eliminar definitivamente el comunicado "${item.title}"?`))return;const button=event.currentTarget;button.disabled=true;try{await deleteNoticeAtomically(item.id);showToast('Comunicados','El comunicado fue eliminado.','success')}catch(error){console.error('No se pudo eliminar el comunicado:',error);showToast('Comunicados','No se pudo eliminar. No se aplicaron cambios parciales.','error');button.disabled=false}};table.append(row)})}
         function subscribeNotices(){if(!window.appState.firebaseEnabled||unsubscribeNotices)return;unsubscribeNotices=onSnapshot(noticeCollection(),snapshot=>{window.appState.notices=snapshot.docs.map(item=>({id:item.id,...item.data()}));renderNoticeTable()},error=>{console.error('Error sincronizando comunicados:',error);document.getElementById('notice-message').textContent='No se pudieron sincronizar los comunicados.'})}
         const uppercaseNoticeInput=event=>{const start=event.target.selectionStart,end=event.target.selectionEnd,upper=event.target.value.toLocaleUpperCase('es-AR');if(event.target.value!==upper){event.target.value=upper;event.target.setSelectionRange(start,end)}};document.getElementById('notice-title').addEventListener('input',uppercaseNoticeInput);document.getElementById('notice-text').addEventListener('input',uppercaseNoticeInput);document.getElementById('notice-form').addEventListener('input',renderNoticePreview);document.getElementById('notice-search').addEventListener('input',renderNoticeTable);document.getElementById('notice-cancel').addEventListener('click',resetNoticeForm);
         document.getElementById('notice-form').addEventListener('submit',()=>{const title=document.getElementById('notice-title'),text=document.getElementById('notice-text');title.value=title.value.toLocaleUpperCase('es-AR');text.value=text.value.toLocaleUpperCase('es-AR')},{capture:true});
-        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
+        document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),thumb=image?await imageThumbnail(image):null,id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0},replacements={};if(image){replacements.image=image;replacements.thumbnail=thumb}if(pdf)replacements.pdf=pdf;await saveNoticeAtomically(id,data,replacements);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
             if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones', 'errores', 'usuarios', 'configuracion', 'mantenimiento'].includes(tabId)) {
