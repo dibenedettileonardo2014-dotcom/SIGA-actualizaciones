@@ -26,7 +26,7 @@ import webview
 
 LOCAL_PORT = 18765
 APP_VERSION = "1.4.11"
-APP_REVISION = "20260814-05"
+APP_REVISION = "20260814-06"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -228,6 +228,7 @@ def update_required(manifest: dict, executable: Path | None = None) -> bool:
 
 def fetch_update_manifest() -> dict | None:
     update_log("manifest-check-start", revision=APP_REVISION, architecture=APP_ARCH)
+    candidates = []
     for manifest_url in UPDATE_MANIFEST_URLS:
         for attempt in range(1):
             try:
@@ -240,11 +241,21 @@ def fetch_update_manifest() -> dict | None:
                 if valid_update_manifest(manifest):
                     metadata = update_metadata(manifest)
                     update_log("manifest-valid", source=manifest_url, remoteRevision=metadata.get("revision", ""))
-                    return metadata
+                    candidates.append(metadata)
+                    break
             except (OSError, ValueError, json.JSONDecodeError) as error:
                 update_log("manifest-error", source=manifest_url, attempt=attempt + 1, error=type(error).__name__)
                 time.sleep(2 ** attempt)
-    return None
+    if not candidates:
+        return None
+    # Los espejos pueden actualizarse con algunos minutos de diferencia.
+    return max(
+        candidates,
+        key=lambda item: (
+            version_key(item.get("displayVersion", item.get("version", "0.0.0"))),
+            str(item.get("revision", "")),
+        ),
+    )
 
 
 def install_update(manifest: dict) -> bool:

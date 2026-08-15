@@ -270,6 +270,14 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("await flushPendingChanges();", desktop)
         self.assertIn("await checkUpdateAfterConnectivityRecovery();", desktop)
         self.assertLess(desktop.rindex("await flushPendingChanges();"), desktop.rindex("await checkUpdateAfterConnectivityRecovery();"))
+        self.assertIn("if (!window.appState.firebaseEnabled) await setupFirebase();", desktop)
+        self.assertIn("window.addEventListener('pagehide'", desktop)
+
+    def test_manifest_selection_compares_all_update_mirrors(self):
+        source = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
+        self.assertIn("candidates.append(metadata)", source)
+        self.assertIn("return max(", source)
+        self.assertIn('str(item.get("revision", ""))', source)
 
     def test_automatic_biometric_lifecycle_contract(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")

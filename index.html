@@ -2035,6 +2035,13 @@ window.__firebase_config = {
         }
 
         // --- Procesamiento de Estados, Gráficos y Renderizado ---
+        window.addEventListener('pagehide', () => {
+            if (localSaveTimer) {
+                clearTimeout(localSaveTimer);
+                persistLocalData();
+            }
+        });
+
         function processStateChange() {
             stateRevision += 1;
             derivedState = null;
@@ -4214,6 +4221,7 @@ window.__firebase_config = {
         };
 
         let recoveredConnectivityUpdateCheck = false;
+        let recoveringConnectivity = false;
         async function checkUpdateAfterConnectivityRecovery() {
             if (recoveredConnectivityUpdateCheck || !window.pywebview?.api?.install_available_update) return;
             recoveredConnectivityUpdateCheck = true;
@@ -4228,10 +4236,19 @@ window.__firebase_config = {
         }
 
         window.addEventListener('online', async () => {
-            if (window.appState.firebaseEnabled) setupRealtimeSync();
-            await flushPendingChanges();
-            await checkUpdateAfterConnectivityRecovery();
+            if (recoveringConnectivity) return;
+            recoveringConnectivity = true;
+            try {
+                if (!window.appState.firebaseEnabled) await setupFirebase();
+                else setupRealtimeSync();
+                if (window.appState.firebaseEnabled) await flushPendingChanges();
+                await checkUpdateAfterConnectivityRecovery();
+            } finally {
+                recoveringConnectivity = false;
+            }
         });
+
+        window.addEventListener('offline', () => loadLocalFallback(true));
 
         window.onload = function() {
             // Inicio local primero: la pantalla queda lista aun sin red.
