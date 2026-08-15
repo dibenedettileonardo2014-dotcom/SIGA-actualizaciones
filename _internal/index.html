@@ -731,13 +731,13 @@
                             <div id="update-available" class="hidden bg-amber-50 border border-amber-200 p-4 rounded-xl">
                                 <div class="space-y-3">
                                     <div>
-                                        <p class="font-semibold text-amber-900 mb-2">Nueva versión disponible</p>
+                                        <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
                                 <span id="current-version-text" class="font-bold text-amber-800">v1.4.11</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
-                                            <span class="text-sm text-amber-700">Nueva Versión:</span>
+                                            <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
                                             <span id="new-version-text" class="font-bold text-amber-800">—</span>
                                         </div>
                                         <p id="update-notes" class="text-xs text-amber-700 bg-white/50 p-2 rounded mb-3 border border-amber-100">Cargando descripción...</p>
@@ -772,7 +772,7 @@
                         <!-- Información adicional -->
                         <div class="mt-6 pt-4 border-t border-slate-100">
                             <p class="text-[10px] text-slate-500 flex items-center gap-1">
-                                <i class="fa-solid fa-shield-halved"></i> Las actualizaciones se verifican únicamente al abrir esta solapa. SIGA no mostrará avisos automáticos al iniciar.
+                                <i class="fa-solid fa-shield-halved"></i> SIGA verifica, descarga y aplica automáticamente las actualizaciones al iniciar o al recuperar la conexión.
                             </p>
                         </div>
                     </div>
@@ -3859,9 +3859,9 @@ window.__firebase_config = {
         };
 
         // --- SISTEMA DE ACTUALIZACIONES ---
-        const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json";
+        const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
         const APP_VERSION = "1.4.11";
-        const APP_REVISION = "20260814-05";
+        const APP_REVISION = "20260814-07";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
@@ -3880,14 +3880,17 @@ window.__firebase_config = {
                 
                 const remoteVersion = manifest.displayVersion || manifest.version;
                 const hasUpdate = compareVersions(remoteVersion, APP_VERSION) > 0
-                    || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision !== APP_REVISION);
+                    || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision > APP_REVISION);
                 
                 document.getElementById('update-checking').classList.add('hidden');
                 
                 if (hasUpdate) {
                     // Actualización disponible
                     document.getElementById('current-version-text').textContent = `v${APP_VERSION}`;
-                    document.getElementById('new-version-text').textContent = `v${remoteVersion}`;
+                    const maintenanceUpdate = compareVersions(remoteVersion, APP_VERSION) === 0;
+                    document.getElementById('update-available-title').textContent = maintenanceUpdate ? 'Actualización de mantenimiento disponible' : 'Nueva versión disponible';
+                    document.getElementById('new-version-label').textContent = maintenanceUpdate ? 'Versión disponible:' : 'Nueva versión:';
+                    document.getElementById('new-version-text').textContent = maintenanceUpdate ? `v${remoteVersion} (revisión interna)` : `v${remoteVersion}`;
                     document.getElementById('update-notes').textContent = manifest.notes || 'Nueva versión disponible';
                     document.getElementById('update-available').classList.remove('hidden');
                     
@@ -3966,7 +3969,7 @@ window.__firebase_config = {
                     .then(r => r.json())
                     .then(manifest => {
                         const remoteVersion = manifest.displayVersion || manifest.version;
-                        if (remoteVersion && (compareVersions(remoteVersion, APP_VERSION) > 0 || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision !== APP_REVISION))) {
+                        if (remoteVersion && (compareVersions(remoteVersion, APP_VERSION) > 0 || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision > APP_REVISION))) {
                             // Hay actualización disponible
                             window.appState.updateManifest = manifest;
                             const badge = document.getElementById('update-badge');

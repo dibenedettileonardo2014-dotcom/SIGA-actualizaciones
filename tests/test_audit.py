@@ -272,6 +272,9 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertLess(desktop.rindex("await flushPendingChanges();"), desktop.rindex("await checkUpdateAfterConnectivityRecovery();"))
         self.assertIn("if (!window.appState.firebaseEnabled) await setupFirebase();", desktop)
         self.assertIn("window.addEventListener('pagehide'", desktop)
+        self.assertIn("manifest.revision > APP_REVISION", desktop)
+        self.assertNotIn("manifest.revision !== APP_REVISION", desktop)
+        self.assertIn("verifica, descarga y aplica automáticamente", desktop)
 
     def test_manifest_selection_compares_all_update_mirrors(self):
         source = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
