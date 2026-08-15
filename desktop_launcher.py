@@ -436,6 +436,22 @@ class DesktopApi:
         except OSError:
             return {"ok": False}
 
+    def check_update_status(self) -> dict:
+        """Check updates through the native channel, avoiding WebView CORS failures."""
+        manifest = fetch_update_manifest()
+        if not manifest:
+            return {"ok": False, "error": "No se pudo conectar con el servidor de actualizaciones."}
+        return {
+            "ok": True,
+            "available": update_required(manifest),
+            "manifest": {
+                "version": manifest.get("version", ""),
+                "displayVersion": manifest.get("displayVersion", manifest.get("version", "")),
+                "revision": manifest.get("revision", ""),
+                "notes": manifest.get("notes", ""),
+            },
+        }
+
     def install_available_update(self) -> dict:
         if not getattr(sys, "frozen", False):
             return {"ok": False, "error": "La instalación solo está disponible en SIGA compilado."}

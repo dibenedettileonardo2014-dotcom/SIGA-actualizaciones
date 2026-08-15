@@ -275,6 +275,9 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("manifest.revision > APP_REVISION", desktop)
         self.assertNotIn("manifest.revision !== APP_REVISION", desktop)
         self.assertIn("verifica, descarga y aplica automáticamente", desktop)
+        self.assertIn("window.pywebview?.api?.check_update_status", desktop)
+        self.assertIn("def check_update_status(self)", (ROOT / "desktop_launcher.py").read_text(encoding="utf-8"))
+        self.assertNotIn("document.getElementById('error-message').textContent = error.message ||", desktop)
 
     def test_manifest_selection_compares_all_update_mirrors(self):
         source = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")

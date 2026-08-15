@@ -3871,16 +3871,24 @@ window.__firebase_config = {
             document.getElementById('update-error').classList.add('hidden');
 
             try {
-                const response = await fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`);
-                if (!response.ok) throw new Error('No se pudo obtener el manifiesto');
-                
-                const manifest = await response.json();
+                let manifest;
+                let nativeAvailability = null;
+                if (window.pywebview?.api?.check_update_status) {
+                    const result = await window.pywebview.api.check_update_status();
+                    if (!result?.ok) throw new Error(result?.error || 'No se pudo conectar con el servidor de actualizaciones.');
+                    manifest = result.manifest;
+                    nativeAvailability = Boolean(result.available);
+                } else {
+                    const response = await fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`);
+                    if (!response.ok) throw new Error('No se pudo obtener el manifiesto');
+                    manifest = await response.json();
+                }
                 
                 if (!manifest.version) throw new Error('Formato de manifiesto inválido');
                 
                 const remoteVersion = manifest.displayVersion || manifest.version;
-                const hasUpdate = compareVersions(remoteVersion, APP_VERSION) > 0
-                    || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision > APP_REVISION);
+                const hasUpdate = nativeAvailability ?? (compareVersions(remoteVersion, APP_VERSION) > 0
+                    || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision > APP_REVISION));
                 
                 document.getElementById('update-checking').classList.add('hidden');
                 
@@ -3910,7 +3918,9 @@ window.__firebase_config = {
             } catch (error) {
                 console.error('Error verificando actualizaciones:', error);
                 document.getElementById('update-checking').classList.add('hidden');
-                document.getElementById('error-message').textContent = error.message || 'No se pudo conectar con el servidor. Intenta más tarde.';
+                document.getElementById('error-message').textContent = error.message === 'Failed to fetch'
+                    ? 'No se pudo conectar con el servidor de actualizaciones. SIGA volverá a intentarlo automáticamente.'
+                    : (error.message || 'No se pudo conectar con el servidor. Intenta más tarde.');
                 document.getElementById('update-error').classList.remove('hidden');
             }
         };
