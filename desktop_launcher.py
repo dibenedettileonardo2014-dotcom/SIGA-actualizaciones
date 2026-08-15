@@ -21,12 +21,13 @@ import threading
 import time
 import zipfile
 from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 
 import webview
 
 LOCAL_PORT = 18765
 APP_VERSION = "1.4.12"
-APP_REVISION = "20260815-03"
+APP_REVISION = "20260815-04"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -396,6 +397,18 @@ class DesktopApi:
     def get_installed_version(self) -> dict:
         """Return the version embedded in the running executable."""
         return {"version": APP_VERSION, "revision": APP_REVISION, "architecture": APP_ARCH}
+
+    def open_affiliate_app(self, dni: str = "") -> dict:
+        """Open the public affiliate portal in the user's default browser."""
+        normalized_dni = re.sub(r"\D", "", str(dni or ""))[:9]
+        url = "https://siga-85bdd.web.app/"
+        if normalized_dni:
+            url += f"?dni={normalized_dni}"
+        parsed = urlparse(url)
+        if parsed.scheme != "https" or parsed.netloc != "siga-85bdd.web.app":
+            return {"ok": False, "error": "Destino externo no permitido."}
+        result = ctypes.windll.shell32.ShellExecuteW(None, "open", url, None, None, 1)
+        return {"ok": result > 32, "error": "No se pudo abrir el navegador." if result <= 32 else ""}
 
     def report_sync_error(self, code: str, message: str) -> dict:
         """Persist a sanitized Firestore diagnostic without record contents."""

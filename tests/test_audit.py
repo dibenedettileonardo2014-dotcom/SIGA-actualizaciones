@@ -381,16 +381,39 @@ class ApplicationSourceTests(unittest.TestCase):
 
     def test_automatic_mobile_access_and_admin_only_credentials(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
-        self.assertIn("provisionMobileAccess(affiliate, 'sindicatoquimico')", desktop)
+        self.assertIn("const savedAffiliate = await commitToDatabase(affiliate)", desktop)
+        self.assertIn("provisionMobileAccess(savedAffiliate, 'sindicatoquimico')", desktop)
         self.assertIn('body[data-role="operador"] #btn-tab-credenciales', desktop)
+        self.assertIn('<body data-role="operador"', desktop)
         self.assertIn("window.appState.currentUserRole === 'admin'", desktop)
-        self.assertIn("['credenciales', 'actualizaciones'].includes(tabId)", desktop)
+        self.assertIn("'errores', 'usuarios', 'configuracion', 'mantenimiento'", desktop)
+
+    def test_admin_can_review_local_sync_conflicts(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        for marker in ('id="btn-tab-errores"', 'id="tab-errores"', "function renderConflictsTab()", "window.retryPendingConflicts"):
+            self.assertIn(marker, desktop)
+        self.assertIn("conflictCode: error.code", desktop)
+        self.assertIn("conflictReason: error.message", desktop)
+        self.assertIn("clearAcknowledgedPendingChanges('afiliados'", desktop)
+        self.assertIn("acknowledgedAffiliates.forEach(syncMobileCredential)", desktop)
+        self.assertIn("function waitForPendingChange(change", desktop)
+        self.assertNotIn("siga_mobile_credential_repaired_35463065", desktop)
 
     def test_about_reads_the_version_from_the_running_executable(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
         self.assertIn('id="about-installed-version"', desktop)
         self.assertIn("window.pywebview.api.get_installed_version()", desktop)
+
+    def test_affiliate_portal_opens_in_external_browser(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        self.assertIn("openAffiliateAppInBrowser()", desktop)
+        self.assertIn("window.pywebview.api.open_affiliate_app(dni)", desktop)
+        self.assertIn("def open_affiliate_app(self, dni", launcher)
+        self.assertIn('parsed.netloc != "siga-85bdd.web.app"', launcher)
+        self.assertIn("new URLSearchParams(location.search).get('dni')", mobile)
         self.assertIn("def get_installed_version(self)", launcher)
 
     def test_update_is_staged_and_relaunched_from_canonical_install(self):

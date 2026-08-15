@@ -46,6 +46,7 @@
         }
         body[data-role="operador"] #admin-nav-section,
         body[data-role="operador"] #btn-tab-usuarios,
+        body[data-role="operador"] #btn-tab-errores,
         body[data-role="operador"] #btn-tab-configuracion,
         body[data-role="operador"] #btn-tab-mantenimiento,
         body[data-role="operador"] #btn-tab-credenciales,
@@ -58,7 +59,7 @@
         #notice-preview strong, #notice-preview > p { text-transform: uppercase; }
     </style>
 </head>
-<body class="h-full overflow-hidden flex flex-col">
+<body data-role="operador" class="h-full overflow-hidden flex flex-col">
     <aside id="update-ready-banner" class="hidden bg-slate-900 text-white rounded-2xl shadow-2xl p-4 border border-emerald-400/40" role="status" aria-live="polite">
         <p class="text-xs text-emerald-300 font-bold uppercase">Actualización lista</p>
         <p class="text-sm mt-1">SIGA descargó y verificó la nueva versión.</p>
@@ -128,6 +129,11 @@
                 <div id="admin-nav-section" class="pt-6 mt-6 border-t border-slate-800">
                     <span class="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Administración</span>
                 </div>
+                <button onclick="switchTab('errores')" id="btn-tab-errores" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    Errores / Conflictos
+                    <span id="conflicts-nav-badge" class="hidden ml-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black items-center justify-center"></span>
+                </button>
                 <button onclick="switchTab('usuarios')" id="btn-tab-usuarios" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i class="fa-solid fa-user-shield text-lg"></i>
                     Control de Permisos
@@ -154,11 +160,11 @@
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2.5 overflow-hidden">
                         <div class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs" id="role-avatar">
-                            AD
+                            OP
                         </div>
                         <div class="overflow-hidden">
-                            <p class="text-xs font-semibold truncate" id="auth-user-name">Administrador</p>
-                            <p class="text-[10px] text-slate-400 truncate font-semibold" id="auth-user-role">Control Total</p>
+                            <p class="text-xs font-semibold truncate" id="auth-user-name">Operador</p>
+                            <p class="text-[10px] text-slate-400 truncate font-semibold" id="auth-user-role">Carga, Búsqueda y Baja</p>
                         </div>
                     </div>
                     <button onclick="openChangeRoleModal()" title="Cambiar de Rol / Usuario" class="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-all">
@@ -650,7 +656,7 @@
                                         <button id="mobile-access-toggle" onclick="toggleMobileAccess()" class="hidden px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl text-xs transition-all">Bloquear</button>
                                     </div>
                                     <a id="firebase-accounts-link" href="https://console.firebase.google.com/project/siga-85bdd/authentication/users" target="_blank" rel="noopener" class="block text-center text-xs font-semibold text-slate-600 hover:text-slate-800">Administrar cuentas en Firebase <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>
-                                    <a href="https://siga-85bdd.web.app/" target="_blank" rel="noopener" class="block text-center text-xs font-semibold text-emerald-700 hover:text-emerald-800">Abrir app de afiliados <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>
+                                    <button type="button" onclick="openAffiliateAppInBrowser()" class="block w-full text-center text-xs font-semibold text-emerald-700 hover:text-emerald-800">Abrir app de afiliados <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></button>
                                 </div>
                             </div>
 
@@ -809,6 +815,17 @@
                         · Actualización preparada en segundo plano
                     </p>
                     </section>
+                </div>
+
+                <div id="tab-errores" class="tab-content hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-5xl mx-auto">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
+                            <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>Errores y conflictos pendientes</h4><p class="text-xs text-slate-500 mt-1">Cambios guardados en esta PC que necesitan revisión antes de sincronizarse.</p></div>
+                            <button type="button" onclick="retryPendingConflicts()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl"><i class="fa-solid fa-rotate mr-2"></i>Reintentar</button>
+                        </div>
+                        <div id="conflicts-empty" class="text-center py-10 text-sm text-slate-500">No hay conflictos pendientes.</div>
+                        <div id="conflicts-list" class="space-y-3"></div>
+                    </div>
                 </div>
 
                 <!-- SECCIÓN: CONTROL DE PERMISOS -->
@@ -1427,6 +1444,7 @@ window.__firebase_config = {
             unsubscribeAffiliates = onSnapshot(affiliatesColRef, (snapshot) => {
                 if (!affiliatesSnapshotReady) {
                     affiliatesById = new Map(snapshot.docs.map(item => [item.id, { id: item.id, ...item.data() }]));
+                    clearAcknowledgedPendingChanges('afiliados', Array.from(affiliatesById.values()));
                     affiliatesSnapshotReady = true;
                     void migrateAffiliateUniquenessIndex(Array.from(affiliatesById.values()))
                         .then(resolveAffiliateUniquenessReady)
@@ -1436,6 +1454,7 @@ window.__firebase_config = {
                         if (change.type === 'removed') affiliatesById.delete(change.doc.id);
                         else affiliatesById.set(change.doc.id, { id: change.doc.id, ...change.doc.data() });
                     });
+                    clearAcknowledgedPendingChanges('afiliados', Array.from(affiliatesById.values()));
                 }
                 window.appState.affiliates = mergePendingChanges('afiliados', Array.from(affiliatesById.values()));
                 saveLocalData();
@@ -1557,17 +1576,84 @@ window.__firebase_config = {
             return [...merged.values()];
         }
 
+        function clearAcknowledgedPendingChanges(collectionName, networkItems) {
+            const networkById = new Map(networkItems.map(item => [item.id, item]));
+            const pending = readPendingChanges();
+            const acknowledgedAffiliates = [];
+            const remaining = pending.filter(change => {
+                if (change.collection !== collectionName || change.type !== 'set') return true;
+                const networkItem = networkById.get(change.id);
+                const acknowledged = networkItem?.clientMutationId && networkItem.clientMutationId === change.data?.clientMutationId;
+                if (acknowledged && collectionName === 'afiliados' && networkItem.mobileAccess?.uid) acknowledgedAffiliates.push(networkItem);
+                return !acknowledged;
+            });
+            if (remaining.length === pending.length) return false;
+            if (remaining.length) localStorage.setItem(pendingChangesKey(), JSON.stringify(remaining));
+            else localStorage.removeItem(pendingChangesKey());
+            acknowledgedAffiliates.forEach(syncMobileCredential);
+            showPendingSyncStatus();
+            return true;
+        }
+
         function showPendingSyncStatus() {
             const pending = readPendingChanges();
             const pendingCount = pending.length;
-            if (!pendingCount) return;
             const conflictCount = pending.filter(change => change.conflict).length;
+            const badge = document.getElementById('conflicts-nav-badge');
+            if (badge) {
+                badge.textContent = String(conflictCount);
+                badge.classList.toggle('hidden', !conflictCount);
+                badge.classList.toggle('flex', Boolean(conflictCount));
+            }
+            if (window.appState.currentTab === 'errores') renderConflictsTab();
+            if (!pendingCount) return;
             const status = document.getElementById('cloud-sync-status');
             status.className = `flex items-center gap-1 font-semibold ${conflictCount ? 'text-rose-500' : 'text-amber-500'}`;
             status.innerHTML = conflictCount
                 ? `<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> ${conflictCount} conflicto${conflictCount === 1 ? '' : 's'} por revisar`
                 : `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Guardado local · ${pendingCount} pendiente${pendingCount === 1 ? '' : 's'}`;
         }
+
+        function conflictDescription(change) {
+            if (change.conflictReason) return change.conflictReason;
+            if (change.conflictCode === 'dni-conflict') return 'El DNI ya pertenece a otro afiliado de la red.';
+            if (change.conflictCode === 'number-conflict') return 'El número de afiliado ya pertenece a otra ficha.';
+            return 'La ficha cambió en otra PC mientras se guardaban estos datos.';
+        }
+
+        function renderConflictsTab() {
+            const list = document.getElementById('conflicts-list');
+            const empty = document.getElementById('conflicts-empty');
+            if (!list || !empty) return;
+            const conflicts = readPendingChanges().filter(change => change.conflict);
+            empty.classList.toggle('hidden', conflicts.length > 0);
+            list.replaceChildren();
+            conflicts.forEach(change => {
+                const affiliate = change.data || {};
+                const card = document.createElement('article');
+                card.className = 'border border-rose-200 bg-rose-50/40 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4';
+                card.innerHTML = `<div class="flex-1 min-w-0"><div class="flex flex-wrap items-center gap-2"><span class="px-2 py-1 rounded bg-rose-100 text-rose-700 text-[10px] font-black">CONFLICTO</span><strong class="text-sm text-slate-800"></strong></div><p class="conflict-detail text-xs text-rose-700 mt-2"></p><p class="conflict-meta text-[11px] text-slate-500 mt-1"></p></div><button type="button" class="review-conflict px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl">Revisar ficha</button>`;
+                card.querySelector('strong').textContent = affiliate.name || `Registro ${change.id}`;
+                card.querySelector('.conflict-detail').textContent = conflictDescription(change);
+                card.querySelector('.conflict-meta').textContent = `Nº ${affiliate.number || '—'} · DNI ${affiliate.dni || '—'}${change.conflictAt ? ` · Detectado ${new Date(change.conflictAt).toLocaleString('es-AR')}` : ''}`;
+                card.querySelector('.review-conflict').onclick = () => {
+                    const local = window.appState.affiliates.find(item => item.id === change.id);
+                    if (!local) return showToast('Conflicto', 'La ficha local ya no está disponible.', 'warning');
+                    switchTab('afiliados');
+                    editAffiliate(change.id);
+                    showToast('Revisar conflicto', 'Verificá los datos y guardá la ficha para reemplazar el cambio pendiente.', 'info');
+                };
+                list.append(card);
+            });
+        }
+
+        window.retryPendingConflicts = function() {
+            const pending = readPendingChanges();
+            const retryable = pending.map(change => change.conflictCode === 'revision-conflict' || (!change.conflictCode && change.conflict) ? { ...change, conflict: false } : change);
+            localStorage.setItem(pendingChangesKey(), JSON.stringify(retryable));
+            renderConflictsTab();
+            void flushPendingChanges();
+        };
 
         function queuePendingChange(change) {
             queuePendingChanges([change]);
@@ -1804,7 +1890,7 @@ window.__firebase_config = {
                         window.pywebview?.api?.report_sync_error?.(error?.code || 'unknown', error?.message || String(error)).catch(() => {});
                         if (error?.code === 'dni-conflict' || error?.code === 'number-conflict') {
                             showToast('Conflicto entre computadoras', error.message, 'error');
-                            remaining.push({ ...change, conflict: true });
+                            remaining.push({ ...change, conflict: true, conflictCode: error.code, conflictReason: error.message, conflictAt: new Date().toISOString() });
                             const localItem = window.appState.affiliates.find(item => item.id === change.id && item.clientMutationId === change.data?.clientMutationId);
                             if (localItem) {
                                 localItem.syncStatus = 'conflict';
@@ -1812,7 +1898,7 @@ window.__firebase_config = {
                                 localStateChanged = true;
                             }
                         } else if (error?.code === 'revision-conflict') {
-                            const rebasedChange = { ...change, conflict: true, data: { ...change.data, revision: error.currentRevision } };
+                            const rebasedChange = { ...change, conflict: true, conflictCode: error.code, conflictReason: error.message, conflictAt: new Date().toISOString(), data: { ...change.data, revision: error.currentRevision } };
                             remaining.push(rebasedChange);
                             const localItem = window.appState.affiliates.find(item => item.id === change.id && item.clientMutationId === change.data?.clientMutationId);
                             if (localItem) {
@@ -1837,6 +1923,7 @@ window.__firebase_config = {
                     .reverse();
                 if (finalPending.length) localStorage.setItem(pendingChangesKey(), JSON.stringify(finalPending));
                 else localStorage.removeItem(pendingChangesKey());
+                showPendingSyncStatus();
                 if (localStateChanged) {
                     saveLocalData();
                     processStateChange();
@@ -1856,6 +1943,21 @@ window.__firebase_config = {
             }
         }
 
+        function waitForPendingChange(change, timeoutMs = 20000) {
+            if (!window.appState.firebaseEnabled || !window.appState.auth?.currentUser) return Promise.resolve();
+            const startedAt = Date.now();
+            return new Promise((resolve, reject) => {
+                const check = () => {
+                    const pending = readPendingChanges().find(item => item.collection === change.collection && item.id === change.id && item.data?.clientMutationId === change.data?.clientMutationId);
+                    if (!pending) return resolve();
+                    if (pending.conflict) return reject(Object.assign(new Error(pending.conflictReason || 'El cambio requiere revisión.'), { code: pending.conflictCode || 'revision-conflict' }));
+                    if (Date.now() - startedAt >= timeoutMs) return reject(Object.assign(new Error('La sincronización demoró demasiado. El cambio quedó guardado localmente.'), { code: 'sync-timeout' }));
+                    setTimeout(check, 50);
+                };
+                check();
+            });
+        }
+
         function syncChange(change) {
             // Primero se registra en la cola local; la red nunca bloquea el guardado.
             queuePendingChange(change);
@@ -1863,7 +1965,9 @@ window.__firebase_config = {
                 void flushPendingChanges().catch(error => {
                     console.error('Error de sincronización en segundo plano:', error);
                 });
+                return waitForPendingChange(change);
             }
+            return Promise.resolve();
         }
 
         function syncChanges(changes) {
@@ -2335,6 +2439,7 @@ window.__firebase_config = {
             const importContainer = document.getElementById('config-import-container');
             const adminNavigation = document.getElementById('admin-nav-section');
             const permissionsNavigation = document.getElementById('btn-tab-usuarios');
+            const errorsNavigation = document.getElementById('btn-tab-errores');
             const configurationNavigation = document.getElementById('btn-tab-configuracion');
             const maintenanceNavigation = document.getElementById('btn-tab-mantenimiento');
             const firebaseAccountsLink = document.getElementById('firebase-accounts-link');
@@ -2350,6 +2455,7 @@ window.__firebase_config = {
                 importContainer.classList.remove('hidden');
                 adminNavigation.classList.remove('hidden');
                 permissionsNavigation.classList.remove('hidden');
+                errorsNavigation.classList.remove('hidden');
                 configurationNavigation.classList.remove('hidden');
                 maintenanceNavigation.classList.remove('hidden');
                 firebaseAccountsLink.classList.remove('hidden');
@@ -2364,6 +2470,7 @@ window.__firebase_config = {
                 importContainer.classList.add('hidden');
                 adminNavigation.classList.add('hidden');
                 permissionsNavigation.classList.add('hidden');
+                errorsNavigation.classList.add('hidden');
                 configurationNavigation.classList.add('hidden');
                 maintenanceNavigation.classList.add('hidden');
                 firebaseAccountsLink.classList.add('hidden');
@@ -2665,11 +2772,11 @@ window.__firebase_config = {
                 createdAt: existing?.createdAt || new Date().toISOString()
             };
 
-            await commitToDatabase(affiliate);
+            const savedAffiliate = await commitToDatabase(affiliate);
             let mobileAccessCreated = false;
             if (!existing && window.appState.firebaseEnabled) {
                 try {
-                    await provisionMobileAccess(affiliate, 'sindicatoquimico');
+                    await provisionMobileAccess(savedAffiliate, 'sindicatoquimico');
                     mobileAccessCreated = true;
                 } catch (error) {
                     console.error('El afiliado se guardó pero no se pudo crear su acceso móvil:', error);
@@ -3494,18 +3601,29 @@ window.__firebase_config = {
 
         function syncMobileCredential(affiliate) {
             if (!affiliate?.mobileAccess?.uid) return;
-            syncChange({
+            return syncChange({
                 type: 'set',
                 collection: 'mobile_credentials',
                 id: affiliate.mobileAccess.uid,
                 data: mobileCredentialData(affiliate, affiliate.mobileAccess.enabled !== false)
-            });
+            }).catch(error => console.error('No se pudo sincronizar la credencial móvil:', error));
         }
 
         function canManageMobileAccess() {
             return window.appState.currentUserRole === 'admin'
                 && window.appState.auth?.currentUser?.email === roleAuthEmails.admin;
         }
+
+        window.openAffiliateAppInBrowser = async function() {
+            const affiliate = window.appState.affiliates.find(item => item.id === document.getElementById('card-affiliate-select').value);
+            const dni = normalizedDni(affiliate?.dni);
+            if (window.pywebview?.api?.open_affiliate_app) {
+                const result = await window.pywebview.api.open_affiliate_app(dni);
+                if (!result?.ok) showToast('Mi SIGA', result?.error || 'No se pudo abrir el navegador.', 'error');
+                return;
+            }
+            window.open(`https://siga-85bdd.web.app/${dni ? `?dni=${encodeURIComponent(dni)}` : ''}`, '_blank', 'noopener');
+        };
 
         async function provisionMobileAccess(affiliate, password) {
             if (affiliate.mobileAccess?.uid) { syncMobileCredential(affiliate); return affiliate; }
@@ -3935,7 +4053,7 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
         const APP_VERSION = "1.4.12";
-        const APP_REVISION = "20260815-03";
+        const APP_REVISION = "20260815-04";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4242,7 +4360,7 @@ window.__firebase_config = {
         document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;if(image){await deleteNoticeFiles(id,'image');await deleteNoticeFiles(id,'thumbnail');await uploadNoticeFile(id,'image',image);const thumb=await imageThumbnail(image);await uploadNoticeFile(id,'thumbnail',thumb)}if(pdf){await deleteNoticeFiles(id,'pdf');await uploadNoticeFile(id,'pdf',pdf)}const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0};await setDoc(doc(noticeCollection(),id),data);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
-            if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones'].includes(tabId)) {
+            if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones', 'errores', 'usuarios', 'configuracion', 'mantenimiento'].includes(tabId)) {
                 tabId = 'dashboard';
             }
             window.appState.currentTab = tabId;
@@ -4267,6 +4385,7 @@ window.__firebase_config = {
                 'credenciales': 'Credencial Digital',
                 'actualizaciones': 'Verificar Actualizaciones',
                 'acerca': 'Acerca de SIGA',
+                'errores': 'Errores y Conflictos',
                 'usuarios': 'Control de Permisos y Accesos',
                 'configuracion': 'Configurar Red / Datos',
                 'mantenimiento': 'Mantenimiento del Sistema'
@@ -4279,6 +4398,8 @@ window.__firebase_config = {
             if (tabId === 'dashboard') {
                 renderDashboardStats();
                 renderSectorChart();
+            } else if (tabId === 'errores') {
+                renderConflictsTab();
             }
             if (tabId === 'comunicados') subscribeNotices();
             if (tabId === 'pagos' && typeof window.subscribePaymentsRealtime === 'function') {

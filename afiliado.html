@@ -103,6 +103,8 @@
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
+    const requestedDni=new URLSearchParams(location.search).get('dni')?.replace(/\D/g,'')||'';
+    if(/^\d{7,9}$/.test(requestedDni))$('dni').value=requestedDni;
 
     function maintenanceRef(){return doc(db,'artifacts',networkId,'public','config','maintenance','state')}
     function showMaintenance(data={}){if(!maintenanceBlocked)maintenanceEpoch++;maintenanceBlocked=true;$('maintenance-title').textContent=data.title||DEFAULT_MAINTENANCE_TITLE;$('maintenance-message').textContent=data.message||DEFAULT_MAINTENANCE_MESSAGE;const estimate=$('maintenance-estimate');estimate.textContent=data.estimatedReturn?`Regreso estimado: ${data.estimatedReturn}`:'';estimate.classList.toggle('hidden',!data.estimatedReturn);$('maintenance-screen').classList.remove('hidden');appView.classList.add('hidden');loginView.classList.add('hidden');document.querySelectorAll('.notice-dialog-backdrop').forEach(element=>element.remove());if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches()}
