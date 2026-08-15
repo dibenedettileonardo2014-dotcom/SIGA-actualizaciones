@@ -24,6 +24,7 @@
     .app-version{text-align:center;color:#64748b;font-size:11px;margin:18px 0 0}.legal-notice{text-align:center;color:#94a3b8;font-size:10px;line-height:1.55;margin:24px auto 0;max-width:470px;padding:18px 10px 0;border-top:1px solid #ffffff14}.legal-notice strong{display:block;color:#cbd5e1;font-size:11px;margin-bottom:5px}.legal-notice .copyright{color:#cbd5e1;font-weight:650;margin:0 0 5px}.legal-notice p{margin:0}.update-notice{position:fixed;z-index:20;left:50%;top:14px;transform:translateX(-50%);width:min(calc(100% - 28px),490px);padding:13px 16px;border-radius:14px;background:#d1fae5;color:#064e3b;box-shadow:0 12px 30px #0006;font-size:13px;font-weight:750;text-align:center}.dialog-backdrop{position:fixed;z-index:30;inset:0;background:#020617bb;display:grid;place-items:center;padding:20px}.dialog{width:min(100%,420px);background:#fff;color:#0f172a;border-radius:22px;padding:24px;box-shadow:0 25px 70px #0009}.dialog h2{margin:0 0 9px;font-size:21px}.dialog .actions{grid-template-columns:1fr 1fr}.dialog .primary{margin:0}.install-steps{margin:18px 0;padding:0;list-style:none;counter-reset:steps}.install-steps li{counter-increment:steps;display:flex;gap:11px;align-items:flex-start;margin:12px 0;color:#334155;font-size:14px;line-height:1.45}.install-steps li:before{content:counter(steps);flex:0 0 27px;height:27px;border-radius:50%;display:grid;place-items:center;background:#d1fae5;color:#047857;font-weight:850}.share-icon{font-size:21px;color:#2563eb;vertical-align:-2px}
     .lgdb-signature{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:inherit}.dialog h2{font-weight:850}.notice-card h3,.notice-card p,.dialog h2,.notice-detail-text{text-transform:uppercase}
     .maintenance-screen{position:fixed;z-index:40;inset:0;overflow:auto;background:radial-gradient(circle at 50% 0,#d1fae5 0,transparent 38%),#f8fafc;color:#0f172a;display:grid;place-items:center;padding:24px}.maintenance-card{width:min(100%,480px);text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:28px;padding:26px;box-shadow:0 24px 70px #0f172a20}.maintenance-card .maintenance-brand{font-size:13px;font-weight:900;letter-spacing:.18em;color:#059669}.maintenance-card img{display:block;width:min(100%,310px);height:auto;max-height:42vh;object-fit:contain;margin:10px auto}.maintenance-card h1{font-size:24px;font-weight:900;margin:8px 0;color:#0f172a}.maintenance-card p{white-space:pre-wrap;color:#475569;font-size:14px;font-weight:650;line-height:1.65;margin:0}.maintenance-card time{display:block;color:#64748b;font-size:12px;margin-top:12px}.maintenance-card button{margin-top:18px}
+    .credential-watermark{position:absolute;z-index:0;right:18px;top:48px;width:124px;height:124px;border-radius:50%;object-fit:cover;opacity:.11;pointer-events:none}.credential>div:not(.credential-watermark){position:relative;z-index:1}
   </style>
 </head>
 <body>
@@ -52,7 +53,8 @@
       <div class="topline"><small id="welcome">Cuenta de afiliado</small><button id="logout-button" class="icon-btn">Salir</button></div>
       <section id="credential-view">
         <div class="credential">
-          <div class="card-head"><div class="card-brand"><img id="credential-logo" class="credential-logo" src="assets/logo-spiqyp-rosario.png" alt="SPIQYP Rosario"><div><div class="eyebrow">SINDICATO DE TRABAJADORES</div><div class="org">Asociación Gremial · SIGA</div></div></div><div class="badge">AFILIADO</div></div>
+          <img id="credential-logo" class="credential-watermark" src="assets/logo-spiqyp-rosario.png" alt="">
+          <div class="card-head"><div><div class="eyebrow">SINDICATO DE TRABAJADORES</div><div class="org">Asociación Gremial · SIGA</div></div><div class="badge">AFILIADO</div></div>
           <div><div id="card-name" class="card-name">—</div><div id="card-number" class="card-number">Nº AFILIADO: —</div><div id="card-role" class="role"></div></div>
           <div class="card-foot"><div>DNI: <b id="card-dni">—</b><br>Empresa: <b id="card-company">—</b></div><div id="card-updated"></div></div>
         </div>
@@ -220,9 +222,9 @@
       context.strokeStyle='#334155';context.lineWidth=5;context.strokeRect(3,3,canvas.width-6,canvas.height-6);
       context.fillStyle='rgba(255,255,255,.035)';context.font='900 340px Arial,sans-serif';context.textAlign='right';context.fillText('SIGA',canvas.width+25,canvas.height+55);context.textAlign='left';
       const text=(id,fallback='—')=>$(id).textContent.trim()||fallback;
-      const logo=$('credential-logo');if(!logo.complete)await logo.decode();context.save();context.beginPath();context.arc(165,145,85,0,Math.PI*2);context.clip();context.drawImage(logo,80,60,170,170);context.restore();
-      context.fillStyle='#34d399';context.font='800 38px Arial,sans-serif';context.fillText('SINDICATO DE TRABAJADORES',280,125);
-      context.fillStyle='#cbd5e1';context.font='42px Arial,sans-serif';context.fillText('Asociación Gremial · SIGA',280,180);
+      const logo=$('credential-logo');if(!logo.complete)await logo.decode();context.save();context.globalAlpha=.11;context.beginPath();context.arc(1415,400,220,0,Math.PI*2);context.clip();context.drawImage(logo,1195,180,440,440);context.restore();
+      context.fillStyle='#34d399';context.font='800 38px Arial,sans-serif';context.fillText('SINDICATO DE TRABAJADORES',80,125);
+      context.fillStyle='#cbd5e1';context.font='42px Arial,sans-serif';context.fillText('Asociación Gremial · SIGA',80,180);
       context.fillStyle='#34d399';context.beginPath();context.roundRect(1415,73,215,75,18);context.fill();context.fillStyle='#052e16';context.font='900 34px Arial,sans-serif';context.textAlign='center';context.fillText('AFILIADO',1522,123);context.textAlign='left';
       const fitText=(value,maxWidth,startSize,minSize=36)=>{let size=startSize;do{context.font=`850 ${size}px Arial,sans-serif`;if(context.measureText(value).width<=maxWidth)return size;size-=2}while(size>minSize);return minSize};
       const name=text('card-name');fitText(name,1552,76);context.fillStyle='#f8fafc';context.fillText(name,80,505);

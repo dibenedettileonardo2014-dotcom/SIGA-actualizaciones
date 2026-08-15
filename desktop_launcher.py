@@ -26,7 +26,7 @@ import webview
 
 LOCAL_PORT = 18765
 APP_VERSION = "1.4.11"
-APP_REVISION = "20260814-09"
+APP_REVISION = "20260814-10"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",

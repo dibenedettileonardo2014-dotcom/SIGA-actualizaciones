@@ -652,11 +652,12 @@
                                     <div class="absolute -right-10 -bottom-10 text-white/5 text-9xl pointer-events-none">
                                         <i class="fa-solid fa-users-gear"></i>
                                     </div>
+                                    <img src="assets/logo-spiqyp-rosario.png" alt="" class="absolute right-4 top-12 w-28 h-28 rounded-full object-cover opacity-10 pointer-events-none">
                                     <div class="flex justify-between items-start z-10">
-                                        <div class="flex items-center gap-2 min-w-0"><img src="assets/logo-spiqyp-rosario.png" alt="SPIQYP Rosario" class="w-12 h-12 rounded-full object-cover bg-white shrink-0"><div>
+                                        <div>
                                             <p class="text-[9px] font-bold tracking-widest text-emerald-400 uppercase">SINDICATO DE TRABAJADORES</p>
                                             <p class="text-xs font-semibold text-slate-200">Asociación Gremial (SIGA)</p>
-                                        </div></div>
+                                        </div>
                                         <div class="bg-emerald-500 text-slate-900 px-2 py-0.5 rounded text-[8px] font-extrabold tracking-wide">
                                             AFILIADO
                                         </div>
@@ -3722,8 +3723,8 @@ window.__firebase_config = {
                 context.strokeStyle = '#334155'; context.lineWidth = 5; context.strokeRect(3, 3, 1706, 1074);
                 const draw = (value, x, y, color, font, align = 'left') => { context.fillStyle = color; context.font = font; context.textAlign = align; context.fillText(String(value || ''), x, y); };
                 const fit = (value, maxWidth, size, minimum = 30) => { while (size > minimum) { context.font = `bold ${size}px Arial,sans-serif`; if (context.measureText(value).width <= maxWidth) break; size -= 2; } return size; };
-                const logo = new Image(); logo.src = 'assets/logo-spiqyp-rosario.png'; if (!logo.complete) await logo.decode(); context.save(); context.beginPath(); context.arc(165, 145, 85, 0, Math.PI * 2); context.clip(); context.drawImage(logo, 80, 60, 170, 170); context.restore();
-                draw('SIGA - ASOCIACIÓN GREMIAL', 280, 125, '#10b981', 'bold 40px Arial,sans-serif'); draw('Sindicato Integral', 280, 185, '#cbd5e1', '42px Arial,sans-serif');
+                const logo = new Image(); logo.src = 'assets/logo-spiqyp-rosario.png'; if (!logo.complete) await logo.decode(); context.save(); context.globalAlpha = .11; context.beginPath(); context.arc(1415, 400, 220, 0, Math.PI * 2); context.clip(); context.drawImage(logo, 1195, 180, 440, 440); context.restore();
+                draw('SIGA - ASOCIACIÓN GREMIAL', 80, 125, '#10b981', 'bold 40px Arial,sans-serif'); draw('Sindicato Integral', 80, 185, '#cbd5e1', '42px Arial,sans-serif');
                 context.fillStyle = '#10b981'; context.fillRect(1420, 75, 210, 72); draw('AFILIADO', 1525, 124, '#0f172a', 'bold 32px Arial,sans-serif', 'center');
                 const name = String(a.name || '—').toUpperCase(); draw(name, 80, 500, '#f8fafc', `bold ${fit(name, 1552, 76)}px Arial,sans-serif`); draw(`Nº AFILIADO: ${a.number || 'S/N'}`, 80, 570, '#94a3b8', '42px Arial,sans-serif');
                 const representation = [a.isDelegate ? 'DELEGADO/A' : '', a.isInternalCommission ? 'COMISIÓN INTERNA' : '', a.isDirectiveCommission ? 'COMISIÓN DIRECTIVA' : ''].filter(Boolean).join(' · '); if (representation) draw(representation, 80, 635, '#fcd34d', 'bold 34px Arial,sans-serif');
@@ -3892,7 +3893,7 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
         const APP_VERSION = "1.4.11";
-        const APP_REVISION = "20260814-09";
+        const APP_REVISION = "20260814-10";
 
         window.checkForUpdatesManual = async function() {
             // Mostrar que está verificando
