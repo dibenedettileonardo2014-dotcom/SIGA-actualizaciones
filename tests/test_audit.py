@@ -486,6 +486,8 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn('id="restart-update-button"', desktop)
         self.assertIn("void window.downloadAndInstallUpdate()", desktop)
         self.assertIn("def apply_prepared_update()", launcher)
+        self.assertIn('state = update_state_path() / "prepared-update.json"', launcher)
+        self.assertIn('return apply_prepared_update()', launcher)
         self.assertIn('webview_storage_path().parent / "SIGA.exe"', launcher)
         self.assertNotIn('f"set \\"TARGET={executable}\\"', launcher)
 

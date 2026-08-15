@@ -387,8 +387,12 @@ def validate_update_package(path: Path, architecture: str) -> None:
 
 
 def automatic_update_on_startup() -> bool:
-    """Startup must never close the app; the UI stages updates in background."""
-    return False
+    """Apply an already verified update before opening the old application again."""
+    state = update_state_path() / "prepared-update.json"
+    if not state.exists():
+        return False
+    update_log("prepared-update-found-on-startup", revision=APP_REVISION)
+    return apply_prepared_update()
 
 
 class DesktopApi:
