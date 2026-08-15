@@ -442,6 +442,10 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("provisionMobileAccess(savedAffiliate, 'sindicatoquimico')", desktop)
         self.assertIn('body[data-role="operador"] #btn-tab-credenciales', desktop)
         self.assertIn('<body data-role="operador"', desktop)
+        self.assertIn("const VERIFIED_ROLE_KEY = 'siga_last_verified_role'", desktop)
+        self.assertIn("if (cachedRole === 'admin' || cachedRole === 'operador')", desktop)
+        self.assertIn("window.appState.auth?.currentUser?.email !== roleAuthEmails[role]", desktop)
+        self.assertIn("localStorage.removeItem(VERIFIED_ROLE_KEY)", desktop)
         self.assertIn("window.appState.currentUserRole === 'admin'", desktop)
         self.assertIn("'errores', 'usuarios', 'configuracion', 'mantenimiento'", desktop)
 

@@ -60,6 +60,18 @@
     </style>
 </head>
 <body data-role="operador" class="h-full overflow-hidden flex flex-col">
+    <script>
+        (() => {
+            const key = 'siga_last_verified_role';
+            let role = 'operador';
+            try {
+                const cachedRole = localStorage.getItem(key);
+                if (cachedRole === 'admin' || cachedRole === 'operador') role = cachedRole;
+            } catch (_) {}
+            window.__sigaInitialVisualRole = role;
+            document.body.dataset.role = role;
+        })();
+    </script>
     <aside id="update-ready-banner" class="hidden bg-slate-900 text-white rounded-2xl shadow-2xl p-4 border border-emerald-400/40" role="status" aria-live="polite">
         <p class="text-xs text-emerald-300 font-bold uppercase">Actualización lista</p>
         <p class="text-sm mt-1">SIGA descargó y verificó la nueva versión.</p>
@@ -183,6 +195,15 @@
         </aside>
 
         <!-- Fondo del Sidebar para Móviles -->
+        <script>
+            (() => {
+                if (window.__sigaInitialVisualRole !== 'admin') return;
+                document.getElementById('role-avatar').textContent = 'AD';
+                document.getElementById('auth-user-name').textContent = 'Administrador';
+                document.getElementById('auth-user-role').textContent = 'Control Total';
+            })();
+        </script>
+
         <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 hidden md:hidden"></div>
 
         <!-- Contenido de la Aplicación -->
@@ -1262,6 +1283,7 @@
             admin: 'administrador@siga.com',
             operador: 'operador@siga.com'
         };
+        const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -2386,6 +2408,10 @@ window.__firebase_config = {
 
         function requireDesktopAuthentication() {
             authenticationRequired = true;
+            try { localStorage.removeItem(VERIFIED_ROLE_KEY); } catch (_) {}
+            applyRoleIdentityVisual('operador');
+            window.appState.currentUserRole = 'operador';
+            applyRoleUIRestrictions();
             document.getElementById('role-modal-title').innerHTML = '<i class="fa-solid fa-computer text-emerald-500 mr-2"></i> Autorizar esta computadora';
             document.getElementById('role-modal-close').classList.add('hidden');
             document.getElementById('role-modal-cancel').classList.add('hidden');
@@ -2427,9 +2453,9 @@ window.__firebase_config = {
             }
         };
 
-        function setRole(role, notify = true) {
-            window.appState.currentUserRole = role;
+        function applyRoleIdentityVisual(role) {
             document.body.dataset.role = role;
+            window.__sigaInitialVisualRole = role;
 
             // Ajustes visuales de Avatar e información en el Sidebar
             const avatar = document.getElementById('role-avatar');
@@ -2442,14 +2468,26 @@ window.__firebase_config = {
                 avatar.className = "w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs";
                 nameEl.textContent = 'Administrador';
                 roleEl.textContent = 'Control Total';
-                statusText.innerHTML = '<b>Administrador (Control Total)</b>. Todas las funciones de red desbloqueadas.';
-            } else if (role === 'operador') {
+                if (statusText) statusText.innerHTML = '<b>Administrador (Control Total)</b>. Todas las funciones de red desbloqueadas.';
+            } else {
                 avatar.textContent = 'OP';
                 avatar.className = "w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs";
                 nameEl.textContent = 'Operador Gremial';
                 roleEl.textContent = 'Carga, Búsqueda y Baja';
-                statusText.innerHTML = '<b>Operador</b>. Puedes agregar afiliados, buscar y dar de baja afiliados. Reinicio de red restringido.';
+                if (statusText) statusText.innerHTML = '<b>Operador</b>. Puedes agregar afiliados, buscar y dar de baja afiliados. Reinicio de red restringido.';
             }
+        }
+
+        function rememberVerifiedRole(role) {
+            if (!['admin', 'operador'].includes(role)) return;
+            if (window.appState.auth?.currentUser?.email !== roleAuthEmails[role]) return;
+            try { localStorage.setItem(VERIFIED_ROLE_KEY, role); } catch (_) {}
+        }
+
+        function setRole(role, notify = true) {
+            window.appState.currentUserRole = role;
+            applyRoleIdentityVisual(role);
+            rememberVerifiedRole(role);
 
             // Aplicar restricciones UI críticas según rol
             applyRoleUIRestrictions();
@@ -4085,7 +4123,7 @@ window.__firebase_config = {
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
         const APP_VERSION = "1.4.12";
-        const APP_REVISION = "20260815-05";
+        const APP_REVISION = "20260815-06";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
