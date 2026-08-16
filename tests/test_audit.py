@@ -239,6 +239,16 @@ class ApplicationSourceTests(unittest.TestCase):
         for relative_path in declared_fonts:
             self.assertTrue((ROOT / "assets" / "vendor" / relative_path).is_file(), relative_path)
 
+    def test_mobile_convention_uses_local_pdfjs_with_navigation_and_fallback(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
+        self.assertNotIn('<iframe class="convention"', mobile)
+        for marker in ("pdfjs/pdf.min.mjs", "pdfjs/pdf.worker.min.mjs", "renderConventionPage", "convention-prev", "convention-next", "download>Abrir PDF"):
+            self.assertIn(marker, mobile)
+        for filename in ("pdf.min.mjs", "pdf.worker.min.mjs"):
+            self.assertTrue((ROOT / "assets" / "vendor" / "pdfjs" / filename).is_file(), filename)
+            self.assertIn(f"'./assets/vendor/pdfjs/{filename}'", service_worker)
+
     def test_notice_updates_are_validated_and_mobile_access_creation_is_admin_only(self):
         rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
         self.assertIn("allow create, update: if isStaffOperational(appId) && validNotice(noticeId)", rules)
@@ -558,7 +568,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.16")
+        self.assertEqual(manifest["displayVersion"], "1.4.17")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

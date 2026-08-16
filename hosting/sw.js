@@ -1,4 +1,4 @@
-const CACHE_NAME = 'siga-v1.4.16-r20260816-04';
+const CACHE_NAME = 'siga-v1.4.17-r20260816-05';
 const APP_SHELL = [
   './',
   './index.html',
@@ -11,6 +11,8 @@ const APP_SHELL = [
   './assets/logo-spiqyp-rosario.png',
   './assets/mantenimiento.png',
   './assets/vendor/firebase.js',
+  './assets/vendor/pdfjs/pdf.min.mjs',
+  './assets/vendor/pdfjs/pdf.worker.min.mjs',
   './assets/convenio-77-89.pdf'
 ];
 
