@@ -15,14 +15,7 @@
                     ],
     "packageSha256":  "93FD671C4E2947FFC48C691CD7339550110B57BBCBB2960C17FC05145CE1A66F",
     "packageSize":  19131264,
-    "notes":  "Restaura la detección automática desde SIGA 1.4.12 mediante un manifiesto CORS sin caché.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.22-x64.exe",
-    "installerUrls":  [
-                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.22-x64.exe",
-                          "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.22-x64.exe"
-                      ],
-    "installerSha256":  "0C9D07384BB2D077F65F85B3DBC8FBEA6D83025DF77814F7743914A54FF415E6",
-    "installerSize":  17504151,
+    "notes":  "Actualización 1.4.22 por paquete Firebase para máxima compatibilidad con SIGA 1.4.12.",
     "architectures":  {
                           "x64":  {
                                       "architecture":  "x64",
@@ -38,14 +31,7 @@
                                                           "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.22-x64.zip"
                                                       ],
                                       "packageSha256":  "93FD671C4E2947FFC48C691CD7339550110B57BBCBB2960C17FC05145CE1A66F",
-                                      "packageSize":  19131264,
-                                      "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.22-x64.exe",
-                                      "installerUrls":  [
-                                                            "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.22-x64.exe",
-                                                            "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.22-x64.exe"
-                                                        ],
-                                      "installerSha256":  "0C9D07384BB2D077F65F85B3DBC8FBEA6D83025DF77814F7743914A54FF415E6",
-                                      "installerSize":  17504151
+                                      "packageSize":  19131264
                                   },
                           "x86":  {
                                       "architecture":  "x86",
@@ -61,14 +47,7 @@
                                                           "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.22-x86.zip"
                                                       ],
                                       "packageSha256":  "0C469058387764F6F58E57302DABB57F14FA5E585337907EF0DD2D046A25D6AD",
-                                      "packageSize":  17800856,
-                                      "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.22-x86.exe",
-                                      "installerUrls":  [
-                                                            "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.22-x86.exe",
-                                                            "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.22-x86.exe"
-                                                        ],
-                                      "installerSha256":  "CFC0434ED4F4B3046351C714F3F8D61F5D56C2A129192439BA8DA51B9A3B40AB",
-                                      "installerSize":  16449355
+                                      "packageSize":  17800856
                                   }
                       }
 }

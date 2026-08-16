@@ -600,11 +600,11 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")
-        self.assertRegex(manifest["installerSha256"], r"^[A-F0-9]{64}$")
+        self.assertNotIn("installerUrl", manifest)
+        self.assertNotIn("installerSha256", manifest)
         artifacts = {
             "sha256": ROOT / "SIGA.exe",
             "packageSha256": ROOT / "SIGA-update.zip",
-            "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['displayVersion']}-x64.exe",
         }
         for key, path in artifacts.items():
             with self.subTest(artifact=path.name):
@@ -616,10 +616,11 @@ class ApplicationSourceTests(unittest.TestCase):
         for architecture, metadata in manifest["architectures"].items():
             self.assertEqual(metadata["architecture"], architecture)
             self.assertIn(manifest["displayVersion"], metadata["packageUrl"])
+            self.assertNotIn("installerUrl", metadata)
+            self.assertNotIn("installerSha256", metadata)
             architecture_artifacts = {
                 "sha256": ROOT / f"SIGA-{architecture}.exe",
                 "packageSha256": ROOT / f"SIGA-update-{architecture}.zip",
-                "installerSha256": ROOT / "installer" / f"SIGA-Setup-{manifest['displayVersion']}-{architecture}.exe",
             }
             for key, path in architecture_artifacts.items():
                 with self.subTest(architecture=architecture, artifact=path.name):
