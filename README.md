@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.17` — visor local del Convenio Colectivo 77/89 compatible con Android, navegación por páginas y descarga alternativa.
+`1.4.18` — visor del convenio adaptado a Android/WebView antiguos y al ancho disponible de la pantalla.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
+- 1.4.18 (x86 y x64)
 - 1.4.17 (x86 y x64)
-- 1.4.16 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 

@@ -46,7 +46,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.4.17</p>
+      <p class="app-version">Versión 1.4.18</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -87,6 +87,7 @@
   <div id="ios-install-guide" class="dialog-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="ios-install-title">
     <div class="dialog"><h2 id="ios-install-title">Instalar Mi SIGA en iPhone</h2><p class="muted">Apple realiza la instalación desde el menú Compartir.</p><ol class="install-steps"><li>Tocá Compartir <span class="share-icon" aria-hidden="true">□↑</span> en la barra de Safari.</li><li>Deslizá el menú y elegí <b>Agregar a inicio</b>.</li><li>Confirmá tocando <b>Agregar</b>.</li></ol><button id="ios-install-close" class="primary" type="button">Entendido</button></div>
   </div>
+  <script>if(!Promise.withResolvers){Promise.withResolvers=function(){let resolve,reject;const promise=new Promise(function(onResolve,onReject){resolve=onResolve;reject=onReject});return{promise:promise,resolve:resolve,reject:reject}}}</script>
   <script type="module">
     import { initializeApp, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, getFirestore, collection, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where } from './assets/vendor/firebase.js';
     import { getDocument, GlobalWorkerOptions } from './assets/vendor/pdfjs/pdf.min.mjs';
@@ -103,7 +104,7 @@
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.',MAINTENANCE_CACHE_KEY=`siga_mobile_verified_maintenance_${networkId}`;
-    const APP_VERSION='1.4.17',APP_REVISION='20260816-05',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
+    const APP_VERSION='1.4.18',APP_REVISION='20260816-06',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
     const requestedDni=new URLSearchParams(location.search).get('dni')?.replace(/\D/g,'')||'';
     if(/^\d{7,9}$/.test(requestedDni))$('dni').value=requestedDni;
 
