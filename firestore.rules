@@ -131,6 +131,35 @@ service cloud.firestore {
         && request.resource.data.createdAt is timestamp;
     }
 
+    function validNotice(noticeId) {
+      return request.resource.data.keys().hasAll(['id', 'title', 'text', 'publishedAt', 'important', 'published'])
+        && request.resource.data.id == noticeId
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 160
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 20000
+        && request.resource.data.publishedAt is string
+        && request.resource.data.important is bool
+        && request.resource.data.published == true;
+    }
+
+    function validNoticeChunk() {
+      return request.resource.data.keys().hasAll(['noticeId', 'kind', 'index', 'total', 'data'])
+        && request.resource.data.kind in ['image', 'thumbnail', 'pdf']
+        && request.resource.data.noticeId is string
+        && request.resource.data.noticeId.size() > 0
+        && request.resource.data.noticeId.size() <= 100
+        && request.resource.data.index is int
+        && request.resource.data.total is int
+        && request.resource.data.total > 0
+        && request.resource.data.total <= 64
+        && request.resource.data.index >= 0
+        && request.resource.data.index < request.resource.data.total
+        && request.resource.data.data is string
+        && request.resource.data.data.size() <= 360000;
+    }
+
     // Solo las cuentas administrativas autorizadas pueden acceder al padrón.
     // Las sesiones anónimas y las cuentas móviles quedan excluidas.
     match /artifacts/{appId}/public/data/afiliados/{affiliateId} {
@@ -164,7 +193,10 @@ service cloud.firestore {
         && request.auth.uid == userId
         && resource.data.enabled == true
         && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(resource.data.affiliateId));
-      allow create, update: if isStaffOperational(appId) && validMobileCredential(appId);
+      allow create: if isAdmin() && validMobileCredential(appId);
+      allow update: if isStaffOperational(appId)
+        && request.resource.data.affiliateId == resource.data.affiliateId
+        && validMobileCredential(appId);
       allow delete: if false;
     }
 
@@ -172,37 +204,14 @@ service cloud.firestore {
     // Los adjuntos se fragmentan para respetar el límite de documento.
     match /artifacts/{appId}/public/data/comunicados/{noticeId} {
       allow read: if isAdmin() || (!maintenanceEnabled(appId) && (isStaff() || isEnabledAffiliate(appId)));
-      allow create: if isStaffOperational(appId)
-        && request.resource.data.keys().hasAll(['id', 'title', 'text', 'publishedAt', 'important', 'published'])
-        && request.resource.data.id == noticeId
-        && request.resource.data.title is string
-        && request.resource.data.title.size() > 0
-        && request.resource.data.title.size() <= 160
-        && request.resource.data.text is string
-        && request.resource.data.text.size() <= 20000
-        && request.resource.data.publishedAt is string
-        && request.resource.data.important is bool
-        && request.resource.data.published == true;
-      allow update, delete: if isStaffOperational(appId);
+      allow create, update: if isStaffOperational(appId) && validNotice(noticeId);
+      allow delete: if isStaffOperational(appId);
     }
 
     match /artifacts/{appId}/public/data/comunicado_files/{chunkId} {
       allow read: if isAdmin() || (!maintenanceEnabled(appId) && (isStaff() || isEnabledAffiliate(appId)));
-      allow create: if isStaffOperational(appId)
-        && request.resource.data.keys().hasAll(['noticeId', 'kind', 'index', 'total', 'data'])
-        && request.resource.data.kind in ['image', 'thumbnail', 'pdf']
-        && request.resource.data.noticeId is string
-        && request.resource.data.noticeId.size() > 0
-        && request.resource.data.noticeId.size() <= 100
-        && request.resource.data.index is int
-        && request.resource.data.total is int
-        && request.resource.data.total > 0
-        && request.resource.data.total <= 64
-        && request.resource.data.index >= 0
-        && request.resource.data.index < request.resource.data.total
-        && request.resource.data.data is string
-        && request.resource.data.data.size() <= 360000;
-      allow update, delete: if isStaffOperational(appId);
+      allow create, update: if isStaffOperational(appId) && validNoticeChunk();
+      allow delete: if isStaffOperational(appId);
     }
 
     match /artifacts/{appId}/mobile_reads/{userId}/items/{noticeId} {

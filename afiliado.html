@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="theme-color" content="#064e3b">
   <meta name="description" content="Credencial digital y convenio colectivo para afiliados SIGA">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mi SIGA">
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="manifest" href="afiliado-manifest.json">
   <link rel="icon" href="assets/siga-app-icon-192.png" sizes="192x192">
   <link rel="apple-touch-icon" href="assets/siga-app-icon-192.png">
@@ -46,7 +46,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.4.14</p>
+      <p class="app-version">Versión 1.4.15</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -88,9 +88,7 @@
     <div class="dialog"><h2 id="ios-install-title">Instalar Mi SIGA en iPhone</h2><p class="muted">Apple realiza la instalación desde el menú Compartir.</p><ol class="install-steps"><li>Tocá Compartir <span class="share-icon" aria-hidden="true">□↑</span> en la barra de Safari.</li><li>Deslizá el menú y elegí <b>Agregar a inicio</b>.</li><li>Confirmá tocando <b>Agregar</b>.</li></ol><button id="ios-install-close" class="primary" type="button">Entendido</button></div>
   </div>
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
-    import { getFirestore, collection, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { initializeApp, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, getFirestore, collection, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where } from './assets/vendor/firebase.js';
 
     const firebaseConfig = {apiKey:'AIzaSyC5-_AUlTMIGmv0oRUXeRUCaO79NNHFBY0',authDomain:'siga-85bdd.firebaseapp.com',projectId:'siga-85bdd',storageBucket:'siga-85bdd.firebasestorage.app',messagingSenderId:'1065738174061',appId:'1:1065738174061:web:7f62a435474bb4cbce4964'};
     const networkId = 'siga-gremio-principal-v2';
@@ -103,7 +101,7 @@
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.',MAINTENANCE_CACHE_KEY=`siga_mobile_verified_maintenance_${networkId}`;
-    const APP_VERSION='1.4.14',APP_REVISION='20260816-02',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
+    const APP_VERSION='1.4.15',APP_REVISION='20260816-03',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
     const requestedDni=new URLSearchParams(location.search).get('dni')?.replace(/\D/g,'')||'';
     if(/^\d{7,9}$/.test(requestedDni))$('dni').value=requestedDni;
 

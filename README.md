@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.14` — incorpora el Comité Mixto de Higiene y Seguridad en la ficha del afiliado y en su credencial móvil.
+`1.4.15` — auditoría integral de rendimiento, funcionamiento offline, seguridad, sincronización y actualizaciones.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
+- 1.4.15 (x86 y x64)
 - 1.4.14 (x86 y x64)
-- 1.4.13 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 

@@ -26,8 +26,8 @@ from urllib.parse import urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.14"
-APP_REVISION = "20260816-02"
+APP_VERSION = "1.4.15"
+APP_REVISION = "20260816-03"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -187,19 +187,31 @@ def valid_update_manifest(manifest: object, architecture: str = APP_ARCH) -> boo
         digest = manifest.get(hash_key)
         if url is None and digest is None and url_key in {"packageUrl", "installerUrl"}:
             continue
-        if not isinstance(url, str) or not url.startswith("https://"):
+        if not trusted_update_url(url):
             return False
         if not isinstance(digest, str) or not re.fullmatch(r"[A-Fa-f0-9]{64}", digest):
             return False
     for list_key in ("urls", "packageUrls", "installerUrls"):
         urls = manifest.get(list_key, [])
-        if not isinstance(urls, list) or any(not isinstance(url, str) or not url.startswith("https://") for url in urls):
+        if not isinstance(urls, list) or any(not trusted_update_url(url) for url in urls):
             return False
     for size_key in ("size", "packageSize", "installerSize"):
         size = manifest.get(size_key)
         if size is not None and (not isinstance(size, int) or isinstance(size, bool) or size <= 0):
             return False
     return True
+
+
+def trusted_update_url(value: object) -> bool:
+    """Accept update artifacts only from SIGA's explicitly controlled HTTPS hosts."""
+    if not isinstance(value, str):
+        return False
+    parsed = urlparse(value)
+    return parsed.scheme == "https" and parsed.hostname in {
+        "raw.githubusercontent.com",
+        "github.com",
+        "siga-85bdd.web.app",
+    }
 
 
 def file_sha256(path: Path) -> str | None:

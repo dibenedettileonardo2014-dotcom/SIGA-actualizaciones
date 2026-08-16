@@ -12,6 +12,7 @@ a = Analysis(
         ('assets/mantenimiento.png', 'assets'),
         ('assets/convenio-77-89.pdf', 'assets'),
         ('assets/convenio-77-89.txt', 'assets'),
+        ('assets/vendor', 'assets/vendor'),
     ],
     hiddenimports=[],
     hookspath=[],

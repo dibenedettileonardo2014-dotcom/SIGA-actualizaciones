@@ -36,9 +36,9 @@ class LauncherTests(unittest.TestCase):
     def test_update_manifest_requires_https_and_sha256(self):
         valid = {
             "version": "1.2.49",
-            "url": "https://example.test/SIGA.exe",
+            "url": "https://raw.githubusercontent.com/test/SIGA.exe",
             "sha256": "A" * 64,
-            "packageUrl": "https://example.test/SIGA.zip",
+            "packageUrl": "https://siga-85bdd.web.app/SIGA.zip",
             "packageSha256": "b" * 64,
         }
         self.assertTrue(desktop_launcher.valid_update_manifest(valid, "x64"))
@@ -46,14 +46,14 @@ class LauncherTests(unittest.TestCase):
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "url": "http://example.test/SIGA.exe"}, "x64"))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "sha256": "bad"}, "x64"))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "urls": ["http://example.test/SIGA.exe"]}, "x64"))
-        installer = {**valid, "installerUrl": "https://example.test/SIGA-Setup.exe", "installerSha256": "C" * 64}
+        installer = {**valid, "installerUrl": "https://github.com/test/SIGA-Setup.exe", "installerSha256": "C" * 64}
         self.assertTrue(desktop_launcher.valid_update_manifest(installer, "x64"))
         self.assertFalse(desktop_launcher.valid_update_manifest({**installer, "installerSha256": "bad"}, "x64"))
 
     def test_update_manifest_selects_only_matching_architecture(self):
         artifact = {
-            "architecture": "x86", "url": "https://example.test/SIGA-x86.exe",
-            "sha256": "A" * 64, "packageUrl": "https://example.test/SIGA-x86.zip",
+            "architecture": "x86", "url": "https://raw.githubusercontent.com/test/SIGA-x86.exe",
+            "sha256": "A" * 64, "packageUrl": "https://siga-85bdd.web.app/SIGA-x86.zip",
             "packageSha256": "B" * 64,
         }
         manifest = {"version": "1.4.0", "architectures": {"x86": artifact}}
@@ -103,7 +103,7 @@ class LauncherTests(unittest.TestCase):
         manifest = {
             "version": "1.4.13", "displayVersion": "1.4.13", "revision": desktop_launcher.APP_REVISION,
             "architecture": desktop_launcher.APP_ARCH,
-            "url": "https://example.test/SIGA.exe", "urls": ["https://example.test/SIGA.exe"],
+            "url": "https://raw.githubusercontent.com/test/SIGA.exe", "urls": ["https://raw.githubusercontent.com/test/SIGA.exe"],
             "sha256": hashlib.sha256(payload).hexdigest(), "size": len(payload),
         }
         with tempfile.TemporaryDirectory() as folder, \
@@ -209,15 +209,34 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("handleCredentialWatchError", mobile_html)
         self.assertIn("validAffiliate", rules)
         self.assertIn("validMobileCredential", rules)
-        self.assertIn("isStaffOperational(appId) && validMobileCredential(appId)", rules)
+        self.assertIn("allow create: if isAdmin() && validMobileCredential(appId)", rules)
         self.assertIn("validPayment", rules)
         self.assertIn("request.resource.data.revision == resource.data.revision + 1", rules)
 
     def test_payments_confirm_before_marking_affiliate_paid(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         payment_save = desktop.index("await commitPaymentToDatabase(payment);")
-        affiliate_update = desktop.index("if (!affiliate.hasPaid) await commitToDatabase", payment_save)
+        affiliate_update = desktop.index("if (!affiliate.hasPaid)", payment_save)
         self.assertLess(payment_save, affiliate_update)
+        self.assertIn("await removePaymentFromDatabase(payment.id)", desktop)
+
+    def test_runtime_dependencies_are_local_and_mobile_offline_shell_includes_firebase(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
+        for source in (desktop, mobile):
+            self.assertIn("./assets/vendor/firebase.js", source)
+            self.assertNotIn("gstatic.com/firebasejs", source)
+            self.assertIn("Content-Security-Policy", source)
+        self.assertIn("'./assets/vendor/firebase.js'", service_worker)
+        for filename in ("firebase.js", "tailwind.css", "chart.js", "xlsx.js", "jspdf.js", "jspdf-autotable.js"):
+            self.assertTrue((ROOT / "assets" / "vendor" / filename).is_file(), filename)
+
+    def test_notice_updates_are_validated_and_mobile_access_creation_is_admin_only(self):
+        rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
+        self.assertIn("allow create, update: if isStaffOperational(appId) && validNotice(noticeId)", rules)
+        self.assertIn("allow create, update: if isStaffOperational(appId) && validNoticeChunk()", rules)
+        self.assertIn("allow create: if isAdmin() && validMobileCredential(appId)", rules)
 
     def test_notice_replacements_are_committed_atomically(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
@@ -251,8 +270,9 @@ class ApplicationSourceTests(unittest.TestCase):
         for action in ("notice-edit", "notice-toggle", "notice-delete"):
             self.assertNotIn(f'body[data-role="operador"] #notice-table .{action}', desktop)
         notice_rules = rules[rules.index("match /artifacts/{appId}/public/data/comunicados/{noticeId}"):]
-        self.assertIn("allow create: if isStaffOperational(appId)", notice_rules)
-        self.assertGreaterEqual(notice_rules.count("allow update, delete: if isStaffOperational(appId);"), 2)
+        self.assertIn("allow create, update: if isStaffOperational(appId) && validNotice(noticeId)", notice_rules)
+        self.assertIn("allow create, update: if isStaffOperational(appId) && validNoticeChunk()", notice_rules)
+        self.assertGreaterEqual(notice_rules.count("allow delete: if isStaffOperational(appId);"), 2)
         for marker in ("notice-edit-id", "saveNoticeAtomically(id,data,replacements)", "deleteNoticeAtomically(item.id)", "if(!confirm(`¿Eliminar definitivamente", "onSnapshot(noticeCollection()"):
             self.assertIn(marker, desktop)
 
@@ -531,7 +551,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.14")
+        self.assertEqual(manifest["displayVersion"], "1.4.15")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")
