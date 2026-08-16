@@ -85,6 +85,14 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('Cache-Control", "no-store, no-cache, must-revalidate, max-age=0', source)
         self.assertIn('index.html?revision={APP_REVISION}', source)
 
+    def test_silent_update_preserves_and_repairs_desktop_shortcut(self):
+        launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
+        installer = (ROOT / "siga-installer.iss").read_text(encoding="utf-8")
+        self.assertNotIn('Name: "{userdesktop}\\SIGA.lnk"', installer.split("[InstallDelete]", 1)[1].split("[Icons]", 1)[0])
+        self.assertNotIn('Name: "{commondesktop}\\SIGA.lnk"', installer)
+        self.assertIn("CreateShortcut", launcher)
+        self.assertIn("SpecialFolders.Item(\\'Desktop\\')", launcher)
+
     def test_same_visible_version_is_repaired_by_hash(self):
         with tempfile.TemporaryDirectory() as folder:
             executable = Path(folder) / "SIGA.exe"
@@ -250,6 +258,14 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertEqual(len(pages), 29)
         self.assertIn("'./assets/convenio-77-89-pages/page-01.jpg'", service_worker)
         self.assertNotIn("pdfjs/", service_worker)
+
+    def test_affiliate_register_shows_calculated_age_and_mobile_has_direct_convention_access(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        self.assertIn('>Edad</th>', desktop)
+        self.assertIn("formatAffiliateAge(a.birthdate)", desktop)
+        self.assertIn('id="open-convention-button"', mobile)
+        self.assertIn("[data-view=\"convention-view\"]", mobile)
 
     def test_notice_updates_are_validated_and_mobile_access_creation_is_admin_only(self):
         rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
@@ -570,7 +586,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.19")
+        self.assertEqual(manifest["displayVersion"], "1.4.20")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

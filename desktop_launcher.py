@@ -26,8 +26,8 @@ from urllib.parse import urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.19"
-APP_REVISION = "20260816-07"
+APP_VERSION = "1.4.20"
+APP_REVISION = "20260816-08"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -366,13 +366,20 @@ def apply_prepared_update() -> bool:
         target = webview_storage_path().parent / "SIGA.exe"
         script = update_state_path() / "SIGA.apply-update.cmd"
         log = update_state_path() / "SIGA.update-installer.log"
+        repair_shortcut = (
+            f'powershell -NoProfile -ExecutionPolicy Bypass -Command '
+            f'"$w=New-Object -ComObject WScript.Shell; $d=$w.SpecialFolders.Item(\'Desktop\'); '
+            f'$s=$w.CreateShortcut((Join-Path $d \'SIGA.lnk\')); $s.TargetPath=\'{target}\'; '
+            f'$s.WorkingDirectory=\'{target.parent}\'; '
+            f'$s.IconLocation=\'{target.parent / "siga-app-icon.ico"}\'; $s.Save()"\n'
+        )
         if prepared["kind"] == "installer":
             action = f'start "" /wait "{source}" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CURRENTUSER /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS /LOG="{log}"\n'
         elif prepared["kind"] == "package":
             action = f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath \'{source}\' -DestinationPath \'{target.parent}\' -Force; if (-not $?) {{ exit 1 }}"\n'
         else:
             action = f'copy /Y "{source}" "{target}" >nul\n'
-        script.write_text("@echo off\nsetlocal\n" + f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Wait-Process -Id {os.getpid()} -Timeout 120 -ErrorAction SilentlyContinue"\n' + action + "if errorlevel 1 exit /b 1\n" + f'start "" "{target}"\ndel /q "{source}"\ndel /q "{state}"\ndel "%~f0"\n', encoding="utf-8")
+        script.write_text("@echo off\nsetlocal\n" + f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Wait-Process -Id {os.getpid()} -Timeout 120 -ErrorAction SilentlyContinue"\n' + action + "if errorlevel 1 exit /b 1\n" + repair_shortcut + "if errorlevel 1 exit /b 1\n" + f'start "" "{target}"\ndel /q "{source}"\ndel /q "{state}"\ndel "%~f0"\n', encoding="utf-8")
         subprocess.Popen(["cmd.exe", "/d", "/c", str(script)], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         update_log("update-apply-start", revision=prepared.get("revision", ""))
         return True

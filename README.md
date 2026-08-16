@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.19` — convenio mostrado como páginas optimizadas y adaptables, compatible con Android sin depender de un visor PDF integrado.
+`1.4.20` — edad calculada en el padrón, acceso móvil directo al convenio y actualización de escritorio reparada.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,6 +28,7 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
+- 1.4.20 (x86 y x64)
 - 1.4.19 (x86 y x64)
 - 1.4.18 (x86 y x64)
 
