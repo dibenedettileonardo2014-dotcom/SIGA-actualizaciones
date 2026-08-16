@@ -1,4 +1,4 @@
-const CACHE_NAME = 'siga-v1.4.21-r20260816-09';
+const CACHE_NAME = 'siga-v1.4.22-r20260816-10';
 const APP_SHELL = [
   './',
   './index.html',

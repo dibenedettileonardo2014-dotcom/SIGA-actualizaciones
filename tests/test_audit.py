@@ -152,6 +152,13 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertEqual(headers["/"]["Cache-Control"], "no-cache")
         self.assertEqual(headers["/sw.js"]["Cache-Control"], "no-cache")
 
+    def test_legacy_desktop_can_fetch_update_manifest_cross_origin(self):
+        firebase_config = json.loads((ROOT / "firebase.json").read_text(encoding="utf-8"))
+        version_headers = next(item["headers"] for item in firebase_config["hosting"]["headers"] if item["source"] == "/version.json")
+        values = {item["key"]: item["value"] for item in version_headers}
+        self.assertEqual(values["Access-Control-Allow-Origin"], "*")
+        self.assertEqual(values["Cache-Control"], "no-cache")
+
     def test_cache_revision_matches_current_internal_revision(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
@@ -589,7 +596,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.21")
+        self.assertEqual(manifest["displayVersion"], "1.4.22")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

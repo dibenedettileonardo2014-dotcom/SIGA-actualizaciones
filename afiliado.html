@@ -47,7 +47,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.4.21</p>
+      <p class="app-version">Versión 1.4.22</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -102,7 +102,7 @@
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.',MAINTENANCE_CACHE_KEY=`siga_mobile_verified_maintenance_${networkId}`;
-    const APP_VERSION='1.4.21',APP_REVISION='20260816-09',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
+    const APP_VERSION='1.4.22',APP_REVISION='20260816-10',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
     const requestedDni=new URLSearchParams(location.search).get('dni')?.replace(/\D/g,'')||'';
     if(/^\d{7,9}$/.test(requestedDni))$('dni').value=requestedDni;
 
