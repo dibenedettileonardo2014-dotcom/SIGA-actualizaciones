@@ -232,6 +232,13 @@ class ApplicationSourceTests(unittest.TestCase):
         for filename in ("firebase.js", "tailwind.css", "chart.js", "xlsx.js", "jspdf.js", "jspdf-autotable.js"):
             self.assertTrue((ROOT / "assets" / "vendor" / filename).is_file(), filename)
 
+    def test_fontawesome_fonts_resolve_beside_the_local_stylesheet(self):
+        stylesheet = (ROOT / "assets" / "vendor" / "fontawesome.css").read_text(encoding="utf-8")
+        declared_fonts = re.findall(r"url\((?:['\"]?)(webfonts/[^)'\"]+)", stylesheet)
+        self.assertTrue(declared_fonts)
+        for relative_path in declared_fonts:
+            self.assertTrue((ROOT / "assets" / "vendor" / relative_path).is_file(), relative_path)
+
     def test_notice_updates_are_validated_and_mobile_access_creation_is_admin_only(self):
         rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
         self.assertIn("allow create, update: if isStaffOperational(appId) && validNotice(noticeId)", rules)
@@ -551,7 +558,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.15")
+        self.assertEqual(manifest["displayVersion"], "1.4.16")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")
