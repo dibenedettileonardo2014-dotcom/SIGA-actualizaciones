@@ -239,17 +239,17 @@ class ApplicationSourceTests(unittest.TestCase):
         for relative_path in declared_fonts:
             self.assertTrue((ROOT / "assets" / "vendor" / relative_path).is_file(), relative_path)
 
-    def test_mobile_convention_uses_local_pdfjs_with_navigation_and_fallback(self):
+    def test_mobile_convention_uses_native_images_with_navigation_and_pdf_fallback(self):
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
         self.assertNotIn('<iframe class="convention"', mobile)
-        for marker in ("pdfjs/pdf.min.mjs", "pdfjs/pdf.worker.min.mjs", "renderConventionPage", "convention-prev", "convention-next", "download>Abrir PDF"):
+        self.assertNotIn("pdfjs/", mobile)
+        for marker in ("convention-image", "CONVENTION_PAGE_COUNT=29", "renderConventionPage", "convention-prev", "convention-next", "download>Abrir PDF"):
             self.assertIn(marker, mobile)
-        for filename in ("pdf.min.mjs", "pdf.worker.min.mjs"):
-            self.assertTrue((ROOT / "assets" / "vendor" / "pdfjs" / filename).is_file(), filename)
-            self.assertIn(f"'./assets/vendor/pdfjs/{filename}'", service_worker)
-        self.assertIn("if(!Promise.withResolvers)", mobile)
-        self.assertNotIn("URL.parse", (ROOT / "assets" / "vendor" / "pdfjs" / "pdf.min.mjs").read_text(encoding="utf-8"))
+        pages = sorted((ROOT / "assets" / "convenio-77-89-pages").glob("page-*.jpg"))
+        self.assertEqual(len(pages), 29)
+        self.assertIn("'./assets/convenio-77-89-pages/page-01.jpg'", service_worker)
+        self.assertNotIn("pdfjs/", service_worker)
 
     def test_notice_updates_are_validated_and_mobile_access_creation_is_admin_only(self):
         rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
@@ -570,7 +570,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.18")
+        self.assertEqual(manifest["displayVersion"], "1.4.19")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")
