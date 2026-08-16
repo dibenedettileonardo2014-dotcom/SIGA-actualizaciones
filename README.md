@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.22` — canal CORS compatible con SIGA 1.4.12 para recuperar la actualización automática.
+`1.4.23` — permite que el Operador cree automáticamente el acceso móvil al guardar un afiliado, sin mostrarle la administración de credenciales.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
+- 1.4.23 (x86 y x64)
 - 1.4.22 (x86 y x64)
-- 1.4.21 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 

@@ -1,21 +1,33 @@
 {
-    "version":  "1.4.22",
-    "displayVersion":  "1.4.22",
-    "revision":  "20260816-10",
+    "version":  "1.4.23",
+    "displayVersion":  "1.4.23",
+    "revision":  "20260816-11",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "17B2BBD2D6EE63B3C9188CDFAF7D5B27140819628EF820304A42B94ACBC4082B",
+    "sha256":  "4249446D1F7CE3EDA8999C3B9FBEBFFD90C528EC49533D95F9B027B3C317E07F",
     "size":  4680377,
-    "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.22.zip",
+    "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.23.zip",
     "packageUrls":  [
-                        "https://siga-85bdd.web.app/SIGA-update-1.4.22.zip",
-                        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.22.zip"
+                        "https://siga-85bdd.web.app/SIGA-update-1.4.23.zip",
+                        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.23.zip"
                     ],
-    "packageSha256":  "93FD671C4E2947FFC48C691CD7339550110B57BBCBB2960C17FC05145CE1A66F",
-    "packageSize":  19131264,
-    "notes":  "Actualización 1.4.22 por paquete Firebase para máxima compatibilidad con SIGA 1.4.12.",
+    "packageSha256":  "7CF15814D606534C583825B970EC155F579178EC326E20A659F29EBAC69D5855",
+    "packageSize":  19038761,
+    "notes":  "El Operador puede crear automáticamente el acceso móvil al guardar un afiliado, sin acceso a la administración de credenciales.",
+    "installers": {
+                      "x64": {
+                                 "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-Setup-1.4.23-x64.exe",
+                                 "sha256": "96E2A5FA3FE9D5E9DDD1C7E21241F0326C21195E066986ECCC96083864FD8090",
+                                 "size": 17501589
+                               },
+                      "x86": {
+                                 "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-Setup-1.4.23-x86.exe",
+                                 "sha256": "F273EECBE5F243567A5D811DC633D86EFDC0B896CE76C91DD42150AA88588A3A",
+                                 "size": 16448186
+                               }
+                    },
     "architectures":  {
                           "x64":  {
                                       "architecture":  "x64",
@@ -23,15 +35,15 @@
                                       "urls":  [
                                                    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe"
                                                ],
-                                      "sha256":  "17B2BBD2D6EE63B3C9188CDFAF7D5B27140819628EF820304A42B94ACBC4082B",
+                                      "sha256":  "4249446D1F7CE3EDA8999C3B9FBEBFFD90C528EC49533D95F9B027B3C317E07F",
                                       "size":  4680377,
-                                      "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.22-x64.zip",
+                                      "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.23-x64.zip",
                                       "packageUrls":  [
-                                                          "https://siga-85bdd.web.app/SIGA-update-1.4.22-x64.zip",
-                                                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.22-x64.zip"
+                                                          "https://siga-85bdd.web.app/SIGA-update-1.4.23-x64.zip",
+                                                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.23-x64.zip"
                                                       ],
-                                      "packageSha256":  "93FD671C4E2947FFC48C691CD7339550110B57BBCBB2960C17FC05145CE1A66F",
-                                      "packageSize":  19131264
+                                      "packageSha256":  "7CF15814D606534C583825B970EC155F579178EC326E20A659F29EBAC69D5855",
+                                      "packageSize":  19038761
                                   },
                           "x86":  {
                                       "architecture":  "x86",
@@ -39,15 +51,15 @@
                                       "urls":  [
                                                    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe"
                                                ],
-                                      "sha256":  "DF19F89C4082C2AF16C70899EB34DA43CD7EC7B78FDE43E6F15A42BD0DA9F983",
+                                      "sha256":  "E022CB316354F8D621ABB5FF8700B4FB4201471BAB3D86703BAC1676A154EE3C",
                                       "size":  4562476,
-                                      "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.22-x86.zip",
+                                      "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.23-x86.zip",
                                       "packageUrls":  [
-                                                          "https://siga-85bdd.web.app/SIGA-update-1.4.22-x86.zip",
-                                                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.22-x86.zip"
+                                                          "https://siga-85bdd.web.app/SIGA-update-1.4.23-x86.zip",
+                                                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.23-x86.zip"
                                                       ],
-                                      "packageSha256":  "0C469058387764F6F58E57302DABB57F14FA5E585337907EF0DD2D046A25D6AD",
-                                      "packageSize":  17800856
+                                      "packageSha256":  "0E2D02FC771A7659D043FAA083681C6FBDE5596F7F4D17E2C45DBB961FDE75DA",
+                                      "packageSize":  17708902
                                   }
                       }
 }

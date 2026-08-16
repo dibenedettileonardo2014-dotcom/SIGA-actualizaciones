@@ -193,7 +193,7 @@ service cloud.firestore {
         && request.auth.uid == userId
         && resource.data.enabled == true
         && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(resource.data.affiliateId));
-      allow create: if isAdmin() && validMobileCredential(appId);
+      allow create: if isStaffOperational(appId) && validMobileCredential(appId);
       allow update: if isStaffOperational(appId)
         && request.resource.data.affiliateId == resource.data.affiliateId
         && validMobileCredential(appId);

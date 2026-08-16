@@ -227,7 +227,7 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("handleCredentialWatchError", mobile_html)
         self.assertIn("validAffiliate", rules)
         self.assertIn("validMobileCredential", rules)
-        self.assertIn("allow create: if isAdmin() && validMobileCredential(appId)", rules)
+        self.assertIn("allow create: if isStaffOperational(appId) && validMobileCredential(appId)", rules)
         self.assertIn("validPayment", rules)
         self.assertIn("request.resource.data.revision == resource.data.revision + 1", rules)
 
@@ -277,11 +277,11 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn('id="open-convention-button"', mobile)
         self.assertIn("[data-view=\"convention-view\"]", mobile)
 
-    def test_notice_updates_are_validated_and_mobile_access_creation_is_admin_only(self):
+    def test_notice_updates_and_staff_mobile_access_creation_are_validated(self):
         rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
         self.assertIn("allow create, update: if isStaffOperational(appId) && validNotice(noticeId)", rules)
         self.assertIn("allow create, update: if isStaffOperational(appId) && validNoticeChunk()", rules)
-        self.assertIn("allow create: if isAdmin() && validMobileCredential(appId)", rules)
+        self.assertIn("allow create: if isStaffOperational(appId) && validMobileCredential(appId)", rules)
 
     def test_notice_replacements_are_committed_atomically(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
@@ -501,7 +501,7 @@ class ApplicationSourceTests(unittest.TestCase):
         body = maintenance_function.group(1)
         self.assertLess(body.index("classList.remove('hidden')"), body.index("stopNoticeWatches()"))
 
-    def test_automatic_mobile_access_and_admin_only_credentials(self):
+    def test_automatic_mobile_access_and_staff_credential_creation(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         self.assertIn("const savedAffiliate = await commitToDatabase(affiliate)", desktop)
         self.assertIn("provisionMobileAccess(savedAffiliate, 'sindicatoquimico')", desktop)
@@ -596,7 +596,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.22")
+        self.assertEqual(manifest["displayVersion"], "1.4.23")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")
