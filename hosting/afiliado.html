@@ -46,7 +46,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.4.13</p>
+      <p class="app-version">Versión 1.4.14</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -103,7 +103,7 @@
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.',MAINTENANCE_CACHE_KEY=`siga_mobile_verified_maintenance_${networkId}`;
-    const APP_VERSION='1.4.13',APP_REVISION='20260816-01',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
+    const APP_VERSION='1.4.14',APP_REVISION='20260816-02',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
     const requestedDni=new URLSearchParams(location.search).get('dni')?.replace(/\D/g,'')||'';
     if(/^\d{7,9}$/.test(requestedDni))$('dni').value=requestedDni;
 
@@ -229,10 +229,10 @@
     function showCredential(data){
       setText('card-name',data.name); setText('card-number',`Nº AFILIADO: ${data.number||'S/N'}`); setText('card-dni',data.dni);
       setText('card-company',data.company||'Sin empresa'); setText('affiliate-status',data.status); setText('payment-status',data.hasPaid?'Al día':'Pendiente');
-      const role=[data.isDelegate?'Delegado/a':'',data.isInternalCommission?'Comisión interna':'',data.isDirectiveCommission?'Comisión directiva':''].filter(Boolean).join(' · '); setText('card-role',role);
+      const role=[data.isDelegate?'Delegado/a':'',data.isInternalCommission?'Comisión interna':'',data.isDirectiveCommission?'Comisión directiva':'',data.isMixedHealthSafetyCommittee?'Comité Mixto de Higiene y Seguridad':''].filter(Boolean).join(' · '); setText('card-role',role);
       setText('card-updated',data.updatedAt?`Actualizada ${new Date(data.updatedAt).toLocaleDateString('es-AR')}`:'');
       $('welcome').textContent=`Hola, ${(data.name||'').split(' ')[0]}`;
-      const rows=[['Nombre y apellido',data.name],['DNI',data.dni],['Fecha de nacimiento',data.birthdate],['Fecha de afiliación',data.affiliationDate],['Nº de afiliado',data.number],['Empresa / compañía',data.company],['Consultora',data.consultant],['Sector o categoría',data.sector],['Teléfono',data.phone],['Correo electrónico',data.email],['Domicilio',data.address],['Localidad',data.locality],['Estado',data.status]];
+      const rows=[['Nombre y apellido',data.name],['DNI',data.dni],['Fecha de nacimiento',data.birthdate],['Fecha de afiliación',data.affiliationDate],['Nº de afiliado',data.number],['Empresa / compañía',data.company],['Consultora',data.consultant],['Sector o categoría',data.sector],['Teléfono',data.phone],['Correo electrónico',data.email],['Domicilio',data.address],['Localidad',data.locality],['Estado',data.status],['Comité Mixto de Higiene y Seguridad',data.isMixedHealthSafetyCommittee?'Sí':'No']];
       $('data-list').replaceChildren(...rows.map(([label,value])=>{const row=document.createElement('div');row.className='row';const a=document.createElement('span');a.textContent=label;const b=document.createElement('b');b.textContent=value||'—';row.append(a,b);return row}));
       showFamily(data.familyGroup);
     }
@@ -249,7 +249,7 @@
       const fitText=(value,maxWidth,startSize,minSize=36)=>{let size=startSize;do{context.font=`850 ${size}px Arial,sans-serif`;if(context.measureText(value).width<=maxWidth)return size;size-=2}while(size>minSize);return minSize};
       const name=text('card-name');fitText(name,1552,76);context.fillStyle='#f8fafc';context.fillText(name,80,505);
       context.fillStyle='#94a3b8';context.font='42px Arial,sans-serif';context.fillText(text('card-number'),80,570);
-      const role=text('card-role','');if(role&&role!=='—'){context.fillStyle='#fcd34d';context.font='800 34px Arial,sans-serif';context.fillText(role,80,630)}
+      const role=text('card-role','');if(role&&role!=='—'){context.fillStyle='#fcd34d';context.font=`800 ${fitText(role,1552,34,24)}px Arial,sans-serif`;context.fillText(role,80,630)}
       context.strokeStyle='rgba(255,255,255,.1)';context.lineWidth=3;context.beginPath();context.moveTo(80,800);context.lineTo(1632,800);context.stroke();
       context.font='38px Arial,sans-serif';context.fillStyle='#94a3b8';context.fillText('DNI:',80,885);context.fillStyle='#e2e8f0';context.font='700 38px Arial,sans-serif';context.fillText(text('card-dni'),185,885);
       context.fillStyle='#94a3b8';context.font='38px Arial,sans-serif';context.fillText('Empresa:',80,950);context.fillStyle='#e2e8f0';context.font='700 38px Arial,sans-serif';const company=text('card-company');fitText(company,1060,38,28);context.fillText(company,260,950);

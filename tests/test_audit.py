@@ -484,6 +484,15 @@ class ApplicationSourceTests(unittest.TestCase):
         for marker in ("authenticateMobile", "loginErrorMessage", "auth/network-request-failed", "auth/too-many-requests", "auth/user-disabled", "mobile/post-login"):
             self.assertIn(marker, mobile)
 
+    def test_mixed_health_safety_committee_is_saved_and_shown_on_mobile_credential(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        self.assertIn('id="form-is-mixed-health-safety-committee"', desktop)
+        self.assertIn("isMixedHealthSafetyCommittee: document.getElementById('form-is-mixed-health-safety-committee').checked", desktop)
+        self.assertIn("isMixedHealthSafetyCommittee: Boolean(affiliate.isMixedHealthSafetyCommittee)", desktop)
+        for source in (desktop, mobile):
+            self.assertIn("Comité Mixto de Higiene y Seguridad", source)
+
     def test_about_reads_the_version_from_the_running_executable(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
@@ -522,7 +531,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.13")
+        self.assertEqual(manifest["displayVersion"], "1.4.14")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

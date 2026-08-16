@@ -755,7 +755,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.13</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.14</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -776,7 +776,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.13</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.14</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -838,7 +838,7 @@
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
                     <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.13</span><span id="about-installed-architecture"></span>
+                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.14</span><span id="about-installed-architecture"></span>
                         · Actualización preparada en segundo plano
                     </p>
                     </section>
@@ -1112,7 +1112,7 @@
                             <p class="text-xs font-bold text-slate-700">Representación sindical</p>
                             <p class="text-[11px] text-slate-500">Confirmá si el afiliado tiene una función de representación vigente.</p>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <label class="flex items-center justify-between gap-3 bg-white rounded-lg border border-indigo-100 px-3 py-2.5 cursor-pointer">
                                 <span class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-user-tie text-indigo-600 mr-1"></i> Es delegado/a</span>
                                 <input type="checkbox" id="form-is-delegate" class="w-4 h-4 accent-indigo-600">
@@ -1124,6 +1124,10 @@
                             <label class="flex items-center justify-between gap-3 bg-white rounded-lg border border-indigo-100 px-3 py-2.5 cursor-pointer">
                                 <span class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-users-gear text-indigo-600 mr-1"></i> Comisión directiva</span>
                                 <input type="checkbox" id="form-is-directive-commission" class="w-4 h-4 accent-indigo-600">
+                            </label>
+                            <label class="flex items-center justify-between gap-3 bg-white rounded-lg border border-indigo-100 px-3 py-2.5 cursor-pointer">
+                                <span class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-helmet-safety text-indigo-600 mr-1"></i> Comité Mixto de Higiene y Seguridad</span>
+                                <input type="checkbox" id="form-is-mixed-health-safety-committee" class="w-4 h-4 accent-indigo-600">
                             </label>
                         </div>
                     </div>
@@ -1302,8 +1306,8 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.13';
-        const DIAGNOSTIC_REVISION = '20260816-01';
+        const DIAGNOSTIC_VERSION = '1.4.14';
+        const DIAGNOSTIC_REVISION = '20260816-02';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -2440,7 +2444,8 @@ window.__firebase_config = {
                 const representationBadges = [
                     a.isDelegate ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100"><i class="fa-solid fa-user-tie"></i> Delegado/a</span>' : '',
                     a.isInternalCommission ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-100"><i class="fa-solid fa-people-group"></i> Comisión interna</span>' : '',
-                    a.isDirectiveCommission ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100"><i class="fa-solid fa-users-gear"></i> Comisión directiva</span>' : ''
+                    a.isDirectiveCommission ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100"><i class="fa-solid fa-users-gear"></i> Comisión directiva</span>' : '',
+                    a.isMixedHealthSafetyCommittee ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100"><i class="fa-solid fa-helmet-safety"></i> Comité Mixto de Higiene y Seguridad</span>' : ''
                 ].filter(Boolean).join('<br>') || '<span class="text-xs text-slate-400">—</span>';
                 const syncConflictBadge = a.syncStatus === 'conflict'
                     ? `<div class="mt-1"><span class="inline-flex px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-100 text-rose-700" title="${escapePrintHtml(a.syncConflictReason || 'Revisar conflicto de sincronización')}">CONFLICTO DE SINCRONIZACIÓN</span></div>`
@@ -2948,6 +2953,7 @@ window.__firebase_config = {
                 isDelegate: document.getElementById('form-is-delegate').checked,
                 isInternalCommission: document.getElementById('form-is-internal-commission').checked,
                 isDirectiveCommission: document.getElementById('form-is-directive-commission').checked,
+                isMixedHealthSafetyCommittee: document.getElementById('form-is-mixed-health-safety-committee').checked,
                 familyGroup,
                 attachments: [...(existing?.attachments || []), ...newAttachments],
                 mobileAccess: existing?.mobileAccess || null,
@@ -3003,6 +3009,7 @@ window.__firebase_config = {
             document.getElementById('form-is-delegate').checked = Boolean(a.isDelegate);
             document.getElementById('form-is-internal-commission').checked = Boolean(a.isInternalCommission);
             document.getElementById('form-is-directive-commission').checked = Boolean(a.isDirectiveCommission);
+            document.getElementById('form-is-mixed-health-safety-committee').checked = Boolean(a.isMixedHealthSafetyCommittee);
             renderFamilyGroup(a.familyGroup);
             document.getElementById('form-affiliate-attachments').value = '';
             renderAffiliateAttachments(a.attachments || []);
@@ -3734,7 +3741,7 @@ window.__firebase_config = {
             cardCompany.textContent = a.company || 'Sin Empresa';
             cardConsultant.textContent = a.consultant || 'Sin Consultora';
             renderMobileAccessStatus(a);
-            cardRepresentation.textContent = [a.isDelegate ? 'Delegado/a' : '', a.isInternalCommission ? 'Comisión interna' : '', a.isDirectiveCommission ? 'Comisión directiva' : ''].filter(Boolean).join(' · ');
+            cardRepresentation.textContent = [a.isDelegate ? 'Delegado/a' : '', a.isInternalCommission ? 'Comisión interna' : '', a.isDirectiveCommission ? 'Comisión directiva' : '', a.isMixedHealthSafetyCommittee ? 'Comité Mixto de Higiene y Seguridad' : ''].filter(Boolean).join(' · ');
         };
 
         function mobileLoginEmail(dni) {
@@ -3758,7 +3765,7 @@ window.__firebase_config = {
                 company: affiliate.company || '', consultant: affiliate.consultant || '', sector: affiliate.sector || '',
                 birthdate: affiliate.birthdate || '', affiliationDate: affiliate.affiliationDate || '', phone: affiliate.phone || '', email: affiliate.email || '', address: affiliate.address || '', locality: affiliate.locality || '',
                 status: affiliate.status || '', hasPaid: Boolean(affiliate.hasPaid),
-                isDelegate: Boolean(affiliate.isDelegate), isInternalCommission: Boolean(affiliate.isInternalCommission), isDirectiveCommission: Boolean(affiliate.isDirectiveCommission),
+                isDelegate: Boolean(affiliate.isDelegate), isInternalCommission: Boolean(affiliate.isInternalCommission), isDirectiveCommission: Boolean(affiliate.isDirectiveCommission), isMixedHealthSafetyCommittee: Boolean(affiliate.isMixedHealthSafetyCommittee),
                 familyGroup: { partner, children },
                 enabled, updatedAt: new Date().toISOString()
             };
@@ -4038,7 +4045,8 @@ window.__firebase_config = {
             const representation = [
                 affiliate.isDelegate ? 'Delegado/a' : '',
                 affiliate.isInternalCommission ? 'Comisión interna' : '',
-                affiliate.isDirectiveCommission ? 'Comisión directiva' : ''
+                affiliate.isDirectiveCommission ? 'Comisión directiva' : '',
+                affiliate.isMixedHealthSafetyCommittee ? 'Comité Mixto de Higiene y Seguridad' : ''
             ].filter(Boolean).join(' · ') || 'Sin función de representación informada.';
             printHtmlDocument(`<!doctype html><html><head><title>Ficha de ${escapePrintHtml(affiliate.name)}</title><style>body{font-family:Arial,sans-serif;color:#1e293b;margin:34px}h1{color:#065f46;margin-bottom:4px}h2{font-size:15px;border-bottom:1px solid #cbd5e1;padding-bottom:6px;margin-top:26px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}p,li{font-size:13px;line-height:1.5}strong{color:#334155}.meta{color:#64748b;font-size:12px}</style></head><body><h1>SIGA · Ficha de Afiliado</h1><p class="meta">Emitida el ${new Date().toLocaleString('es-AR')}</p><h2>Datos personales</h2><div class="grid"><p><strong>Nombre:</strong> ${escapePrintHtml(affiliate.name)}</p><p><strong>Legajo:</strong> ${escapePrintHtml(affiliate.number)}</p><p><strong>DNI:</strong> ${escapePrintHtml(affiliate.dni)}</p><p><strong>Estado:</strong> ${escapePrintHtml(affiliate.status)}</p><p><strong>Empresa:</strong> ${escapePrintHtml(affiliate.company || '-')}</p><p><strong>Sector:</strong> ${escapePrintHtml(affiliate.sector || '-')}</p><p><strong>Teléfono:</strong> ${escapePrintHtml(affiliate.phone || '-')}</p><p><strong>Correo:</strong> ${escapePrintHtml(affiliate.email || '-')}</p></div><h2>Representación sindical</h2><p>${escapePrintHtml(representation)}</p><h2>Grupo familiar</h2>${partner}<p><strong>Hijos:</strong></p>${children}<h2>Archivos adjuntos</h2>${attachments}</body></html>`);
         };
@@ -4070,7 +4078,7 @@ window.__firebase_config = {
                 draw('SIGA - ASOCIACIÓN GREMIAL', 80, 125, '#10b981', 'bold 40px Arial,sans-serif'); draw('Sindicato Integral', 80, 185, '#cbd5e1', '42px Arial,sans-serif');
                 context.fillStyle = '#10b981'; context.fillRect(1420, 75, 210, 72); draw('AFILIADO', 1525, 124, '#0f172a', 'bold 32px Arial,sans-serif', 'center');
                 const name = String(a.name || '—').toUpperCase(); draw(name, 80, 500, '#f8fafc', `bold ${fit(name, 1552, 76)}px Arial,sans-serif`); draw(`Nº AFILIADO: ${a.number || 'S/N'}`, 80, 570, '#94a3b8', '42px Arial,sans-serif');
-                const representation = [a.isDelegate ? 'DELEGADO/A' : '', a.isInternalCommission ? 'COMISIÓN INTERNA' : '', a.isDirectiveCommission ? 'COMISIÓN DIRECTIVA' : ''].filter(Boolean).join(' · '); if (representation) draw(representation, 80, 635, '#fcd34d', 'bold 34px Arial,sans-serif');
+                const representation = [a.isDelegate ? 'DELEGADO/A' : '', a.isInternalCommission ? 'COMISIÓN INTERNA' : '', a.isDirectiveCommission ? 'COMISIÓN DIRECTIVA' : '', a.isMixedHealthSafetyCommittee ? 'COMITÉ MIXTO DE HIGIENE Y SEGURIDAD' : ''].filter(Boolean).join(' · '); if (representation) draw(representation, 80, 635, '#fcd34d', `bold ${fit(representation, 1552, 34, 24)}px Arial,sans-serif`);
                 context.strokeStyle = 'rgba(148,163,184,.35)'; context.lineWidth = 3; context.beginPath(); context.moveTo(80, 790); context.lineTo(1632, 790); context.stroke();
                 draw('DNI:', 80, 865, '#94a3b8', '36px Arial,sans-serif'); draw(a.dni || '—', 180, 865, '#f8fafc', 'bold 36px Arial,sans-serif'); draw('Empresa:', 80, 925, '#94a3b8', '36px Arial,sans-serif'); draw(a.company || 'Sin Empresa', 255, 925, '#f8fafc', `bold ${fit(a.company || 'Sin Empresa', 970, 36, 27)}px Arial,sans-serif`); draw('Consultora:', 80, 985, '#94a3b8', '36px Arial,sans-serif'); draw(a.consultant || 'Sin Consultora', 290, 985, '#f8fafc', `bold ${fit(a.consultant || 'Sin Consultora', 935, 36, 27)}px Arial,sans-serif`);
                 const bars = [42,55,36,50,55,36,50,44,58,39,52]; let barX = 1400; context.fillStyle = '#fff'; bars.forEach((height, index) => { const width = index % 3 === 1 ? 8 : 4; context.fillRect(barX, 930 - height, width, height); barX += width + 7; }); draw('SIGA-RED', 1515, 970, '#94a3b8', '24px Arial,sans-serif', 'center');
@@ -4091,7 +4099,7 @@ window.__firebase_config = {
 
             const a = window.appState.affiliates.find(item => item.id === affiliateId);
             if (!a) return;
-            const representation = [a.isDelegate ? 'Delegado/a' : '', a.isInternalCommission ? 'Comisión interna' : '', a.isDirectiveCommission ? 'Comisión directiva' : ''].filter(Boolean).join(' · ');
+            const representation = [a.isDelegate ? 'Delegado/a' : '', a.isInternalCommission ? 'Comisión interna' : '', a.isDirectiveCommission ? 'Comisión directiva' : '', a.isMixedHealthSafetyCommittee ? 'Comité Mixto de Higiene y Seguridad' : ''].filter(Boolean).join(' · ');
 
             printHtmlDocument(`
                 <html>
@@ -4235,8 +4243,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.13";
-        const APP_REVISION = "20260816-01";
+        const APP_VERSION = "1.4.14";
+        const APP_REVISION = "20260816-02";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };

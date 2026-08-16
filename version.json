@@ -1,1 +1,33 @@
-{"version":"1.4.13","displayVersion":"1.4.13","revision":"20260816-01","url":"https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe","urls":["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],"sha256":"1585207596BBA94802FED07D5B97D8C128D1D2EB9312AF697A2D673466A275E9","size":4679475,"packageUrl":"https://siga-85bdd.web.app/SIGA-update-1.4.13.zip","packageUrls":["https://siga-85bdd.web.app/SIGA-update-1.4.13.zip","https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.13.zip"],"packageSha256":"D8E7E4F17A1C3E42F6964BCCDDC2B0C61414C42E0C31A2F1AE507130B33A9204","packageSize":17104679,"notes":"Centraliza en el Administrador los errores sanitizados de PC y móviles. El acceso móvil distingue credenciales, conexión, bloqueo y exceso de intentos, reintenta cortes breves y separa los fallos posteriores al ingreso.","installerUrl":"https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.13-x64.exe","installerSha256":"1E1E2B5704995CEBEBA46256D7ACAB9A5E84BA3719014CB732E72F759A6DAE63","installerSize":15944036,"architectures":{"x64":{"architecture":"x64","url":"https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe","urls":["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe"],"sha256":"1585207596BBA94802FED07D5B97D8C128D1D2EB9312AF697A2D673466A275E9","size":4679475,"packageUrl":"https://siga-85bdd.web.app/SIGA-update-1.4.13-x64.zip","packageUrls":["https://siga-85bdd.web.app/SIGA-update-1.4.13-x64.zip","https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.13-x64.zip"],"packageSha256":"D8E7E4F17A1C3E42F6964BCCDDC2B0C61414C42E0C31A2F1AE507130B33A9204","packageSize":17104679,"installerUrl":"https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.13-x64.exe","installerSha256":"1E1E2B5704995CEBEBA46256D7ACAB9A5E84BA3719014CB732E72F759A6DAE63","installerSize":15944036},"x86":{"architecture":"x86","url":"https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe","urls":["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe"],"sha256":"F679B52B95AEC7A2DFAD61EC9BC0C06B84C2715B16804EDD63529E0A78F019DE","size":4561574,"packageUrl":"https://siga-85bdd.web.app/SIGA-update-1.4.13-x86.zip","packageUrls":["https://siga-85bdd.web.app/SIGA-update-1.4.13-x86.zip","https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.13-x86.zip"],"packageSha256":"2B67E6FDF7265B2E2DE32850DCE1DF65178EB118BA344EDBD24977F04E787F9F","packageSize":15773163,"installerUrl":"https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.13-x86.exe","installerSha256":"9F872FB77F1A00499E68CE5B4036552D3A9FF298E11547157D5626C31C36DE27","installerSize":14890784}}}
+{
+  "version": "1.4.14",
+  "displayVersion": "1.4.14",
+  "revision": "20260816-02",
+  "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
+  "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
+  "sha256": "C3D57C79BD064F402DCDF4B78C7E271BEF56AB06FF92573577767B7DDFBB10C7",
+  "size": 4679475,
+  "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.14.zip",
+  "packageUrls": ["https://siga-85bdd.web.app/SIGA-update-1.4.14.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.14.zip"],
+  "packageSha256": "14A7DF40F9EC9A29249F1D66715456EDF46ED918880220B7F285193DFCBFCE81",
+  "packageSize": 17104808,
+  "notes": "Incorpora el Comité Mixto de Higiene y Seguridad en la ficha del afiliado y lo refleja en la credencial móvil, descargable e impresa.",
+  "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.14-x64.exe",
+  "installerSha256": "271F7B8FBCD733EEAAB5AD15A3CEFA1F7A046F3A1425CB98FC8E7E28EE94087C",
+  "installerSize": 15939491,
+  "architectures": {
+    "x64": {
+      "architecture": "x64", "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe",
+      "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe"], "sha256": "C3D57C79BD064F402DCDF4B78C7E271BEF56AB06FF92573577767B7DDFBB10C7", "size": 4679475,
+      "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.14-x64.zip", "packageUrls": ["https://siga-85bdd.web.app/SIGA-update-1.4.14-x64.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.14-x64.zip"],
+      "packageSha256": "14A7DF40F9EC9A29249F1D66715456EDF46ED918880220B7F285193DFCBFCE81", "packageSize": 17104808,
+      "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.14-x64.exe", "installerSha256": "271F7B8FBCD733EEAAB5AD15A3CEFA1F7A046F3A1425CB98FC8E7E28EE94087C", "installerSize": 15939491
+    },
+    "x86": {
+      "architecture": "x86", "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe",
+      "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe"], "sha256": "F2CC091DDB1E4D909C8A854D1AC283A8C175E06B7C760653E5973B3EC2F605EA", "size": 4561574,
+      "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.14-x86.zip", "packageUrls": ["https://siga-85bdd.web.app/SIGA-update-1.4.14-x86.zip", "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.14-x86.zip"],
+      "packageSha256": "0D64138F57B9C9D12F86BE9985555EAE7DD5129E2496A6BFB8D9E25D2D9DE342", "packageSize": 15774358,
+      "installerUrl": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.14-x86.exe", "installerSha256": "66A374277884328C9F35FED7A3C5C92046D8242615C804E225C107F60C2CFDAD", "installerSize": 14890023
+    }
+  }
+}
