@@ -1,4 +1,5 @@
-const CACHE_NAME = 'siga-v1.4.23-r20260816-11';
+const CACHE_NAME = 'siga-v1.4.24-r20260816-12';
+const NAVIGATION_NETWORK_TIMEOUT_MS = 3500;
 const APP_SHELL = [
   './',
   './index.html',
@@ -36,15 +37,22 @@ self.addEventListener('fetch', event => {
   const sameOrigin = event.request.url.startsWith(self.location.origin);
   if (sameOrigin && event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
+      caches.match(event.request).then(async exactCached => {
+        const cached = exactCached || await caches.match('./') || await caches.match('./index.html');
+        const network = fetch(event.request).then(response => {
           if (response.ok) {
             const copy = response.clone();
             event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)));
           }
           return response;
-        })
-        .catch(() => caches.match(event.request).then(cached => cached || caches.match('./')))
+        }).catch(error => {
+          if (cached) return cached;
+          throw error;
+        });
+        if (!cached) return network;
+        const timeout = new Promise(resolve => setTimeout(() => resolve(cached), NAVIGATION_NETWORK_TIMEOUT_MS));
+        return Promise.race([network, timeout]);
+      })
     );
     return;
   }

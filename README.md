@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.23` — permite que el Operador cree automáticamente el acceso móvil al guardar un afiliado, sin mostrarle la administración de credenciales.
+`1.4.24` — evita la pantalla blanca al abrir el enlace móvil cuando la red demora, usando la copia local tras un tiempo máximo de espera.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
+- 1.4.24 (x86 y x64)
 - 1.4.23 (x86 y x64)
-- 1.4.22 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 
