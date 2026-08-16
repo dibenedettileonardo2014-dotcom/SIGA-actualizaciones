@@ -755,7 +755,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.12</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.13</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -776,7 +776,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.12</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.13</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -838,13 +838,21 @@
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
                     <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.12</span><span id="about-installed-architecture"></span>
+                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.13</span><span id="about-installed-architecture"></span>
                         · Actualización preparada en segundo plano
                     </p>
                     </section>
                 </div>
 
                 <div id="tab-errores" class="tab-content hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-5xl mx-auto">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
+                            <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-tower-broadcast text-amber-500 mr-2"></i>Incidentes de PC y móviles</h4><p class="text-xs text-slate-500 mt-1">Diagnósticos sanitizados de todas las instalaciones. Nunca se guardan contraseñas, tokens ni DNI.</p></div>
+                            <div class="flex gap-2"><select id="diagnostics-filter" onchange="renderDiagnostics()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"><option value="open">Pendientes</option><option value="all">Todos</option><option value="resolved">Resueltos</option></select><button type="button" onclick="clearResolvedDiagnostics()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl">Eliminar resueltos</button></div>
+                        </div>
+                        <div id="diagnostics-empty" class="text-center py-10 text-sm text-slate-500">No hay incidentes registrados.</div>
+                        <div id="diagnostics-list" class="space-y-3"></div>
+                    </div>
                     <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-5xl mx-auto">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
                             <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>Errores y conflictos pendientes</h4><p class="text-xs text-slate-500 mt-1">Cambios guardados en esta PC que necesitan revisión antes de sincronizarse.</p></div>
@@ -1238,7 +1246,7 @@
 
     <script type="module">
         import { initializeApp, getApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDocs, onSnapshot, query, orderBy, limit, runTransaction, serverTimestamp, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         // --- Estado Global de la Aplicación ---
@@ -1246,6 +1254,7 @@
             affiliates: [],
             payments: [],
             notices: [],
+            diagnostics: [],
             currentPage: 1,
             itemsPerPage: 8,
             currentTab: 'dashboard',
@@ -1284,6 +1293,7 @@
         let resolveAffiliateUniquenessReady = () => {};
         let authenticationRequired = false;
         let unsubscribeMaintenance = null;
+        let unsubscribeDiagnostics = null;
         let maintenanceConfigVerified = false;
         const roleAuthEmails = {
             admin: 'administrador@siga.com',
@@ -1292,9 +1302,105 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
+        const DIAGNOSTIC_VERSION = '1.4.13';
+        const DIAGNOSTIC_REVISION = '20260816-01';
+        const DIAGNOSTIC_QUEUE_LIMIT = 50;
+        const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
         const maintenanceAuditCollection = () => collection(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'maintenance_audit');
         const maintenanceCacheKey = () => `siga_verified_maintenance_${window.appState.appId}`;
+
+        function diagnosticQueueKey() { return `siga_diagnostic_queue_${window.appState.appId}`; }
+        function diagnosticDeviceId() {
+            const key = 'siga_diagnostic_device_v1';
+            try {
+                let value = localStorage.getItem(key);
+                if (!value) { value = crypto.randomUUID(); localStorage.setItem(key, value); }
+                return value;
+            } catch { return 'pc-local'; }
+        }
+        function sanitizeDiagnostic(value) {
+            return String(value || 'Sin detalle').replace(/[\r\n\x00-\x1f]+/g, ' ')
+                .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[correo]')
+                .replace(/\b\d{7,9}\b/g, '[dni]')
+                .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[token]')
+                .replace(/AIza[\w-]{20,}/g, '[clave]')
+                .slice(0, 500);
+        }
+        function readDiagnosticQueue() {
+            try { const value = JSON.parse(localStorage.getItem(diagnosticQueueKey()) || '[]'); return Array.isArray(value) ? value.slice(-DIAGNOSTIC_QUEUE_LIMIT) : []; }
+            catch { return []; }
+        }
+        function queueDiagnostic(code, message, severity = 'error', context = '') {
+            const safeCode = sanitizeDiagnostic(code).replace(/[^A-Za-z0-9._/-]/g, '_').slice(0, 100) || 'unknown';
+            const queue = readDiagnosticQueue();
+            const now = Date.now();
+            const duplicate = queue.findLast?.(item => item.code === safeCode && now - new Date(item.occurredAt).getTime() < 300000);
+            if (duplicate) { duplicate.repeatCount = Math.min(999, Number(duplicate.repeatCount || 1) + 1); duplicate.occurredAt = new Date().toISOString(); }
+            else queue.push({ id: crypto.randomUUID(), source: 'pc', code: safeCode, message: sanitizeDiagnostic(message), context: sanitizeDiagnostic(context), severity: ['warning', 'error', 'critical'].includes(severity) ? severity : 'error', appVersion: DIAGNOSTIC_VERSION, revision: DIAGNOSTIC_REVISION, deviceId: diagnosticDeviceId(), occurredAt: new Date().toISOString(), repeatCount: 1, status: 'open' });
+            try { localStorage.setItem(diagnosticQueueKey(), JSON.stringify(queue.slice(-DIAGNOSTIC_QUEUE_LIMIT))); } catch {}
+        }
+        async function flushDiagnosticQueue() {
+            const user = window.appState.auth?.currentUser;
+            if (!window.appState.db || !user) return;
+            const pending = readDiagnosticQueue();
+            for (const item of pending) {
+                try {
+                    await setDoc(doc(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics', item.id), { ...item, reporterUid: user.uid, createdAt: serverTimestamp() });
+                    const remaining = readDiagnosticQueue().filter(candidate => candidate.id !== item.id);
+                    if (remaining.length) localStorage.setItem(diagnosticQueueKey(), JSON.stringify(remaining)); else localStorage.removeItem(diagnosticQueueKey());
+                } catch (error) { originalConsoleError('No se pudo enviar un diagnóstico:', error); break; }
+            }
+        }
+        function reportDiagnostic(code, error, severity = 'error', context = '') {
+            const message = error?.message || error || 'Sin detalle';
+            queueDiagnostic(error?.code || code, message, severity, context || code);
+            void flushDiagnosticQueue();
+        }
+        console.error = (...args) => { originalConsoleError(...args); const error = args.find(value => value instanceof Error || value?.code); reportDiagnostic('pc/console-error', error || args.map(value => typeof value === 'string' ? value : '').join(' '), 'error', args[0]); };
+        window.addEventListener('error', event => reportDiagnostic('pc/unhandled-error', event.error || event.message, 'critical', 'window.error'));
+        window.addEventListener('unhandledrejection', event => reportDiagnostic('pc/unhandled-rejection', event.reason, 'critical', 'promise'));
+
+        function updateDiagnosticsBadge() {
+            const localConflicts = readPendingChanges().filter(change => change.conflict).length;
+            const remoteOpen = window.appState.diagnostics.filter(item => item.status !== 'resolved').length;
+            const total = localConflicts + remoteOpen;
+            const badge = document.getElementById('conflicts-nav-badge');
+            if (!badge) return;
+            badge.textContent = String(total);
+            badge.classList.toggle('hidden', !total);
+            badge.classList.toggle('flex', Boolean(total));
+        }
+        function setupDiagnosticsWatch() {
+            if (unsubscribeDiagnostics) unsubscribeDiagnostics();
+            unsubscribeDiagnostics = null;
+            if (window.appState.currentUserRole !== 'admin' || !window.appState.db) { window.appState.diagnostics = []; updateDiagnosticsBadge(); return; }
+            const diagnosticsQuery = query(collection(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics'), orderBy('occurredAt', 'desc'), limit(100));
+            unsubscribeDiagnostics = onSnapshot(diagnosticsQuery, snapshot => {
+                window.appState.diagnostics = snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+                updateDiagnosticsBadge();
+                if (window.appState.currentTab === 'errores') renderDiagnostics();
+            }, error => { originalConsoleError('No se pudieron consultar los diagnósticos:', error); });
+        }
+        window.renderDiagnostics = function() {
+            const list = document.getElementById('diagnostics-list'), empty = document.getElementById('diagnostics-empty'), filter = document.getElementById('diagnostics-filter')?.value || 'open';
+            if (!list || !empty) return;
+            const items = window.appState.diagnostics.filter(item => filter === 'all' || (filter === 'resolved' ? item.status === 'resolved' : item.status !== 'resolved'));
+            empty.classList.toggle('hidden', items.length > 0); list.replaceChildren();
+            items.forEach(item => {
+                const card = document.createElement('article'), mobile = item.source === 'mobile', resolved = item.status === 'resolved';
+                card.className = `border ${resolved ? 'border-slate-200 bg-slate-50' : 'border-amber-200 bg-amber-50/40'} rounded-xl p-4`;
+                card.innerHTML = `<div class="flex flex-col sm:flex-row gap-3"><div class="flex-1 min-w-0"><div class="flex flex-wrap gap-2 items-center"><span class="source px-2 py-1 rounded text-[10px] font-black"></span><span class="severity px-2 py-1 rounded bg-rose-100 text-rose-700 text-[10px] font-black"></span><strong class="code text-sm text-slate-800 break-all"></strong></div><p class="message text-xs text-slate-700 mt-2 break-words"></p><p class="meta text-[11px] text-slate-500 mt-1"></p></div><div class="flex sm:flex-col gap-2"><button class="resolve flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold"></button><button class="remove flex-1 px-3 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">Eliminar</button></div></div>`;
+                const source = card.querySelector('.source'); source.textContent = mobile ? 'MÓVIL' : 'PC'; source.classList.add(...(mobile ? ['bg-violet-100','text-violet-700'] : ['bg-blue-100','text-blue-700']));
+                card.querySelector('.severity').textContent = String(item.severity || 'error').toUpperCase(); card.querySelector('.code').textContent = item.code || 'unknown'; card.querySelector('.message').textContent = item.message || 'Sin detalle';
+                card.querySelector('.meta').textContent = `${item.appVersion || '—'} · ${new Date(item.occurredAt).toLocaleString('es-AR')} · repeticiones: ${item.repeatCount || 1}`;
+                const resolve = card.querySelector('.resolve'); resolve.textContent = resolved ? 'Reabrir' : 'Resolver'; resolve.onclick = () => setDiagnosticStatus(item.id, resolved ? 'open' : 'resolved');
+                card.querySelector('.remove').onclick = () => removeDiagnostic(item.id); list.append(card);
+            });
+        };
+        window.setDiagnosticStatus = async function(id, status) { try { await updateDoc(doc(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics', id), { status, resolvedAt: serverTimestamp(), resolvedBy: window.appState.auth.currentUser.email }); } catch (error) { reportDiagnostic('pc/diagnostic-status', error); showToast('Diagnósticos', 'No se pudo actualizar el incidente.', 'error'); } };
+        window.removeDiagnostic = async function(id) { try { await deleteDoc(doc(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics', id)); } catch (error) { reportDiagnostic('pc/diagnostic-delete', error); showToast('Diagnósticos', 'No se pudo eliminar el incidente.', 'error'); } };
+        window.clearResolvedDiagnostics = async function() { const resolved = window.appState.diagnostics.filter(item => item.status === 'resolved'); if (!resolved.length) return; const approved = await customConfirm('¿Eliminar incidentes resueltos?', `Se eliminarán ${resolved.length} diagnósticos ya resueltos.`); if (!approved) return; await Promise.all(resolved.map(item => deleteDoc(doc(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics', item.id)))).catch(error => reportDiagnostic('pc/diagnostic-clear', error)); };
 
         function readVerifiedMaintenance() {
             try {
@@ -1460,6 +1566,8 @@ window.__firebase_config = {
                     // La pantalla ya se abrió con la copia local. Estas tareas
                     // continúan en segundo plano para no demorar el inicio.
                     await setupMaintenanceWatch();
+                    void flushDiagnosticQueue();
+                    setupDiagnosticsWatch();
                     if (!(window.appState.maintenance.enabled && authenticatedRole !== 'admin')) {
                         setupRealtimeSync();
                         void flushPendingChanges();
@@ -1659,12 +1767,7 @@ window.__firebase_config = {
             const pending = readPendingChanges();
             const pendingCount = pending.length;
             const conflictCount = pending.filter(change => change.conflict).length;
-            const badge = document.getElementById('conflicts-nav-badge');
-            if (badge) {
-                badge.textContent = String(conflictCount);
-                badge.classList.toggle('hidden', !conflictCount);
-                badge.classList.toggle('flex', Boolean(conflictCount));
-            }
+            updateDiagnosticsBadge();
             if (window.appState.currentTab === 'errores') renderConflictsTab();
             if (!pendingCount) return;
             const status = document.getElementById('cloud-sync-status');
@@ -2449,6 +2552,8 @@ window.__firebase_config = {
                 document.getElementById('cloud-sync-status').className = 'flex items-center gap-1 text-emerald-500 font-semibold';
                 document.getElementById('cloud-sync-status').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Red Conectada';
                 await setupMaintenanceWatch();
+                void flushDiagnosticQueue();
+                setupDiagnosticsWatch();
                 if (!(window.appState.maintenance.enabled && roleSelected !== 'admin')) {
                     setupRealtimeSync();
                     void flushPendingChanges();
@@ -4130,8 +4235,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.12";
-        const APP_REVISION = "20260815-07";
+        const APP_VERSION = "1.4.13";
+        const APP_REVISION = "20260816-01";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4480,6 +4585,7 @@ window.__firebase_config = {
                 renderSectorChart();
             } else if (tabId === 'errores') {
                 renderConflictsTab();
+                renderDiagnostics();
             }
             if (tabId === 'comunicados') subscribeNotices();
             if (tabId === 'pagos' && typeof window.subscribePaymentsRealtime === 'function') {

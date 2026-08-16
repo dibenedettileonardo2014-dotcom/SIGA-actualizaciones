@@ -100,6 +100,37 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/artifacts/$(appId)/public/data/afiliados/$(request.resource.data.affiliateId)).data.dni == request.resource.data.dni;
     }
 
+    function validDiagnostic() {
+      return request.resource.data.keys().hasAll(['id', 'source', 'code', 'message', 'context', 'severity', 'appVersion', 'revision', 'deviceId', 'occurredAt', 'repeatCount', 'status', 'reporterUid', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['id', 'source', 'code', 'message', 'context', 'severity', 'appVersion', 'revision', 'deviceId', 'occurredAt', 'repeatCount', 'status', 'reporterUid', 'createdAt'])
+        && request.resource.data.id is string
+        && request.resource.data.id.size() >= 16
+        && request.resource.data.id.size() <= 80
+        && request.resource.data.source in ['pc', 'mobile']
+        && request.resource.data.code is string
+        && request.resource.data.code.size() > 0
+        && request.resource.data.code.size() <= 100
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 500
+        && request.resource.data.context is string
+        && request.resource.data.context.size() <= 500
+        && request.resource.data.severity in ['warning', 'error', 'critical']
+        && request.resource.data.appVersion is string
+        && request.resource.data.appVersion.size() <= 20
+        && request.resource.data.revision is string
+        && request.resource.data.revision.size() <= 30
+        && request.resource.data.deviceId is string
+        && request.resource.data.deviceId.size() <= 80
+        && request.resource.data.occurredAt is string
+        && request.resource.data.occurredAt.size() <= 40
+        && request.resource.data.repeatCount is int
+        && request.resource.data.repeatCount > 0
+        && request.resource.data.repeatCount <= 999
+        && request.resource.data.status == 'open'
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.createdAt is timestamp;
+    }
+
     // Solo las cuentas administrativas autorizadas pueden acceder al padrón.
     // Las sesiones anónimas y las cuentas móviles quedan excluidas.
     match /artifacts/{appId}/public/data/afiliados/{affiliateId} {
@@ -182,6 +213,14 @@ service cloud.firestore {
         && request.resource.data.readAt is string
         && exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/comunicados/$(noticeId));
       allow delete: if false;
+    }
+
+    match /artifacts/{appId}/diagnostics/{eventId} {
+      allow read: if isAdmin();
+      allow create: if (isStaff() || isEnabledAffiliate(appId))
+        && request.resource.data.id == eventId
+        && validDiagnostic();
+      allow update, delete: if isAdmin();
     }
 
     match /artifacts/{appId}/public/config/affiliate_sequence/state {

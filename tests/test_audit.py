@@ -101,7 +101,7 @@ class LauncherTests(unittest.TestCase):
         response = io.BytesIO(payload)
         response.status = 200
         manifest = {
-            "version": "1.4.12", "displayVersion": "1.4.12", "revision": desktop_launcher.APP_REVISION,
+            "version": "1.4.13", "displayVersion": "1.4.13", "revision": desktop_launcher.APP_REVISION,
             "architecture": desktop_launcher.APP_ARCH,
             "url": "https://example.test/SIGA.exe", "urls": ["https://example.test/SIGA.exe"],
             "sha256": hashlib.sha256(payload).hexdigest(), "size": len(payload),
@@ -462,6 +462,28 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("function waitForPendingChange(change", desktop)
         self.assertNotIn("siga_mobile_credential_repaired_35463065", desktop)
 
+    def test_cross_device_diagnostics_are_private_sanitized_and_admin_only(self):
+        desktop = (ROOT / "index.html").read_text(encoding="utf-8")
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        rules = (ROOT / "firestore.rules").read_text(encoding="utf-8")
+        for marker in ("flushDiagnosticQueue", "sanitizeDiagnostic", "reporterUid", "DIAGNOSTIC_QUEUE_LIMIT"):
+            self.assertIn(marker, desktop)
+            self.assertIn(marker, mobile)
+        for marker in ("setupDiagnosticsWatch", "renderDiagnostics", "clearResolvedDiagnostics"):
+            self.assertIn(marker, desktop)
+        for secret_marker in ("[correo]", "[dni]", "[token]", "[clave]"):
+            self.assertIn(secret_marker, desktop)
+            self.assertIn(secret_marker, mobile)
+        self.assertIn("match /artifacts/{appId}/diagnostics/{eventId}", rules)
+        self.assertIn("allow read: if isAdmin()", rules)
+        self.assertIn("allow create: if (isStaff() || isEnabledAffiliate(appId))", rules)
+        self.assertIn("validDiagnostic()", rules)
+
+    def test_mobile_login_distinguishes_network_and_credentials(self):
+        mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
+        for marker in ("authenticateMobile", "loginErrorMessage", "auth/network-request-failed", "auth/too-many-requests", "auth/user-disabled", "mobile/post-login"):
+            self.assertIn(marker, mobile)
+
     def test_about_reads_the_version_from_the_running_executable(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
@@ -500,7 +522,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.12")
+        self.assertEqual(manifest["displayVersion"], "1.4.13")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

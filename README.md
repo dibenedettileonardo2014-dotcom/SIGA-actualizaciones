@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.12` — actualizaciones verificadas en segundo plano y acceso móvil simplificado.
+`1.4.13` — diagnósticos centralizados de PC y móviles, y acceso móvil con errores precisos y reintento de red.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,7 +28,7 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.4.11 (x86 y x64)
+- 1.4.13 (x86 y x64)
 - 1.4.12 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
