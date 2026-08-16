@@ -1,5 +1,5 @@
 #define MyAppName "SIGA"
-#define MyAppVersion "1.4.20"
+#define MyAppVersion "1.4.21"
 #define MyAppPublisher "LGDB"
 #define MyAppExeName "SIGA.exe"
 #ifndef MyAppArch
@@ -52,8 +52,8 @@ Type: files; Name: "{app}\_internal\assets\siga-app-icon.ico"
 Type: files; Name: "{app}\_internal\assets\siga-app-icon.png"
 
 [Icons]
-Name: "{userprograms}\SIGA"; Filename: "{sys}\explorer.exe"; Parameters: """{app}\{#MyAppExeName}"""; WorkingDir: "{app}"; IconFilename: "{app}\siga-app-icon.ico"
-Name: "{userdesktop}\SIGA"; Filename: "{sys}\explorer.exe"; Parameters: """{app}\{#MyAppExeName}"""; WorkingDir: "{app}"; IconFilename: "{app}\siga-app-icon.ico"
+Name: "{userprograms}\SIGA"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\siga-app-icon.ico"
+Name: "{userdesktop}\SIGA"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\siga-app-icon.ico"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Abrir SIGA"; Flags: nowait postinstall skipifsilent

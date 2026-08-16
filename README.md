@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.20` — edad calculada en el padrón, acceso móvil directo al convenio y actualización de escritorio reparada.
+`1.4.21` — accesos directos de Windows vinculados únicamente al ejecutable SIGA, sin intermediarios.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,9 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
+- 1.4.21 (x86 y x64)
 - 1.4.20 (x86 y x64)
-- 1.4.19 (x86 y x64)
-- 1.4.18 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 

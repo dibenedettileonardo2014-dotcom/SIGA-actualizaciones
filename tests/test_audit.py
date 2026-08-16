@@ -90,8 +90,11 @@ class LauncherTests(unittest.TestCase):
         installer = (ROOT / "siga-installer.iss").read_text(encoding="utf-8")
         self.assertNotIn('Name: "{userdesktop}\\SIGA.lnk"', installer.split("[InstallDelete]", 1)[1].split("[Icons]", 1)[0])
         self.assertNotIn('Name: "{commondesktop}\\SIGA.lnk"', installer)
+        self.assertNotIn('Filename: "{sys}\\explorer.exe"', installer)
+        self.assertIn('Filename: "{app}\\{#MyAppExeName}"', installer)
         self.assertIn("CreateShortcut", launcher)
         self.assertIn("SpecialFolders.Item(\\'Desktop\\')", launcher)
+        self.assertIn("$s.Arguments=\\'\\'", launcher)
 
     def test_same_visible_version_is_repaired_by_hash(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -586,7 +589,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.20")
+        self.assertEqual(manifest["displayVersion"], "1.4.21")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

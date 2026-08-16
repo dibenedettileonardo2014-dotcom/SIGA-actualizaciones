@@ -26,8 +26,8 @@ from urllib.parse import urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.20"
-APP_REVISION = "20260816-08"
+APP_VERSION = "1.4.21"
+APP_REVISION = "20260816-09"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -370,7 +370,7 @@ def apply_prepared_update() -> bool:
             f'powershell -NoProfile -ExecutionPolicy Bypass -Command '
             f'"$w=New-Object -ComObject WScript.Shell; $d=$w.SpecialFolders.Item(\'Desktop\'); '
             f'$s=$w.CreateShortcut((Join-Path $d \'SIGA.lnk\')); $s.TargetPath=\'{target}\'; '
-            f'$s.WorkingDirectory=\'{target.parent}\'; '
+            f'$s.Arguments=\'\'; $s.WorkingDirectory=\'{target.parent}\'; '
             f'$s.IconLocation=\'{target.parent / "siga-app-icon.ico"}\'; $s.Save()"\n'
         )
         if prepared["kind"] == "installer":

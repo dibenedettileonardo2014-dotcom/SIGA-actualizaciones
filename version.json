@@ -1,28 +1,28 @@
 {
-    "version":  "1.4.20",
-    "displayVersion":  "1.4.20",
-    "revision":  "20260816-08",
+    "version":  "1.4.21",
+    "displayVersion":  "1.4.21",
+    "revision":  "20260816-09",
     "url":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
     "urls":  [
                  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
              ],
-    "sha256":  "5D4A7FED822EB97E57A8469649CCDD51B14D16D33A825C96F96EE2BCFA604F36",
-    "size":  4680359,
-    "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.20.zip",
+    "sha256":  "DBDC9A24A5DC268837BC6CB3C4278A23C042988529AD3B8F2CFBABB596852A9B",
+    "size":  4680377,
+    "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.21.zip",
     "packageUrls":  [
-                        "https://siga-85bdd.web.app/SIGA-update-1.4.20.zip",
-                        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.20.zip"
+                        "https://siga-85bdd.web.app/SIGA-update-1.4.21.zip",
+                        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.21.zip"
                     ],
-    "packageSha256":  "2C6CEF531DA799679ADDE1E293C0A9F7114405AF5926AE5DB0A48D82C9CD2D89",
-    "packageSize":  19131886,
-    "notes":  "Actualización de escritorio reparada; conserva y recupera automáticamente el acceso directo.",
-    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.20-x64.exe",
+    "packageSha256":  "CCBBEED797BEE72CF97E73A63FDF225EAB99823BD363815ABA4095B2B313FDD0",
+    "packageSize":  19132373,
+    "notes":  "Accesos directos vinculados únicamente a SIGA.exe, sin explorer.exe ni argumentos heredados.",
+    "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.21-x64.exe",
     "installerUrls":  [
-                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.20-x64.exe",
-                          "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.20-x64.exe"
+                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.21-x64.exe",
+                          "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.21-x64.exe"
                       ],
-    "installerSha256":  "F0F77776BBC358EA6CE1CAC3FD11E1B3B3C03F668435D471F636555490DE51D0",
-    "installerSize":  17501045,
+    "installerSha256":  "D259233BFE6D18A8F77AC6C237D1076B434269A4018F6E93F77511D29CFF3F15",
+    "installerSize":  17505637,
     "architectures":  {
                           "x64":  {
                                       "architecture":  "x64",
@@ -30,22 +30,22 @@
                                       "urls":  [
                                                    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe"
                                                ],
-                                      "sha256":  "5D4A7FED822EB97E57A8469649CCDD51B14D16D33A825C96F96EE2BCFA604F36",
-                                      "size":  4680359,
-                                      "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.20-x64.zip",
+                                      "sha256":  "DBDC9A24A5DC268837BC6CB3C4278A23C042988529AD3B8F2CFBABB596852A9B",
+                                      "size":  4680377,
+                                      "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.21-x64.zip",
                                       "packageUrls":  [
-                                                          "https://siga-85bdd.web.app/SIGA-update-1.4.20-x64.zip",
-                                                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.20-x64.zip"
+                                                          "https://siga-85bdd.web.app/SIGA-update-1.4.21-x64.zip",
+                                                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.21-x64.zip"
                                                       ],
-                                      "packageSha256":  "2C6CEF531DA799679ADDE1E293C0A9F7114405AF5926AE5DB0A48D82C9CD2D89",
-                                      "packageSize":  19131886,
-                                      "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.20-x64.exe",
+                                      "packageSha256":  "CCBBEED797BEE72CF97E73A63FDF225EAB99823BD363815ABA4095B2B313FDD0",
+                                      "packageSize":  19132373,
+                                      "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.21-x64.exe",
                                       "installerUrls":  [
-                                                            "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.20-x64.exe",
-                                                            "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.20-x64.exe"
+                                                            "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.21-x64.exe",
+                                                            "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.21-x64.exe"
                                                         ],
-                                      "installerSha256":  "F0F77776BBC358EA6CE1CAC3FD11E1B3B3C03F668435D471F636555490DE51D0",
-                                      "installerSize":  17501045
+                                      "installerSha256":  "D259233BFE6D18A8F77AC6C237D1076B434269A4018F6E93F77511D29CFF3F15",
+                                      "installerSize":  17505637
                                   },
                           "x86":  {
                                       "architecture":  "x86",
@@ -53,22 +53,22 @@
                                       "urls":  [
                                                    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe"
                                                ],
-                                      "sha256":  "8DBBE947DCB678437A44A6811F088C7D2ABDBFB864CD4C5A7D27DA5BAFEC483F",
-                                      "size":  4562458,
-                                      "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.20-x86.zip",
+                                      "sha256":  "5DF9B5ECEC6EC04037E90CA850F8D772D3C6886502EFBA9B31371FDFEDD7179C",
+                                      "size":  4562476,
+                                      "packageUrl":  "https://siga-85bdd.web.app/SIGA-update-1.4.21-x86.zip",
                                       "packageUrls":  [
-                                                          "https://siga-85bdd.web.app/SIGA-update-1.4.20-x86.zip",
-                                                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.20-x86.zip"
+                                                          "https://siga-85bdd.web.app/SIGA-update-1.4.21-x86.zip",
+                                                          "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.21-x86.zip"
                                                       ],
-                                      "packageSha256":  "CBFE158B5F38C5E77EB75521634756928338E0058C194773BED2F86C904D2C0C",
-                                      "packageSize":  17799214,
-                                      "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.20-x86.exe",
+                                      "packageSha256":  "82D83F5503A98D1D074C79337D9CD2547744C0221C06E323631DC83CD729BE01",
+                                      "packageSize":  17800146,
+                                      "installerUrl":  "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.21-x86.exe",
                                       "installerUrls":  [
-                                                            "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.20-x86.exe",
-                                                            "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.20-x86.exe"
+                                                            "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/installer/SIGA-Setup-1.4.21-x86.exe",
+                                                            "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/raw/refs/heads/main/installer/SIGA-Setup-1.4.21-x86.exe"
                                                         ],
-                                      "installerSha256":  "74A516E99D09EFCCD30399F79BFA3857AAC742CA15AE42548CA8AC28EABE3EC5",
-                                      "installerSize":  16449510
+                                      "installerSha256":  "AB55F1378F9F94C9D50ED485DFCA0FB6E13D6CDC395C0C55E47AAAB2962B40A7",
+                                      "installerSize":  16448178
                                   }
                       }
 }
