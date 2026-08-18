@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mi SIGA">
   <link rel="manifest" href="afiliado-manifest.json">
-  <link rel="icon" href="assets/mi-siga-icon-192.png" sizes="192x192">
-  <link rel="apple-touch-icon" href="assets/mi-siga-icon-180.png">
+  <link rel="icon" href="assets/mi-siga-icon-192-v1430.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="assets/mi-siga-icon-180-v1430.png">
   <title>Mi SIGA</title>
   <style>
     :root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#e2e8f0;background:#071510;font-synthesis:none}
@@ -31,7 +31,7 @@
 <body>
   <main class="shell">
     <div id="update-notice" class="update-notice hidden" role="status">Nueva versión instalada. Actualizando Mi SIGA…</div>
-    <header class="brand"><img src="assets/mi-siga-icon-192.png" alt="Mi SIGA"><div><b>Mi SIGA</b><span>Portal del afiliado</span></div></header>
+    <header class="brand"><img src="assets/mi-siga-icon-192-v1430.png" alt="Mi SIGA"><div><b>Mi SIGA</b><span>Portal del afiliado</span></div></header>
 
     <section id="login-view" class="panel">
       <h1>Ingresá a tu cuenta</h1>
@@ -47,7 +47,7 @@
         <button id="install-button" class="secondary" type="button">Instalar Mi SIGA en este celular</button>
         <p id="install-help" class="muted" style="margin:0;text-align:center"></p>
       </div>
-      <p class="app-version">Versión 1.4.29</p>
+      <p class="app-version">Versión 1.4.30</p>
     </section>
 
     <div id="app-view" class="hidden">
@@ -102,7 +102,7 @@
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.',MAINTENANCE_CACHE_KEY=`siga_mobile_verified_maintenance_${networkId}`;
-    const APP_VERSION='1.4.29',APP_REVISION='20260818-05',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
+    const APP_VERSION='1.4.30',APP_REVISION='20260818-06',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
     const requestedDni=new URLSearchParams(location.search).get('dni')?.replace(/\D/g,'')||'';
     if(/^\d{7,9}$/.test(requestedDni))$('dni').value=requestedDni;
 

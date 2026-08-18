@@ -10,6 +10,7 @@ a = Analysis(
         ('assets/logo-sindicato.png', 'assets'),
         ('assets/logo-spiqyp-rosario.png', 'assets'),
         ('assets/siga-desktop-icon.png', 'assets'),
+        ('assets/siga-desktop-icon-128.png', 'assets'),
         ('assets/siga-desktop-icon.ico', 'assets'),
         ('assets/mantenimiento.png', 'assets'),
         ('assets/convenio-77-89.pdf', 'assets'),

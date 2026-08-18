@@ -1,4 +1,4 @@
-const CACHE_NAME = 'siga-v1.4.29-r20260818-05';
+const CACHE_NAME = 'siga-v1.4.30-r20260818-06';
 const NAVIGATION_NETWORK_TIMEOUT_MS = 3500;
 const APP_SHELL = [
   './',
@@ -8,8 +8,8 @@ const APP_SHELL = [
   './afiliado-manifest.json',
   './assets/siga-desktop-icon-128.png',
   './assets/siga-desktop-icon.png',
-  './assets/mi-siga-icon-192.png',
-  './assets/mi-siga-icon-512.png',
+  './assets/mi-siga-icon-192-v1430.png',
+  './assets/mi-siga-icon-512-v1430.png',
   './assets/logo-spiqyp-rosario.png',
   './assets/mantenimiento.png',
   './assets/vendor/firebase.js',

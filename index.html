@@ -73,6 +73,7 @@
         <p class="text-xs text-emerald-300 font-bold uppercase">Actualización lista</p>
         <p class="text-sm mt-1">SIGA descargó y verificó la nueva versión.</p>
         <button id="restart-update-button" class="mt-3 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl">Reiniciar y actualizar</button>
+        <button id="postpone-update-button" class="mt-2 w-full py-2 text-slate-200 hover:text-white font-semibold text-sm">Posponer</button>
     </aside>
 
     <!-- Elemento para notificaciones flotantes -->
@@ -89,7 +90,7 @@
             <div class="p-5 flex items-center justify-between border-b border-slate-800">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-white rounded-xl overflow-hidden relative shadow-lg shadow-emerald-500/20" title="Sindicato Químico y Petroquímico Rosario">
-                        <img src="assets/logo-sindicato.png" alt="Sindicato Químico y Petroquímico Rosario" class="absolute w-32 max-w-none -left-1 -top-9">
+                        <img src="assets/siga-desktop-icon-128.png" alt="SIGA — Sistema Integral Gestión de Afiliado" class="h-full w-full object-contain p-1.5">
                     </div>
                     <div>
                         <h1 class="font-bold text-xl leading-none tracking-wider">SIGA</h1>
@@ -750,7 +751,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.29</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.30</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -771,7 +772,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.29</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.30</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -833,7 +834,7 @@
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
                     <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.29</span><span id="about-installed-architecture"></span>
+                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.30</span><span id="about-installed-architecture"></span>
                         · Actualización preparada en segundo plano
                     </p>
                     </section>
@@ -1303,8 +1304,8 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.29';
-        const DIAGNOSTIC_REVISION = '20260818-05';
+        const DIAGNOSTIC_VERSION = '1.4.30';
+        const DIAGNOSTIC_REVISION = '20260818-06';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -3851,7 +3852,7 @@ window.__firebase_config = {
                 if (!result?.ok) showToast('Mi SIGA', result?.error || 'No se pudo abrir el navegador.', 'error');
                 return;
             }
-            window.open(`https://siga-85bdd.web.app/${dni ? `?dni=${encodeURIComponent(dni)}` : ''}`, '_blank', 'noopener');
+                window.open(`https://siga-85bdd.web.app/afiliado.html${dni ? `?dni=${encodeURIComponent(dni)}` : ''}`, '_blank', 'noopener');
         };
 
         async function provisionMobileAccess(affiliate, password) {
@@ -3988,7 +3989,7 @@ window.__firebase_config = {
             return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Padrón de Afiliados</title><style>
                 @page{size:A4 portrait;margin:18mm 10mm 15mm}@media print{body{padding:0}.report{box-shadow:none}.page-number:after{content:counter(page)}}
                 *{box-sizing:border-box}body{margin:0;background:#e2e8f0;color:#1e293b;font-family:Arial,sans-serif;padding:18px}.report{max-width:190mm;margin:auto;background:white;padding:10mm;box-shadow:0 4px 20px #0002}.header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #059669;padding-bottom:9px}.header img{width:46px;height:46px;object-fit:contain}.brand{font-size:12px;font-weight:bold;color:#047857}.header h1{font-size:22px;margin:2px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;font-size:10px;margin:10px 0}.meta b{color:#334155}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}thead{display:table-header-group}tr{break-inside:avoid}th,td{border:1px solid #94a3b8;padding:5px 4px;vertical-align:top;overflow-wrap:anywhere}th{background:#d1fae5;color:#064e3b;text-align:left}th:nth-child(1){width:14%}th:nth-child(2){width:29%}th:nth-child(3){width:16%}th:nth-child(4){width:25%}th:nth-child(5){width:16%}.footer{position:fixed;bottom:3mm;right:10mm;font-size:8px;color:#64748b}.empty{text-align:center;padding:30px;color:#64748b}
-            </style></head><body><main class="report"><header class="header"><img src="assets/logo-sindicato.png" alt="Logo SIGA"><div><div class="brand">SIGA · Sistema Integral de Gestión de Afiliados</div><h1>Padrón de Afiliados</h1></div></header><section class="meta"><div><b>Empresa:</b> ${escapePrintHtml(selectedCompany || 'Todas las empresas')}</div><div><b>Generado:</b> ${escapePrintHtml(generatedAt)}</div><div><b>Cantidad total:</b> ${affiliates.length}</div><div><b>Búsqueda:</b> ${escapePrintHtml(document.getElementById('filter-search').value.trim() || 'Sin búsqueda general')}</div></section><table><thead><tr><th>N.º de afiliado</th><th>Apellido y nombre</th><th>DNI</th><th>Empresa</th><th>Sector</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">No hay afiliados para los filtros seleccionados.</td></tr>'}</tbody></table><footer class="footer">Página <span class="page-number"></span></footer></main></body></html>`;
+            </style></head><body><main class="report"><header class="header"><img src="assets/siga-desktop-icon-128.png" alt="Logo SIGA"><div><div class="brand">SIGA · Sistema Integral de Gestión de Afiliados</div><h1>Padrón de Afiliados</h1></div></header><section class="meta"><div><b>Empresa:</b> ${escapePrintHtml(selectedCompany || 'Todas las empresas')}</div><div><b>Generado:</b> ${escapePrintHtml(generatedAt)}</div><div><b>Cantidad total:</b> ${affiliates.length}</div><div><b>Búsqueda:</b> ${escapePrintHtml(document.getElementById('filter-search').value.trim() || 'Sin búsqueda general')}</div></section><table><thead><tr><th>N.º de afiliado</th><th>Apellido y nombre</th><th>DNI</th><th>Empresa</th><th>Sector</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">No hay afiliados para los filtros seleccionados.</td></tr>'}</tbody></table><footer class="footer">Página <span class="page-number"></span></footer></main></body></html>`;
         }
 
         window.previewAffiliateRegister = function() {
@@ -4319,8 +4320,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.29";
-        const APP_REVISION = "20260818-05";
+        const APP_VERSION = "1.4.30";
+        const APP_REVISION = "20260818-06";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4459,6 +4460,11 @@ window.__firebase_config = {
                 button.textContent = 'Reiniciar y actualizar';
                 showToast('Actualización', error.message, 'error');
             }
+        });
+
+        document.getElementById('postpone-update-button').addEventListener('click', () => {
+            document.getElementById('update-ready-banner').classList.add('hidden');
+            sessionStorage.setItem('siga_update_postponed', '1');
         });
 
         // Verifica y prepara en segundo plano; nunca interrumpe el trabajo.
