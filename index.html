@@ -1354,6 +1354,20 @@
         window.addEventListener('error', event => reportDiagnostic('pc/unhandled-error', event.error || event.message, 'critical', 'window.error'));
         window.addEventListener('unhandledrejection', event => reportDiagnostic('pc/unhandled-rejection', event.reason, 'critical', 'promise'));
 
+        // El texto original se conserva en Firestore para diagnóstico, pero la
+        // consola administrativa muestra una explicación accionable en español.
+        function diagnosticDescription(item) {
+            const code = String(item?.code || '').toLowerCase();
+            if (code.includes('permission-denied')) return 'No hay permisos suficientes para completar la operación.';
+            if (code.includes('unauthenticated') || code.startsWith('auth/')) return 'La sesión no pudo validarse. Volvé a iniciar sesión e intentá nuevamente.';
+            if (code.includes('network') || code.includes('unavailable') || code.includes('timeout')) return 'No se pudo conectar con el servicio. Se reintentará automáticamente al recuperar la conexión.';
+            if (code.includes('conflict')) return 'Se detectó un cambio realizado desde otro equipo que requiere revisión.';
+            if (code.includes('duplicate') || code.includes('already-exists')) return 'El dato ya existe y no se guardó una copia duplicada.';
+            if (code.includes('storage') || code.includes('quota')) return 'El almacenamiento local no tiene espacio suficiente para completar la operación.';
+            if (code.includes('cancel') || code.includes('notallowed')) return 'La acción fue cancelada o no recibió autorización del usuario.';
+            return 'Se produjo un inconveniente técnico. Revisá el código de diagnóstico para obtener más información.';
+        }
+
         function updateDiagnosticsBadge() {
             const localConflicts = readPendingChanges().filter(change => change.conflict).length;
             const remoteOpen = window.appState.diagnostics.filter(item => item.status !== 'resolved').length;
@@ -1385,7 +1399,7 @@
                 card.className = `border ${resolved ? 'border-slate-200 bg-slate-50' : 'border-amber-200 bg-amber-50/40'} rounded-xl p-4`;
                 card.innerHTML = `<div class="flex flex-col sm:flex-row gap-3"><div class="flex-1 min-w-0"><div class="flex flex-wrap gap-2 items-center"><span class="source px-2 py-1 rounded text-[10px] font-black"></span><span class="severity px-2 py-1 rounded bg-rose-100 text-rose-700 text-[10px] font-black"></span><strong class="code text-sm text-slate-800 break-all"></strong></div><p class="message text-xs text-slate-700 mt-2 break-words"></p><p class="meta text-[11px] text-slate-500 mt-1"></p></div><div class="flex sm:flex-col gap-2"><button class="resolve flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold"></button><button class="remove flex-1 px-3 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">Eliminar</button></div></div>`;
                 const source = card.querySelector('.source'); source.textContent = mobile ? 'MÓVIL' : 'PC'; source.classList.add(...(mobile ? ['bg-violet-100','text-violet-700'] : ['bg-blue-100','text-blue-700']));
-                card.querySelector('.severity').textContent = String(item.severity || 'error').toUpperCase(); card.querySelector('.code').textContent = item.code || 'unknown'; card.querySelector('.message').textContent = item.message || 'Sin detalle';
+                card.querySelector('.severity').textContent = String(item.severity || 'error').toUpperCase(); card.querySelector('.code').textContent = item.code || 'unknown'; card.querySelector('.message').textContent = diagnosticDescription(item);
                 card.querySelector('.meta').textContent = `${item.appVersion || '—'} · ${new Date(item.occurredAt).toLocaleString('es-AR')} · repeticiones: ${item.repeatCount || 1}`;
                 const resolve = card.querySelector('.resolve'); resolve.textContent = resolved ? 'Reabrir' : 'Resolver'; resolve.onclick = () => setDiagnosticStatus(item.id, resolved ? 'open' : 'resolved');
                 card.querySelector('.remove').onclick = () => removeDiagnostic(item.id); list.append(card);
@@ -4676,7 +4690,9 @@ window.__firebase_config = {
             recoveringConnectivity = true;
             try {
                 if (!window.appState.firebaseEnabled) await setupFirebase();
-                else setupRealtimeSync();
+                // Firestore recupera listeners activos por sí mismo. Evitar
+                // recrearlos reduce lecturas, parpadeos y trabajo al reconectar.
+                else if (!unsubscribeAffiliates) setupRealtimeSync();
                 if (window.appState.firebaseEnabled) await flushPendingChanges();
                 await checkUpdateAfterConnectivityRecovery();
             } finally {

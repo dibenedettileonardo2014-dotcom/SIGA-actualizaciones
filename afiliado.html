@@ -279,12 +279,15 @@
       $('login-message').textContent=message; signOut(auth).catch(()=>{});
     }
     const NOTICE_PAGE_SIZE=20;
-    let notices=[],readNoticeIds=new Set(),visibleNotices=NOTICE_PAGE_SIZE,stopNoticesWatch=null,stopReadsWatch=null,watchedNoticesUid=null,noticeThumbnailCache=new Map();
+    let notices=[],readNoticeIds=new Set(),visibleNotices=NOTICE_PAGE_SIZE,stopNoticesWatch=null,stopReadsWatch=null,watchedNoticesUid=null,noticeThumbnailCache=new Map(),noticesVerified=false,noticeReadsVerified=false;
     function clearNoticeThumbnailCache(){noticeThumbnailCache.forEach(entry=>{entry.disposed=true;if(entry.url)URL.revokeObjectURL(entry.url)});noticeThumbnailCache.clear()}
-    function stopNoticeWatches(){stopNoticesWatch?.();stopReadsWatch?.();stopNoticesWatch=null;stopReadsWatch=null;watchedNoticesUid=null;clearNoticeThumbnailCache()}
+    function stopNoticeWatches(){stopNoticesWatch?.();stopReadsWatch?.();stopNoticesWatch=null;stopReadsWatch=null;watchedNoticesUid=null;noticesVerified=false;noticeReadsVerified=false;clearNoticeThumbnailCache()}
     function noticeDate(value){const date=new Date(value||0);return Number.isNaN(date.getTime())?'—':date.toLocaleDateString('es-AR')}
     function yieldForPrioritySignal(){if(globalThis.scheduler?.yield)return globalThis.scheduler.yield();return new Promise(resolve=>{const channel=new MessageChannel();channel.port1.onmessage=()=>{channel.port1.close();channel.port2.close();resolve()};channel.port2.postMessage(null)})}
-    function updateNoticeBadge(){const unread=notices.filter(item=>!readNoticeIds.has(item.id)).length,badge=$('notices-badge');badge.textContent=String(unread);badge.classList.toggle('hidden',unread===0)}
+    // Nunca avisar novedades hasta haber confirmado en el servidor tanto los
+    // comunicados como las lecturas: los listeners pueden llegar en distinto orden.
+    function noticesReadStateVerified(){return noticesVerified&&noticeReadsVerified}
+    function updateNoticeBadge(){const badge=$('notices-badge');if(!noticesReadStateVerified()){badge.textContent='0';badge.classList.add('hidden');return}const unread=notices.filter(item=>!readNoticeIds.has(item.id)).length;badge.textContent=String(unread);badge.classList.toggle('hidden',unread===0)}
     async function loadNoticeFile(noticeId,kind,mimeType){
       const requestedEpoch=maintenanceEpoch;
       const snapshot=await getDocs(query(collection(db,'artifacts',networkId,'public','data','comunicado_files'),where('noticeId','==',noticeId),where('kind','==',kind)));
@@ -315,16 +318,16 @@
       backdrop.append(dialog);document.body.append(backdrop);const close=()=>backdrop.remove();dialog.querySelector('.notice-close').onclick=close;backdrop.onclick=event=>{if(event.target===backdrop)close()};
     }
     function renderNotices(){
-      const list=$('notices-list'),status=$('notices-status');list.replaceChildren();const sorted=[...notices].sort((a,b)=>(Number(b.important)-Number(a.important))||(new Date(b.publishedAt)-new Date(a.publishedAt)));status.textContent=sorted.length?'Publicaciones recientes del sindicato.':'No hay comunicados publicados.';
-       sorted.slice(0,visibleNotices).forEach(item=>{const card=document.createElement('article');const unread=!readNoticeIds.has(item.id);card.className=`notice-card${unread?' unread':''}${item.important?' important':''}`;card.tabIndex=0;const summary=(item.text||'').slice(0,150);card.innerHTML=`<div class="notice-meta"><span>${noticeDate(item.publishedAt)}</span>${unread?'<span class="notice-label">NUEVO</span>':''}${item.important?'<span class="notice-label important">IMPORTANTE</span>':''}${item.hasPdf?'<span title="Incluye PDF">📄 PDF</span>':''}</div><h3></h3><p></p>`;card.querySelector('h3').textContent=item.title;card.querySelector('p').textContent=summary+(item.text?.length>150?'…':'');if(item.hasImage){noticeThumbnailUrl(item).then(url=>{if(!card.isConnected)return;const image=document.createElement('img');image.className='notice-thumb';image.loading='lazy';image.alt='';image.src=url;card.append(image)}).catch(()=>{})}card.onclick=()=>openNotice(item);card.onkeydown=event=>{if(event.key==='Enter')openNotice(item)};list.append(card)});
+      const list=$('notices-list'),status=$('notices-status'),readStateReady=noticesReadStateVerified();list.replaceChildren();const sorted=[...notices].sort((a,b)=>(Number(b.important)-Number(a.important))||(new Date(b.publishedAt)-new Date(a.publishedAt)));status.textContent=!readStateReady?'Verificando comunicados…':(sorted.length?'Publicaciones recientes del sindicato.':'No hay comunicados publicados.');
+       sorted.slice(0,visibleNotices).forEach(item=>{const card=document.createElement('article');const unread=readStateReady&&!readNoticeIds.has(item.id);card.className=`notice-card${unread?' unread':''}${item.important?' important':''}`;card.tabIndex=0;const summary=(item.text||'').slice(0,150);card.innerHTML=`<div class="notice-meta"><span>${noticeDate(item.publishedAt)}</span>${unread?'<span class="notice-label">NUEVO</span>':''}${item.important?'<span class="notice-label important">IMPORTANTE</span>':''}${item.hasPdf?'<span title="Incluye PDF">📄 PDF</span>':''}</div><h3></h3><p></p>`;card.querySelector('h3').textContent=item.title;card.querySelector('p').textContent=summary+(item.text?.length>150?'…':'');if(item.hasImage){noticeThumbnailUrl(item).then(url=>{if(!card.isConnected)return;const image=document.createElement('img');image.className='notice-thumb';image.loading='lazy';image.alt='';image.src=url;card.append(image)}).catch(()=>{})}card.onclick=()=>openNotice(item);card.onkeydown=event=>{if(event.key==='Enter')openNotice(item)};list.append(card)});
       $('notices-more').classList.toggle('hidden',visibleNotices>=sorted.length);updateNoticeBadge();
     }
     function watchNotices(user){
       if(watchedNoticesUid===user.uid&&stopNoticesWatch&&stopReadsWatch)return;
       stopNoticeWatches();visibleNotices=NOTICE_PAGE_SIZE;
       watchedNoticesUid=user.uid;
-      stopNoticesWatch=onSnapshot(collection(db,'artifacts',networkId,'public','data','comunicados'),snapshot=>{notices=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.published!==false);const activeKeys=new Set(notices.map(item=>`${item.id}:${item.updatedAt||item.publishedAt||''}`));for(const[key,entry]of noticeThumbnailCache)if(!activeKeys.has(key)){if(entry.url)URL.revokeObjectURL(entry.url);noticeThumbnailCache.delete(key)}renderNotices()},()=>{$('notices-status').textContent='Sin conexión. Se mostrará la copia disponible cuando vuelva la red.'});
-      stopReadsWatch=onSnapshot(collection(db,'artifacts',networkId,'mobile_reads',user.uid,'items'),snapshot=>{readNoticeIds=new Set(snapshot.docs.map(item=>item.id));renderNotices()},()=>{});
+      stopNoticesWatch=onSnapshot(collection(db,'artifacts',networkId,'public','data','comunicados'),snapshot=>{notices=snapshot.docs.map(item=>({id:item.id,...item.data()})).filter(item=>item.published!==false);noticesVerified||= !snapshot.metadata.fromCache;const activeKeys=new Set(notices.map(item=>`${item.id}:${item.updatedAt||item.publishedAt||''}`));for(const[key,entry]of noticeThumbnailCache)if(!activeKeys.has(key)){if(entry.url)URL.revokeObjectURL(entry.url);noticeThumbnailCache.delete(key)}renderNotices()},()=>{$('notices-status').textContent='Sin conexión. Se mostrará la copia disponible cuando vuelva la red.'});
+      stopReadsWatch=onSnapshot(collection(db,'artifacts',networkId,'mobile_reads',user.uid,'items'),snapshot=>{readNoticeIds=new Set(snapshot.docs.map(item=>item.id));noticeReadsVerified||= !snapshot.metadata.fromCache;renderNotices()},()=>{});
     }
     function handleCredentialWatchError(error,user){
       console.error('No se pudo actualizar la credencial:',error);
@@ -359,13 +362,15 @@
     async function handleAuthState(user){
       if(!user){initialAuthResolved=true;authUiReadyUid=null;if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();sessionStorage.removeItem(UNLOCK_KEY);appView.classList.add('hidden');loginView.classList.remove('hidden');await updateBiometricUi(null);return}
       void flushDiagnosticQueue(user);const record=getBiometricRecord(),isInitialAuthenticatedSession=!initialAuthResolved&&!passwordLoginPending;initialAuthResolved=true;
-      const mustUnlock=record?.uid===user.uid&&(isInitialAuthenticatedSession||sessionStorage.getItem(UNLOCK_KEY)!==user.uid)&&await platformAuthenticatorAvailable();
+      // Una credencial ya creada implica que el autenticador existe: no demorar la
+      // solicitud del sistema esperando comprobaciones de red o de interfaz.
+      const mustUnlock=record?.uid===user.uid&&(isInitialAuthenticatedSession||sessionStorage.getItem(UNLOCK_KEY)!==user.uid);
       if(mustUnlock){if(stopCredentialWatch){stopCredentialWatch();stopCredentialWatch=null}stopNoticeWatches();appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Abriendo la verificación de Android…';await updateBiometricUi(user);if(automaticUnlockUid!==user.uid){automaticUnlockUid=user.uid;try{await unlockWithBiometric(user);return}catch{$('login-message').textContent='No se pudo abrir automáticamente. Tocá el botón de huella o ingresá tu contraseña.'}}return}
       loadCredential(user);await updateBiometricUi(user);authUiReadyUid=user.uid;if(pendingBiometricOfferUid===user.uid&&!maintenanceBlocked){pendingBiometricOfferUid=null;await offerBiometricSetup(user)}
     }
     const initialMaintenanceCheck=watchMaintenance();
     void platformAuthenticatorAvailable();
-    onAuthStateChanged(auth,user=>{void initialMaintenanceCheck.then(()=>{if(!maintenanceBlocked)return handleAuthState(user)})});
+    onAuthStateChanged(auth,user=>{const record=getBiometricRecord(),needsImmediateBiometric=Boolean(user&&record?.uid===user.uid&&(sessionStorage.getItem(UNLOCK_KEY)!==user.uid));if(needsImmediateBiometric){void handleAuthState(user);return}void initialMaintenanceCheck.then(()=>{if(!maintenanceBlocked)return handleAuthState(user)})});
     $('logout-button').addEventListener('click',async()=>{const user=auth.currentUser;localStorage.removeItem('siga_mobile_credential');localStorage.removeItem(BIOMETRIC_KEY);if(user)localStorage.removeItem(INVITE_KEY_PREFIX+user.uid);sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;await signOut(auth)});
     $('maintenance-logout').addEventListener('click',()=>{$('logout-button').click()});
     $('save-credential-button').addEventListener('click',saveCredential);
