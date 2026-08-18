@@ -749,7 +749,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.26</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.27</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -770,7 +770,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.26</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.27</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -832,7 +832,7 @@
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
                     <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.26</span><span id="about-installed-architecture"></span>
+                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.27</span><span id="about-installed-architecture"></span>
                         · Actualización preparada en segundo plano
                     </p>
                     </section>
@@ -1303,8 +1303,8 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.26';
-        const DIAGNOSTIC_REVISION = '20260818-02';
+        const DIAGNOSTIC_VERSION = '1.4.27';
+        const DIAGNOSTIC_REVISION = '20260818-03';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -4025,7 +4025,7 @@ window.__firebase_config = {
                 submit.disabled = true; message.className = 'min-h-4 text-xs text-slate-600'; message.textContent = 'Confirmá la cuenta Google administradora…';
                 authorizationApp = initializeApp(window.__firebase_config, `password-reset-${Date.now()}-${crypto.randomUUID()}`);
                 const authorizationAuth = getAuth(authorizationApp), provider = new GoogleAuthProvider();
-                provider.addScope('https://www.googleapis.com/auth/cloud-platform'); provider.setCustomParameters({ prompt: 'select_account' });
+                provider.addScope('https://www.googleapis.com/auth/identitytoolkit'); provider.setCustomParameters({ prompt: 'select_account' });
                 const result = await signInWithPopup(authorizationAuth, provider), googleEmail = String(result.user?.email || '').trim().toLowerCase();
                 if (googleEmail !== PASSWORD_RESET_ADMIN_GOOGLE_EMAIL) throw new Error('Usá la cuenta Google autorizada del Administrador para continuar.');
                 const accessToken = GoogleAuthProvider.credentialFromResult(result)?.accessToken;
@@ -4035,7 +4035,7 @@ window.__firebase_config = {
                 if (!response.ok) { const detail = await response.json().catch(() => ({})); throw new Error(detail?.error?.message === 'PERMISSION_DENIED' ? 'La cuenta Google no tiene permiso para administrar usuarios de Firebase.' : 'Firebase no pudo actualizar la contraseña.'); }
                 const updated = { ...affiliate, mobileAccess: { ...affiliate.mobileAccess, passwordResetAt: new Date().toISOString(), passwordResetBy: googleEmail } };
                 await commitToDatabase(updated); await syncMobileCredential(updated); window.closeMobilePasswordReset(); showToast('Contraseña actualizada', 'El afiliado ya puede ingresar con su DNI y la nueva contraseña.', 'success');
-            } catch (error) { console.error('No se pudo blanquear la contraseña móvil:', error); message.className = 'min-h-4 text-xs text-rose-600'; message.textContent = error?.message || 'No se pudo blanquear la contraseña.'; }
+            } catch (error) { console.error('No se pudo blanquear la contraseña móvil:', error); const code = String(error?.code || ''); message.className = 'min-h-4 text-xs text-rose-600'; message.textContent = code === 'auth/operation-not-allowed' ? 'La autorización con Google no está habilitada en Firebase.' : code === 'auth/popup-blocked' ? 'El inicio de Google fue bloqueado. Permití las ventanas emergentes y reintentá.' : error?.message || 'No se pudo blanquear la contraseña.'; }
             finally { if (authorizationApp) { const authorizationAuth = getAuth(authorizationApp); await signOut(authorizationAuth).catch(() => {}); await deleteApp(authorizationApp).catch(() => {}); } submit.disabled = false; }
         }
 
@@ -4326,8 +4326,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.26";
-        const APP_REVISION = "20260818-02";
+        const APP_VERSION = "1.4.27";
+        const APP_REVISION = "20260818-03";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
