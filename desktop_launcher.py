@@ -26,8 +26,8 @@ from urllib.parse import urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.25"
-APP_REVISION = "20260818-01"
+APP_VERSION = "1.4.26"
+APP_REVISION = "20260818-02"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",

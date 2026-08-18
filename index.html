@@ -674,7 +674,7 @@
                                         <button id="mobile-access-toggle" onclick="toggleMobileAccess()" class="hidden px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl text-xs transition-all">Bloquear</button>
                                     </div>
                                     <button id="mobile-password-recovery" type="button" onclick="openMobilePasswordRecovery()" class="hidden w-full py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs transition-all">
-                                        <i class="fa-solid fa-key mr-1"></i> Recuperar contraseña en Firebase
+                                        <i class="fa-solid fa-key mr-1"></i> Blanquear contraseña
                                     </button>
                                     <a id="firebase-accounts-link" href="https://console.firebase.google.com/project/siga-85bdd/authentication/users" target="_blank" rel="noopener" class="block text-center text-xs font-semibold text-slate-600 hover:text-slate-800">Administrar cuentas en Firebase <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>
                                     <button type="button" onclick="openAffiliateAppInBrowser()" class="block w-full text-center text-xs font-semibold text-emerald-700 hover:text-emerald-800">Abrir app de afiliados <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></button>
@@ -749,7 +749,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.25</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.26</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -770,7 +770,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.25</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.26</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -832,7 +832,7 @@
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
                     <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.25</span><span id="about-installed-architecture"></span>
+                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.26</span><span id="about-installed-architecture"></span>
                         · Actualización preparada en segundo plano
                     </p>
                     </section>
@@ -1229,6 +1229,10 @@
 
 
     <!-- Módulos de Firebase y Script Principal de Aplicación -->
+    <div id="mobile-password-reset-modal" class="fixed inset-0 z-[110] overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="mobile-password-reset-title">
+        <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+        <div class="relative min-h-full flex items-center justify-center p-4"><form id="mobile-password-reset-form" class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4"><div class="flex items-start justify-between gap-4"><div><h3 id="mobile-password-reset-title" class="text-lg font-bold text-slate-800"><i class="fa-solid fa-key text-emerald-600 mr-2"></i>Blanquear contraseña</h3><p id="mobile-password-reset-account" class="text-xs text-slate-500 mt-1"></p></div><button type="button" onclick="closeMobilePasswordReset()" class="text-slate-400 hover:text-slate-700" aria-label="Cerrar"><i class="fa-solid fa-xmark text-lg"></i></button></div><p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">Solo el Administrador puede realizar esta acción. SIGA pedirá la cuenta Google autorizada antes de actualizar Firebase Authentication.</p><div><label for="mobile-password-reset-new" class="block text-xs font-bold text-slate-700 mb-1">Nueva contraseña</label><input id="mobile-password-reset-new" type="password" minlength="8" autocomplete="new-password" required class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3" placeholder="Mínimo 8 caracteres"></div><div><label for="mobile-password-reset-confirm" class="block text-xs font-bold text-slate-700 mb-1">Repetir nueva contraseña</label><input id="mobile-password-reset-confirm" type="password" minlength="8" autocomplete="new-password" required class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3" placeholder="Repetí la contraseña"></div><p id="mobile-password-reset-message" class="min-h-4 text-xs" role="status"></p><div class="flex justify-end gap-2"><button type="button" onclick="closeMobilePasswordReset()" class="px-4 py-2.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancelar</button><button id="mobile-password-reset-submit" type="submit" class="px-4 py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-xl"><i class="fa-solid fa-shield-halved mr-1"></i>Autorizar y blanquear</button></div></form></div>
+    </div>
     <div id="affiliate-print-modal" class="hidden fixed inset-0 z-[100] bg-slate-950/70 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="affiliate-print-title">
         <div class="bg-white h-full max-w-6xl mx-auto rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div class="px-4 py-3 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1243,7 +1247,7 @@
     </div>
 
     <script type="module">
-        import { initializeApp, getApp, getApps, deleteApp, getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDocs, onSnapshot, query, orderBy, limit, runTransaction, serverTimestamp, where, writeBatch, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "./assets/vendor/firebase.js";
+        import { initializeApp, getApp, getApps, deleteApp, getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, getDocs, onSnapshot, query, orderBy, limit, runTransaction, serverTimestamp, where, writeBatch, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from "./assets/vendor/firebase.js";
 
         // --- Estado Global de la Aplicación ---
         window.appState = {
@@ -1295,11 +1299,12 @@
             admin: 'administrador@siga.com',
             operador: 'operador@siga.com'
         };
+        const PASSWORD_RESET_ADMIN_GOOGLE_EMAIL = 'dibenedettileonardo2014@gmail.com';
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.25';
-        const DIAGNOSTIC_REVISION = '20260818-01';
+        const DIAGNOSTIC_VERSION = '1.4.26';
+        const DIAGNOSTIC_REVISION = '20260818-02';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -3820,7 +3825,7 @@ window.__firebase_config = {
             create.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i> Sincronizar credencial';
             password.disabled = true;
             password.value = '';
-            passwordHelp.textContent = 'La cuenta ya existe. “Sincronizar credencial” no cambia su contraseña. Para un olvido, usá “Recuperar contraseña en Firebase”.';
+            passwordHelp.textContent = 'La cuenta ya existe. “Sincronizar credencial” no cambia su contraseña. Para un olvido, el Administrador puede usar “Blanquear contraseña”.';
         }
 
         function syncMobileCredential(affiliate) {
@@ -3998,10 +4003,43 @@ window.__firebase_config = {
             if (!affiliate?.mobileAccess?.uid) return showToast('Recuperar contraseña', 'Primero creá el acceso móvil del afiliado.', 'warning');
             if (!canManageMobileAccess()) return showToast('Acceso restringido', 'Esta función está disponible solamente para el administrador.', 'warning');
             const email = mobileLoginEmail(affiliate.dni);
-            try { await navigator.clipboard?.writeText(email); } catch (_) {}
-            window.open('https://console.firebase.google.com/project/siga-85bdd/authentication/users', '_blank', 'noopener');
-            showToast('Recuperar contraseña', `Se copió ${email}. En Firebase Authentication, buscá esa cuenta y restablecé su contraseña.`, 'info');
+            const modal = document.getElementById('mobile-password-reset-modal');
+            modal.dataset.affiliateId = affiliate.id;
+            document.getElementById('mobile-password-reset-account').textContent = `Cuenta: ${email}`;
+            document.getElementById('mobile-password-reset-new').value = '';
+            document.getElementById('mobile-password-reset-confirm').value = '';
+            document.getElementById('mobile-password-reset-message').textContent = '';
+            modal.classList.remove('hidden');
+            document.getElementById('mobile-password-reset-new').focus();
         };
+
+        window.closeMobilePasswordReset = function() { document.getElementById('mobile-password-reset-modal').classList.add('hidden'); };
+
+        async function resetMobilePassword(event) {
+            event.preventDefault();
+            const modal = document.getElementById('mobile-password-reset-modal'), affiliate = window.appState.affiliates.find(item => item.id === modal.dataset.affiliateId), password = document.getElementById('mobile-password-reset-new').value, confirmation = document.getElementById('mobile-password-reset-confirm').value, message = document.getElementById('mobile-password-reset-message'), submit = document.getElementById('mobile-password-reset-submit');
+            if (!canManageMobileAccess() || !affiliate?.mobileAccess?.uid) return showToast('Acceso restringido', 'La cuenta seleccionada ya no está disponible.', 'error');
+            if (password.length < 8 || password !== confirmation) { message.className = 'min-h-4 text-xs text-rose-600'; message.textContent = password.length < 8 ? 'La nueva contraseña debe tener al menos 8 caracteres.' : 'Las contraseñas no coinciden.'; return; }
+            let authorizationApp;
+            try {
+                submit.disabled = true; message.className = 'min-h-4 text-xs text-slate-600'; message.textContent = 'Confirmá la cuenta Google administradora…';
+                authorizationApp = initializeApp(window.__firebase_config, `password-reset-${Date.now()}-${crypto.randomUUID()}`);
+                const authorizationAuth = getAuth(authorizationApp), provider = new GoogleAuthProvider();
+                provider.addScope('https://www.googleapis.com/auth/cloud-platform'); provider.setCustomParameters({ prompt: 'select_account' });
+                const result = await signInWithPopup(authorizationAuth, provider), googleEmail = String(result.user?.email || '').trim().toLowerCase();
+                if (googleEmail !== PASSWORD_RESET_ADMIN_GOOGLE_EMAIL) throw new Error('Usá la cuenta Google autorizada del Administrador para continuar.');
+                const accessToken = GoogleAuthProvider.credentialFromResult(result)?.accessToken;
+                if (!accessToken) throw new Error('Google no entregó la autorización necesaria.');
+                message.textContent = 'Actualizando la contraseña en Firebase…';
+                const response = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${encodeURIComponent(window.__firebase_config.projectId)}/accounts:update`, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: affiliate.mobileAccess.uid, password }) });
+                if (!response.ok) { const detail = await response.json().catch(() => ({})); throw new Error(detail?.error?.message === 'PERMISSION_DENIED' ? 'La cuenta Google no tiene permiso para administrar usuarios de Firebase.' : 'Firebase no pudo actualizar la contraseña.'); }
+                const updated = { ...affiliate, mobileAccess: { ...affiliate.mobileAccess, passwordResetAt: new Date().toISOString(), passwordResetBy: googleEmail } };
+                await commitToDatabase(updated); await syncMobileCredential(updated); window.closeMobilePasswordReset(); showToast('Contraseña actualizada', 'El afiliado ya puede ingresar con su DNI y la nueva contraseña.', 'success');
+            } catch (error) { console.error('No se pudo blanquear la contraseña móvil:', error); message.className = 'min-h-4 text-xs text-rose-600'; message.textContent = error?.message || 'No se pudo blanquear la contraseña.'; }
+            finally { if (authorizationApp) { const authorizationAuth = getAuth(authorizationApp); await signOut(authorizationAuth).catch(() => {}); await deleteApp(authorizationApp).catch(() => {}); } submit.disabled = false; }
+        }
+
+        document.getElementById('mobile-password-reset-form').addEventListener('submit', resetMobilePassword);
 
         window.closeAffiliateRegisterPreview = function() {
             document.getElementById('affiliate-print-modal').classList.add('hidden');
@@ -4288,8 +4326,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.25";
-        const APP_REVISION = "20260818-01";
+        const APP_VERSION = "1.4.26";
+        const APP_REVISION = "20260818-02";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };

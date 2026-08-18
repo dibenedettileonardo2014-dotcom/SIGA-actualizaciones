@@ -1,4 +1,4 @@
-const CACHE_NAME = 'siga-v1.4.25-r20260818-01';
+const CACHE_NAME = 'siga-v1.4.26-r20260818-02';
 const NAVIGATION_NETWORK_TIMEOUT_MS = 3500;
 const APP_SHELL = [
   './',
