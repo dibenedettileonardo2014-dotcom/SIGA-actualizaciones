@@ -28,8 +28,8 @@ from urllib.parse import parse_qs, urlencode, urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.30"
-APP_REVISION = "20260818-06"
+APP_VERSION = "1.4.31"
+APP_REVISION = "20260818-07"
 PASSWORD_RESET_OAUTH_CLIENT_ID = "1065738174061-m6ugunm3vghoqeilb4k8tq6qj6apiba7.apps.googleusercontent.com"
 PASSWORD_RESET_OAUTH_CLIENT_SECRET = os.environ.get("SIGA_PASSWORD_RESET_OAUTH_CLIENT_SECRET", "")
 PASSWORD_RESET_ADMIN_GOOGLE_EMAIL = "dibenedettileonardo2014@gmail.com"
