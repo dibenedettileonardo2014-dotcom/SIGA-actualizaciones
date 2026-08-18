@@ -55,6 +55,9 @@ Hosting fueron publicadas el 7 de agosto de 2026. Para entregar un acceso:
 ## Recuperación de acceso
 
 Mi SIGA no permite cambiar ni recuperar la contraseña desde el teléfono. Si el
-afiliado pierde el acceso, un administrador u operador debe deshabilitar la
-credencial anterior y crear un acceso nuevo desde SIGA. Este procedimiento usa
-Firebase Authentication dentro del plan Spark y no requiere servicios pagos.
+afiliado pierde el acceso, el administrador debe usar **Recuperar contraseña en
+Firebase** desde la sección Credencial Digital. SIGA abre Firebase
+Authentication y copia el identificador de la cuenta; Firebase es el único
+componente que puede modificar esa contraseña sin exponer privilegios de
+administración en la aplicación cliente. Este procedimiento sigue siendo
+compatible con el plan Spark y no requiere servicios pagos.
