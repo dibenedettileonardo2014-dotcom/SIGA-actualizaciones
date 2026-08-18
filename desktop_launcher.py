@@ -6,28 +6,33 @@ or open a browser.
 """
 
 from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import base64
 import ctypes
+from ctypes import wintypes
 import hashlib
 import json
 import os
 import platform
 import re
+import secrets
 import subprocess
 import sys
 import threading
 import time
 import zipfile
 from urllib.request import Request, urlopen
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.27"
-APP_REVISION = "20260818-03"
+APP_VERSION = "1.4.28"
+APP_REVISION = "20260818-04"
+PASSWORD_RESET_OAUTH_CLIENT_ID = "1065738174061-m6ugunm3vghoqeilb4k8tq6qj6apiba7.apps.googleusercontent.com"
+PASSWORD_RESET_OAUTH_CLIENT_SECRET = os.environ.get("SIGA_PASSWORD_RESET_OAUTH_CLIENT_SECRET", "")
+PASSWORD_RESET_ADMIN_GOOGLE_EMAIL = "dibenedettileonardo2014@gmail.com"
 UPDATE_MANIFEST_URLS = (
     "https://raw.githubusercontent.com/"
     "dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/version.json",
@@ -76,6 +81,10 @@ def webview_storage_path() -> Path:
 
 def update_state_path() -> Path:
     return webview_storage_path().parent / "Updater"
+
+
+def password_reset_secret_path() -> Path:
+    return webview_storage_path().parent / "oauth-password-reset.dat"
 
 
 def update_log(event: str, **details: object) -> None:
@@ -414,6 +423,127 @@ def automatic_update_on_startup() -> bool:
     return apply_prepared_update()
 
 
+def oauth_json_request(url: str, data: dict, headers: dict | None = None) -> dict:
+    """Send a small OAuth/API request without persisting credentials or tokens."""
+    payload = json.dumps(data).encode("utf-8")
+    request_headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    if headers:
+        request_headers.update(headers)
+    request = Request(url, data=payload, headers=request_headers, method="POST")
+    with urlopen(request, timeout=20) as response:
+        return json.load(response)
+
+
+class DataBlob(ctypes.Structure):
+    _fields_ = [("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_byte))]
+
+
+def protect_password_reset_secret(value: str) -> bool:
+    """Store the OAuth client secret encrypted for this Windows user only."""
+    try:
+        raw = value.encode("utf-8")
+        source = (ctypes.c_byte * len(raw)).from_buffer_copy(raw)
+        source_blob = DataBlob(len(raw), source)
+        target_blob = DataBlob()
+        if not ctypes.windll.crypt32.CryptProtectData(ctypes.byref(source_blob), "SIGA OAuth", None, None, None, 0x1, ctypes.byref(target_blob)):
+            return False
+        try:
+            password_reset_secret_path().parent.mkdir(parents=True, exist_ok=True)
+            password_reset_secret_path().write_bytes(ctypes.string_at(target_blob.pbData, target_blob.cbData))
+            return True
+        finally:
+            ctypes.windll.kernel32.LocalFree(target_blob.pbData)
+    except OSError:
+        return False
+
+
+def load_password_reset_secret() -> str:
+    """Read the locally encrypted OAuth secret without exposing it to the web UI."""
+    try:
+        raw = password_reset_secret_path().read_bytes()
+        source = (ctypes.c_byte * len(raw)).from_buffer_copy(raw)
+        source_blob = DataBlob(len(raw), source)
+        target_blob = DataBlob()
+        if not ctypes.windll.crypt32.CryptUnprotectData(ctypes.byref(source_blob), None, None, None, None, 0x1, ctypes.byref(target_blob)):
+            return ""
+        try:
+            return ctypes.string_at(target_blob.pbData, target_blob.cbData).decode("utf-8")
+        finally:
+            ctypes.windll.kernel32.LocalFree(target_blob.pbData)
+    except OSError:
+        return ""
+
+
+def obtain_password_reset_access_token(client_secret: str) -> tuple[str | None, str]:
+    """Authorize the signed-in Google administrator through the system browser."""
+    state = secrets.token_urlsafe(32)
+    verifier = secrets.token_urlsafe(64)
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest()).rstrip(b"=").decode("ascii")
+    result: dict[str, str] = {}
+    completed = threading.Event()
+
+    class OAuthCallbackHandler(BaseHTTPRequestHandler):
+        def log_message(self, format: str, *args: object) -> None:
+            pass
+
+        def do_GET(self) -> None:
+            parsed = urlparse(self.path)
+            if parsed.path != "/oauth2/callback":
+                self.send_error(404)
+                return
+            values = parse_qs(parsed.query)
+            if values.get("state", [""])[0] != state:
+                result["error"] = "La respuesta de autorización no coincide con la solicitud de SIGA."
+            elif values.get("error"):
+                result["error"] = "La autorización fue cancelada o rechazada en Google."
+            else:
+                result["code"] = values.get("code", [""])[0]
+            body = b"<html><body style='font-family:Segoe UI;padding:2rem'><h2>SIGA</h2><p>La autorizacion finalizo. Podes cerrar esta ventana y volver a SIGA.</p></body></html>"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            completed.set()
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), OAuthCallbackHandler)
+    server.daemon_threads = True
+    redirect_uri = f"http://127.0.0.1:{server.server_address[1]}/oauth2/callback"
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    query = urlencode({
+        "client_id": PASSWORD_RESET_OAUTH_CLIENT_ID,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/identitytoolkit",
+        "state": state,
+        "code_challenge": challenge,
+        "code_challenge_method": "S256",
+        "prompt": "select_account",
+    })
+    try:
+        opened = ctypes.windll.shell32.ShellExecuteW(None, "open", f"https://accounts.google.com/o/oauth2/v2/auth?{query}", None, None, 1)
+        if opened <= 32:
+            return None, "No se pudo abrir el navegador para autorizar al administrador."
+        if not completed.wait(180):
+            return None, "La autorización venció. Volvé a intentarlo y completá Google dentro de tres minutos."
+        if result.get("error") or not result.get("code"):
+            return None, result.get("error", "Google no devolvió una autorización válida.")
+        form = urlencode({
+            "code": result["code"], "client_id": PASSWORD_RESET_OAUTH_CLIENT_ID,
+            "client_secret": client_secret, "redirect_uri": redirect_uri,
+            "grant_type": "authorization_code", "code_verifier": verifier,
+        }).encode("utf-8")
+        request = Request("https://oauth2.googleapis.com/token", data=form, headers={"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}, method="POST")
+        with urlopen(request, timeout=20) as response:
+            token = json.load(response).get("access_token")
+        return (token, "") if isinstance(token, str) and token else (None, "Google no entregó el permiso necesario.")
+    except Exception:
+        return None, "No se pudo completar la autorización con Google."
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
 class DesktopApi:
     """Native operations explicitly requested from the desktop interface."""
 
@@ -432,6 +562,37 @@ class DesktopApi:
             return {"ok": False, "error": "Destino externo no permitido."}
         result = ctypes.windll.shell32.ShellExecuteW(None, "open", url, None, None, 1)
         return {"ok": result > 32, "error": "No se pudo abrir el navegador." if result <= 32 else ""}
+
+    def reset_mobile_password(self, uid: str, password: str, oauth_client_secret: str = "") -> dict:
+        """Reset a Firebase password after an administrator-only OAuth approval."""
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", str(uid or "")):
+            return {"ok": False, "error": "La cuenta móvil seleccionada no es válida."}
+        if not isinstance(password, str) or not 8 <= len(password) <= 4096:
+            return {"ok": False, "error": "La nueva contraseña debe tener entre 8 y 4096 caracteres."}
+        supplied_secret = str(oauth_client_secret or "").strip()
+        if supplied_secret and not protect_password_reset_secret(supplied_secret):
+            return {"ok": False, "error": "No se pudo guardar de forma segura la configuración OAuth en Windows."}
+        client_secret = supplied_secret or PASSWORD_RESET_OAUTH_CLIENT_SECRET or load_password_reset_secret()
+        if not client_secret:
+            return {"ok": False, "error": "Ingresá una vez el secreto del cliente OAuth de administrador para configurar este equipo."}
+        access_token, error = obtain_password_reset_access_token(client_secret)
+        if not access_token:
+            return {"ok": False, "error": error}
+        try:
+            user_request = Request("https://openidconnect.googleapis.com/v1/userinfo", headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"})
+            with urlopen(user_request, timeout=15) as response:
+                google_email = str(json.load(response).get("email", "")).strip().lower()
+            if google_email != PASSWORD_RESET_ADMIN_GOOGLE_EMAIL:
+                return {"ok": False, "error": "Usá la cuenta Google autorizada del Administrador para continuar."}
+            oauth_json_request(
+                "https://identitytoolkit.googleapis.com/v1/projects/siga-85bdd/accounts:update",
+                {"localId": uid, "password": password},
+                {"Authorization": f"Bearer {access_token}"},
+            )
+            return {"ok": True, "email": google_email}
+        except Exception as error:
+            update_log("password-reset-failed", error=type(error).__name__)
+            return {"ok": False, "error": "Google no autorizó actualizar este usuario en Firebase. Verificá que la cuenta administradora tenga acceso al proyecto."}
 
     def report_sync_error(self, code: str, message: str) -> dict:
         """Persist a sanitized Firestore diagnostic without record contents."""
