@@ -602,7 +602,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.28")
+        self.assertEqual(manifest["displayVersion"], "1.4.29")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

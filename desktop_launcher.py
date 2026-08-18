@@ -28,8 +28,8 @@ from urllib.parse import parse_qs, urlencode, urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.28"
-APP_REVISION = "20260818-04"
+APP_VERSION = "1.4.29"
+APP_REVISION = "20260818-05"
 PASSWORD_RESET_OAUTH_CLIENT_ID = "1065738174061-m6ugunm3vghoqeilb4k8tq6qj6apiba7.apps.googleusercontent.com"
 PASSWORD_RESET_OAUTH_CLIENT_SECRET = os.environ.get("SIGA_PASSWORD_RESET_OAUTH_CLIENT_SECRET", "")
 PASSWORD_RESET_ADMIN_GOOGLE_EMAIL = "dibenedettileonardo2014@gmail.com"
@@ -380,7 +380,7 @@ def apply_prepared_update() -> bool:
             f'"$w=New-Object -ComObject WScript.Shell; $d=$w.SpecialFolders.Item(\'Desktop\'); '
             f'$s=$w.CreateShortcut((Join-Path $d \'SIGA.lnk\')); $s.TargetPath=\'{target}\'; '
             f'$s.Arguments=\'\'; $s.WorkingDirectory=\'{target.parent}\'; '
-            f'$s.IconLocation=\'{target.parent / "siga-app-icon.ico"}\'; $s.Save()"\n'
+            f'$s.IconLocation=\'{target.parent / "siga-desktop-icon.ico"}\'; $s.Save()"\n'
         )
         if prepared["kind"] == "installer":
             action = f'start "" /wait "{source}" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CURRENTUSER /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS /LOG="{log}"\n'

@@ -9,6 +9,8 @@ a = Analysis(
         ('index.html', '.'),
         ('assets/logo-sindicato.png', 'assets'),
         ('assets/logo-spiqyp-rosario.png', 'assets'),
+        ('assets/siga-desktop-icon.png', 'assets'),
+        ('assets/siga-desktop-icon.ico', 'assets'),
         ('assets/mantenimiento.png', 'assets'),
         ('assets/convenio-77-89.pdf', 'assets'),
         ('assets/convenio-77-89.txt', 'assets'),
@@ -62,7 +64,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['assets\\siga-app-icon.ico'],
+    icon=['assets\\siga-desktop-icon.ico'],
 )
 coll = COLLECT(
     exe,

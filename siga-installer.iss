@@ -1,5 +1,5 @@
 #define MyAppName "SIGA"
-#define MyAppVersion "1.4.28"
+#define MyAppVersion "1.4.29"
 #define MyAppPublisher "LGDB"
 #define MyAppExeName "SIGA.exe"
 #ifndef MyAppArch
@@ -30,14 +30,14 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed={#MyAllowedArch}
 UninstallDisplayName=SIGA - Sistema de Gestión Sindical
-SetupIconFile=assets\siga-app-icon.ico
+SetupIconFile=assets\siga-desktop-icon.ico
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Files]
 Source: "{#MySourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "assets\siga-app-icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\siga-desktop-icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\Documentos"
@@ -48,12 +48,12 @@ Type: files; Name: "{app}\_internal\afiliado.html"
 Type: files; Name: "{app}\_internal\afiliado-manifest.json"
 Type: files; Name: "{app}\_internal\manifest.json"
 Type: files; Name: "{app}\_internal\sw.js"
-Type: files; Name: "{app}\_internal\assets\siga-app-icon.ico"
-Type: files; Name: "{app}\_internal\assets\siga-app-icon.png"
+Type: files; Name: "{app}\_internal\assets\siga-desktop-icon.ico"
+Type: files; Name: "{app}\_internal\assets\siga-desktop-icon.png"
 
 [Icons]
-Name: "{userprograms}\SIGA"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\siga-app-icon.ico"
-Name: "{userdesktop}\SIGA"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\siga-app-icon.ico"
+Name: "{userprograms}\SIGA"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\siga-desktop-icon.ico"
+Name: "{userdesktop}\SIGA"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\siga-desktop-icon.ico"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Abrir SIGA"; Flags: nowait postinstall skipifsilent

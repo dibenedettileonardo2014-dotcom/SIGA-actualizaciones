@@ -7,12 +7,12 @@
   "theme_color": "#10b981",
   "icons": [
     {
-      "src": "assets/siga-app-icon-192.png",
-      "sizes": "192x192",
+      "src": "assets/siga-desktop-icon-128.png",
+      "sizes": "128x128",
       "type": "image/png"
     },
     {
-      "src": "assets/siga-app-icon-512.png",
+      "src": "assets/siga-desktop-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
