@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /afiliado.html
+Disallow: /desktop.html
+Disallow: /version.json
+Disallow: /SIGA-update

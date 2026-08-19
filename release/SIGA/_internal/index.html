@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/siga-desktop-icon-128.png" sizes="128x128">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://raw.githubusercontent.com https://siga-85bdd.web.app; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>SIGA - Sistema Integral de Gestión de Afiliados</title>
     <link rel="stylesheet" href="assets/vendor/tailwind.css">
@@ -71,7 +72,8 @@
     <aside id="update-ready-banner" class="hidden bg-slate-900 text-white rounded-2xl shadow-2xl p-4 border border-emerald-400/40" role="status" aria-live="polite">
         <p class="text-xs text-emerald-300 font-bold uppercase">Actualización lista</p>
         <p class="text-sm mt-1">SIGA descargó y verificó la nueva versión.</p>
-        <button id="restart-update-button" class="mt-3 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl">Reiniciar y actualizar</button>
+        <button id="restart-update-button" class="mt-3 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl">Actualizar y reiniciar</button>
+        <button id="postpone-update-button" class="mt-2 w-full py-2 text-slate-200 hover:text-white font-semibold text-sm">Posponer</button>
     </aside>
 
     <!-- Elemento para notificaciones flotantes -->
@@ -88,7 +90,7 @@
             <div class="p-5 flex items-center justify-between border-b border-slate-800">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-white rounded-xl overflow-hidden relative shadow-lg shadow-emerald-500/20" title="Sindicato Químico y Petroquímico Rosario">
-                        <img src="assets/logo-sindicato.png" alt="Sindicato Químico y Petroquímico Rosario" class="absolute w-32 max-w-none -left-1 -top-9">
+                        <img src="assets/siga-desktop-icon-128.png" alt="SIGA — Sistema Integral Gestión de Afiliado" class="h-full w-full object-contain p-1.5">
                     </div>
                     <div>
                         <h1 class="font-bold text-xl leading-none tracking-wider">SIGA</h1>
@@ -457,6 +459,7 @@
                                     <tr class="bg-slate-50 text-xs font-semibold text-slate-500 border-b border-slate-100 uppercase">
                                         <th class="py-3.5 px-6">N° Afiliado / Nombre</th>
                                         <th class="py-3.5 px-6">Identidad / DNI</th>
+                                        <th class="py-3.5 px-6">Edad</th>
                                         <th class="py-3.5 px-6">Fecha de Afiliación</th>
                                         <th class="py-3.5 px-6">Empresa / Consultora</th>
                                         <th class="py-3.5 px-6">Contacto</th>
@@ -664,14 +667,17 @@
                                         <p class="text-xs font-bold text-slate-700">Acceso a la app del afiliado</p>
                                         <p id="mobile-access-status" class="text-[11px] text-slate-500 mt-1">Seleccioná un afiliado para administrar su acceso.</p>
                                     </div>
-                                    <input id="mobile-initial-password" type="password" minlength="8" autocomplete="new-password" placeholder="Contraseña inicial (mínimo 8 caracteres)" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500">
-                                    <p class="text-[11px] text-slate-500">La contraseña solo puede asignarse al crear el acceso y nunca puede visualizarse. En el plan gratuito, un olvido se resuelve recreando manualmente la cuenta desde Firebase Authentication.</p>
+                                    <input id="mobile-initial-password" type="password" minlength="8" autocomplete="new-password" placeholder="Contraseña inicial para un acceso nuevo (mínimo 8 caracteres)" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500">
+                                    <p id="mobile-password-help" class="text-[11px] text-slate-500">Esta contraseña solo se usa al crear el acceso por primera vez. Nunca se puede visualizar ni reemplazar desde este campo.</p>
                                     <div class="flex gap-2">
                                         <button id="mobile-access-create" onclick="createMobileAccess()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-all">
                                             <i class="fa-solid fa-mobile-screen-button mr-1"></i> Crear acceso inicial
                                         </button>
                                         <button id="mobile-access-toggle" onclick="toggleMobileAccess()" class="hidden px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl text-xs transition-all">Bloquear</button>
                                     </div>
+                                    <button id="mobile-password-recovery" type="button" onclick="openMobilePasswordRecovery()" class="hidden w-full py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs transition-all">
+                                        <i class="fa-solid fa-key mr-1"></i> Blanquear contraseña
+                                    </button>
                                     <a id="firebase-accounts-link" href="https://console.firebase.google.com/project/siga-85bdd/authentication/users" target="_blank" rel="noopener" class="block text-center text-xs font-semibold text-slate-600 hover:text-slate-800">Administrar cuentas en Firebase <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>
                                     <button type="button" onclick="openAffiliateAppInBrowser()" class="block w-full text-center text-xs font-semibold text-emerald-700 hover:text-emerald-800">Abrir app de afiliados <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></button>
                                 </div>
@@ -745,7 +751,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.18</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.32</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -766,7 +772,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.18</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.32</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -828,7 +834,7 @@
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
                     <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.18</span><span id="about-installed-architecture"></span>
+                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.32</span><span id="about-installed-architecture"></span>
                         · Actualización preparada en segundo plano
                     </p>
                     </section>
@@ -1225,6 +1231,10 @@
 
 
     <!-- Módulos de Firebase y Script Principal de Aplicación -->
+    <div id="mobile-password-reset-modal" class="fixed inset-0 z-[110] overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="mobile-password-reset-title">
+        <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+        <div class="relative min-h-full flex items-center justify-center p-4"><form id="mobile-password-reset-form" class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4"><div class="flex items-start justify-between gap-4"><div><h3 id="mobile-password-reset-title" class="text-lg font-bold text-slate-800"><i class="fa-solid fa-key text-emerald-600 mr-2"></i>Blanquear contraseña</h3><p id="mobile-password-reset-account" class="text-xs text-slate-500 mt-1"></p></div><button type="button" onclick="closeMobilePasswordReset()" class="text-slate-400 hover:text-slate-700" aria-label="Cerrar"><i class="fa-solid fa-xmark text-lg"></i></button></div><p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">Solo el Administrador puede realizar esta acción. SIGA pedirá la cuenta Google autorizada antes de actualizar Firebase Authentication.</p><div><label for="mobile-password-reset-new" class="block text-xs font-bold text-slate-700 mb-1">Nueva contraseña</label><input id="mobile-password-reset-new" type="password" minlength="8" autocomplete="new-password" required class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3" placeholder="Mínimo 8 caracteres"></div><div><label for="mobile-password-reset-confirm" class="block text-xs font-bold text-slate-700 mb-1">Repetir nueva contraseña</label><input id="mobile-password-reset-confirm" type="password" minlength="8" autocomplete="new-password" required class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3" placeholder="Repetí la contraseña"></div><div><label for="mobile-password-reset-oauth-secret" class="block text-xs font-bold text-slate-700 mb-1">Secreto OAuth de administrador <span class="font-normal text-slate-500">(solo la primera vez)</span></label><input id="mobile-password-reset-oauth-secret" type="password" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl p-3" placeholder="Pegalo solo para configurar este equipo"><p class="text-[11px] text-slate-500 mt-1">Se cifra localmente en Windows; no se guarda en Firebase ni se vuelve a pedir.</p></div><p id="mobile-password-reset-message" class="min-h-4 text-xs" role="status"></p><div class="flex justify-end gap-2"><button type="button" onclick="closeMobilePasswordReset()" class="px-4 py-2.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancelar</button><button id="mobile-password-reset-submit" type="submit" class="px-4 py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-xl"><i class="fa-solid fa-shield-halved mr-1"></i>Autorizar y blanquear</button></div></form></div>
+    </div>
     <div id="affiliate-print-modal" class="hidden fixed inset-0 z-[100] bg-slate-950/70 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="affiliate-print-title">
         <div class="bg-white h-full max-w-6xl mx-auto rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div class="px-4 py-3 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1294,8 +1304,8 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.18';
-        const DIAGNOSTIC_REVISION = '20260816-06';
+        const DIAGNOSTIC_VERSION = '1.4.32';
+        const DIAGNOSTIC_REVISION = '20260819-01';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -1353,6 +1363,20 @@
         window.addEventListener('error', event => reportDiagnostic('pc/unhandled-error', event.error || event.message, 'critical', 'window.error'));
         window.addEventListener('unhandledrejection', event => reportDiagnostic('pc/unhandled-rejection', event.reason, 'critical', 'promise'));
 
+        // El texto original se conserva en Firestore para diagnóstico, pero la
+        // consola administrativa muestra una explicación accionable en español.
+        function diagnosticDescription(item) {
+            const code = String(item?.code || '').toLowerCase();
+            if (code.includes('permission-denied')) return 'No hay permisos suficientes para completar la operación.';
+            if (code.includes('unauthenticated') || code.startsWith('auth/')) return 'La sesión no pudo validarse. Volvé a iniciar sesión e intentá nuevamente.';
+            if (code.includes('network') || code.includes('unavailable') || code.includes('timeout')) return 'No se pudo conectar con el servicio. Se reintentará automáticamente al recuperar la conexión.';
+            if (code.includes('conflict')) return 'Se detectó un cambio realizado desde otro equipo que requiere revisión.';
+            if (code.includes('duplicate') || code.includes('already-exists')) return 'El dato ya existe y no se guardó una copia duplicada.';
+            if (code.includes('storage') || code.includes('quota')) return 'El almacenamiento local no tiene espacio suficiente para completar la operación.';
+            if (code.includes('cancel') || code.includes('notallowed')) return 'La acción fue cancelada o no recibió autorización del usuario.';
+            return 'Se produjo un inconveniente técnico. Revisá el código de diagnóstico para obtener más información.';
+        }
+
         function updateDiagnosticsBadge() {
             const localConflicts = readPendingChanges().filter(change => change.conflict).length;
             const remoteOpen = window.appState.diagnostics.filter(item => item.status !== 'resolved').length;
@@ -1384,7 +1408,7 @@
                 card.className = `border ${resolved ? 'border-slate-200 bg-slate-50' : 'border-amber-200 bg-amber-50/40'} rounded-xl p-4`;
                 card.innerHTML = `<div class="flex flex-col sm:flex-row gap-3"><div class="flex-1 min-w-0"><div class="flex flex-wrap gap-2 items-center"><span class="source px-2 py-1 rounded text-[10px] font-black"></span><span class="severity px-2 py-1 rounded bg-rose-100 text-rose-700 text-[10px] font-black"></span><strong class="code text-sm text-slate-800 break-all"></strong></div><p class="message text-xs text-slate-700 mt-2 break-words"></p><p class="meta text-[11px] text-slate-500 mt-1"></p></div><div class="flex sm:flex-col gap-2"><button class="resolve flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold"></button><button class="remove flex-1 px-3 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">Eliminar</button></div></div>`;
                 const source = card.querySelector('.source'); source.textContent = mobile ? 'MÓVIL' : 'PC'; source.classList.add(...(mobile ? ['bg-violet-100','text-violet-700'] : ['bg-blue-100','text-blue-700']));
-                card.querySelector('.severity').textContent = String(item.severity || 'error').toUpperCase(); card.querySelector('.code').textContent = item.code || 'unknown'; card.querySelector('.message').textContent = item.message || 'Sin detalle';
+                card.querySelector('.severity').textContent = String(item.severity || 'error').toUpperCase(); card.querySelector('.code').textContent = item.code || 'unknown'; card.querySelector('.message').textContent = diagnosticDescription(item);
                 card.querySelector('.meta').textContent = `${item.appVersion || '—'} · ${new Date(item.occurredAt).toLocaleString('es-AR')} · repeticiones: ${item.repeatCount || 1}`;
                 const resolve = card.querySelector('.resolve'); resolve.textContent = resolved ? 'Reabrir' : 'Resolver'; resolve.onclick = () => setDiagnosticStatus(item.id, resolved ? 'open' : 'resolved');
                 card.querySelector('.remove').onclick = () => removeDiagnostic(item.id); list.append(card);
@@ -2412,6 +2436,10 @@ window.__firebase_config = {
                 const [year, month, day] = String(value).split('-');
                 return year && month && day ? `${day}/${month}/${year}` : escapePrintHtml(value);
             };
+            const formatAffiliateAge = (birthdate) => {
+                const age = calculateAge(birthdate);
+                return age === null ? '<span class="text-slate-400">—</span>' : `${age} años`;
+            };
             pageItems.forEach(a => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition-colors";
@@ -2457,6 +2485,7 @@ window.__firebase_config = {
                         ${syncConflictBadge}
                     </td>
                     <td class="py-4 px-6 text-slate-700 font-medium">${escapePrintHtml(a.dni)}</td>
+                    <td class="py-4 px-6 text-xs font-bold text-slate-700 whitespace-nowrap">${formatAffiliateAge(a.birthdate)}</td>
                     <td class="py-4 px-6 text-xs font-medium text-slate-700 whitespace-nowrap">${formatAffiliationDate(a.affiliationDate)}</td>
                     <td class="py-4 px-6">
                         <div class="font-semibold text-slate-700 text-xs">${escapePrintHtml(a.company || 'Sin Empresa')}</div>
@@ -3769,12 +3798,22 @@ window.__firebase_config = {
         function renderMobileAccessStatus(affiliate) {
             const status = document.getElementById('mobile-access-status');
             const toggle = document.getElementById('mobile-access-toggle');
-            if (!status || !toggle) return;
+            const create = document.getElementById('mobile-access-create');
+            const password = document.getElementById('mobile-initial-password');
+            const passwordHelp = document.getElementById('mobile-password-help');
+            const recovery = document.getElementById('mobile-password-recovery');
+            if (!status || !toggle || !create || !password || !passwordHelp || !recovery) return;
             const access = affiliate?.mobileAccess;
             if (!access?.uid) {
                 status.textContent = affiliate ? `Todavía no tiene acceso. Ingresará con el DNI ${affiliate.dni}.` : 'Seleccioná un afiliado para administrar su acceso.';
                 status.className = 'text-[11px] text-slate-500 mt-1';
                 toggle.classList.add('hidden');
+                recovery.classList.add('hidden');
+                create.classList.remove('hidden');
+                create.innerHTML = '<i class="fa-solid fa-mobile-screen-button mr-1"></i> Crear acceso inicial';
+                password.disabled = false;
+                password.value = '';
+                passwordHelp.textContent = 'Esta contraseña solo se usa al crear el acceso por primera vez. Nunca se puede visualizar ni reemplazar desde este campo.';
                 return;
             }
             const enabled = access.enabled !== false;
@@ -3782,6 +3821,12 @@ window.__firebase_config = {
             status.className = `text-[11px] mt-1 font-semibold ${enabled ? 'text-emerald-600' : 'text-rose-600'}`;
             toggle.textContent = enabled ? 'Bloquear' : 'Habilitar';
             toggle.classList.remove('hidden');
+            recovery.classList.remove('hidden');
+            create.classList.remove('hidden');
+            create.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i> Sincronizar credencial';
+            password.disabled = true;
+            password.value = '';
+            passwordHelp.textContent = 'La cuenta ya existe. “Sincronizar credencial” no cambia su contraseña. Para un olvido, el Administrador puede usar “Blanquear contraseña”.';
         }
 
         function syncMobileCredential(affiliate) {
@@ -3807,7 +3852,7 @@ window.__firebase_config = {
                 if (!result?.ok) showToast('Mi SIGA', result?.error || 'No se pudo abrir el navegador.', 'error');
                 return;
             }
-            window.open(`https://siga-85bdd.web.app/${dni ? `?dni=${encodeURIComponent(dni)}` : ''}`, '_blank', 'noopener');
+                window.open(`https://siga-85bdd.web.app/afiliado.html${dni ? `?dni=${encodeURIComponent(dni)}` : ''}`, '_blank', 'noopener');
         };
 
         async function provisionMobileAccess(affiliate, password) {
@@ -3944,7 +3989,7 @@ window.__firebase_config = {
             return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Padrón de Afiliados</title><style>
                 @page{size:A4 portrait;margin:18mm 10mm 15mm}@media print{body{padding:0}.report{box-shadow:none}.page-number:after{content:counter(page)}}
                 *{box-sizing:border-box}body{margin:0;background:#e2e8f0;color:#1e293b;font-family:Arial,sans-serif;padding:18px}.report{max-width:190mm;margin:auto;background:white;padding:10mm;box-shadow:0 4px 20px #0002}.header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #059669;padding-bottom:9px}.header img{width:46px;height:46px;object-fit:contain}.brand{font-size:12px;font-weight:bold;color:#047857}.header h1{font-size:22px;margin:2px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;font-size:10px;margin:10px 0}.meta b{color:#334155}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}thead{display:table-header-group}tr{break-inside:avoid}th,td{border:1px solid #94a3b8;padding:5px 4px;vertical-align:top;overflow-wrap:anywhere}th{background:#d1fae5;color:#064e3b;text-align:left}th:nth-child(1){width:14%}th:nth-child(2){width:29%}th:nth-child(3){width:16%}th:nth-child(4){width:25%}th:nth-child(5){width:16%}.footer{position:fixed;bottom:3mm;right:10mm;font-size:8px;color:#64748b}.empty{text-align:center;padding:30px;color:#64748b}
-            </style></head><body><main class="report"><header class="header"><img src="assets/logo-sindicato.png" alt="Logo SIGA"><div><div class="brand">SIGA · Sistema Integral de Gestión de Afiliados</div><h1>Padrón de Afiliados</h1></div></header><section class="meta"><div><b>Empresa:</b> ${escapePrintHtml(selectedCompany || 'Todas las empresas')}</div><div><b>Generado:</b> ${escapePrintHtml(generatedAt)}</div><div><b>Cantidad total:</b> ${affiliates.length}</div><div><b>Búsqueda:</b> ${escapePrintHtml(document.getElementById('filter-search').value.trim() || 'Sin búsqueda general')}</div></section><table><thead><tr><th>N.º de afiliado</th><th>Apellido y nombre</th><th>DNI</th><th>Empresa</th><th>Sector</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">No hay afiliados para los filtros seleccionados.</td></tr>'}</tbody></table><footer class="footer">Página <span class="page-number"></span></footer></main></body></html>`;
+            </style></head><body><main class="report"><header class="header"><img src="assets/siga-desktop-icon-128.png" alt="Logo SIGA"><div><div class="brand">SIGA · Sistema Integral de Gestión de Afiliados</div><h1>Padrón de Afiliados</h1></div></header><section class="meta"><div><b>Empresa:</b> ${escapePrintHtml(selectedCompany || 'Todas las empresas')}</div><div><b>Generado:</b> ${escapePrintHtml(generatedAt)}</div><div><b>Cantidad total:</b> ${affiliates.length}</div><div><b>Búsqueda:</b> ${escapePrintHtml(document.getElementById('filter-search').value.trim() || 'Sin búsqueda general')}</div></section><table><thead><tr><th>N.º de afiliado</th><th>Apellido y nombre</th><th>DNI</th><th>Empresa</th><th>Sector</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">No hay afiliados para los filtros seleccionados.</td></tr>'}</tbody></table><footer class="footer">Página <span class="page-number"></span></footer></main></body></html>`;
         }
 
         window.previewAffiliateRegister = function() {
@@ -3952,6 +3997,43 @@ window.__firebase_config = {
             document.getElementById('affiliate-print-frame').srcdoc = affiliateRegisterHtml();
             document.getElementById('affiliate-print-modal').classList.remove('hidden');
         };
+
+        window.openMobilePasswordRecovery = async function() {
+            const affiliateId = document.getElementById('card-affiliate-select').value;
+            const affiliate = window.appState.affiliates.find(item => item.id === affiliateId);
+            if (!affiliate?.mobileAccess?.uid) return showToast('Recuperar contraseña', 'Primero creá el acceso móvil del afiliado.', 'warning');
+            if (!canManageMobileAccess()) return showToast('Acceso restringido', 'Esta función está disponible solamente para el administrador.', 'warning');
+            const email = mobileLoginEmail(affiliate.dni);
+            const modal = document.getElementById('mobile-password-reset-modal');
+            modal.dataset.affiliateId = affiliate.id;
+            document.getElementById('mobile-password-reset-account').textContent = `Cuenta: ${email}`;
+            document.getElementById('mobile-password-reset-new').value = '';
+            document.getElementById('mobile-password-reset-confirm').value = '';
+            document.getElementById('mobile-password-reset-oauth-secret').value = '';
+            document.getElementById('mobile-password-reset-message').textContent = '';
+            modal.classList.remove('hidden');
+            document.getElementById('mobile-password-reset-new').focus();
+        };
+
+        window.closeMobilePasswordReset = function() { document.getElementById('mobile-password-reset-modal').classList.add('hidden'); };
+
+        async function resetMobilePassword(event) {
+            event.preventDefault();
+            const modal = document.getElementById('mobile-password-reset-modal'), affiliate = window.appState.affiliates.find(item => item.id === modal.dataset.affiliateId), password = document.getElementById('mobile-password-reset-new').value, confirmation = document.getElementById('mobile-password-reset-confirm').value, oauthSecret = document.getElementById('mobile-password-reset-oauth-secret').value, message = document.getElementById('mobile-password-reset-message'), submit = document.getElementById('mobile-password-reset-submit');
+            if (!canManageMobileAccess() || !affiliate?.mobileAccess?.uid) return showToast('Acceso restringido', 'La cuenta seleccionada ya no está disponible.', 'error');
+            if (password.length < 8 || password !== confirmation) { message.className = 'min-h-4 text-xs text-rose-600'; message.textContent = password.length < 8 ? 'La nueva contraseña debe tener al menos 8 caracteres.' : 'Las contraseñas no coinciden.'; return; }
+            try {
+                if (!window.pywebview?.api?.reset_mobile_password) throw new Error('El blanqueo de contraseña está disponible únicamente desde la aplicación SIGA de escritorio.');
+                submit.disabled = true; message.className = 'min-h-4 text-xs text-slate-600'; message.textContent = 'Se abrirá el navegador para autorizar la cuenta Google administradora…';
+                const result = await window.pywebview.api.reset_mobile_password(affiliate.mobileAccess.uid, password, oauthSecret);
+                if (!result?.ok) throw new Error(result?.error || 'Firebase no pudo actualizar la contraseña.');
+                const updated = { ...affiliate, mobileAccess: { ...affiliate.mobileAccess, passwordResetAt: new Date().toISOString(), passwordResetBy: result.email } };
+                await commitToDatabase(updated); await syncMobileCredential(updated); window.closeMobilePasswordReset(); showToast('Contraseña actualizada', 'El afiliado ya puede ingresar con su DNI y la nueva contraseña.', 'success');
+            } catch (error) { console.error('No se pudo blanquear la contraseña móvil:', error); message.className = 'min-h-4 text-xs text-rose-600'; message.textContent = error?.message || 'No se pudo blanquear la contraseña.'; }
+            finally { submit.disabled = false; }
+        }
+
+        document.getElementById('mobile-password-reset-form').addEventListener('submit', resetMobilePassword);
 
         window.closeAffiliateRegisterPreview = function() {
             document.getElementById('affiliate-print-modal').classList.add('hidden');
@@ -4238,8 +4320,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.18";
-        const APP_REVISION = "20260816-06";
+        const APP_VERSION = "1.4.32";
+        const APP_REVISION = "20260819-01";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4375,13 +4457,27 @@ window.__firebase_config = {
                 if (!result?.ok) throw new Error(result?.error || 'No se pudo iniciar la actualización.');
             } catch (error) {
                 button.disabled = false;
-                button.textContent = 'Reiniciar y actualizar';
+                button.textContent = 'Actualizar y reiniciar';
                 showToast('Actualización', error.message, 'error');
             }
         });
 
+        document.getElementById('postpone-update-button').addEventListener('click', () => {
+            document.getElementById('update-ready-banner').classList.add('hidden');
+            sessionStorage.setItem('siga_update_postponed', '1');
+        });
+
         // Verifica y prepara en segundo plano; nunca interrumpe el trabajo.
-        const checkForUpdatesOnStartup = () => {
+        const checkForUpdatesOnStartup = async () => {
+            if (sessionStorage.getItem('siga_update_postponed') === '1') return;
+            try {
+                const nativeStatus = await window.pywebview?.api?.check_update_status?.();
+                if (nativeStatus?.ok && nativeStatus.available) {
+                    window.appState.updateManifest = nativeStatus.manifest;
+                    document.getElementById('update-ready-banner').classList.remove('hidden');
+                    return;
+                }
+            } catch (_) {}
             setTimeout(() => {
                 fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
                     .then(r => r.json())
@@ -4670,7 +4766,9 @@ window.__firebase_config = {
             recoveringConnectivity = true;
             try {
                 if (!window.appState.firebaseEnabled) await setupFirebase();
-                else setupRealtimeSync();
+                // Firestore recupera listeners activos por sí mismo. Evitar
+                // recrearlos reduce lecturas, parpadeos y trabajo al reconectar.
+                else if (!unsubscribeAffiliates) setupRealtimeSync();
                 if (window.appState.firebaseEnabled) await flushPendingChanges();
                 await checkUpdateAfterConnectivityRecovery();
             } finally {

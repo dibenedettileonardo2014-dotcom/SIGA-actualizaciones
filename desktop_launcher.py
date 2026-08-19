@@ -28,8 +28,8 @@ from urllib.parse import parse_qs, urlencode, urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.31"
-APP_REVISION = "20260818-07"
+APP_VERSION = "1.4.32"
+APP_REVISION = "20260819-01"
 PASSWORD_RESET_OAUTH_CLIENT_ID = "1065738174061-m6ugunm3vghoqeilb4k8tq6qj6apiba7.apps.googleusercontent.com"
 PASSWORD_RESET_OAUTH_CLIENT_SECRET = os.environ.get("SIGA_PASSWORD_RESET_OAUTH_CLIENT_SECRET", "")
 PASSWORD_RESET_ADMIN_GOOGLE_EMAIL = "dibenedettileonardo2014@gmail.com"
@@ -377,10 +377,10 @@ def apply_prepared_update() -> bool:
         log = update_state_path() / "SIGA.update-installer.log"
         repair_shortcut = (
             f'powershell -NoProfile -ExecutionPolicy Bypass -Command '
-            f'"$w=New-Object -ComObject WScript.Shell; $d=$w.SpecialFolders.Item(\'Desktop\'); '
-            f'$s=$w.CreateShortcut((Join-Path $d \'SIGA.lnk\')); $s.TargetPath=\'{target}\'; '
-            f'$s.Arguments=\'\'; $s.WorkingDirectory=\'{target.parent}\'; '
-            f'$s.IconLocation=\'{target.parent / "siga-desktop-icon.ico"}\'; $s.Save()"\n'
+            f'"$w=New-Object -ComObject WScript.Shell; $icon=\'{target.parent / "siga-desktop-icon.ico"}\'; '
+            f'$links=@((Join-Path $w.SpecialFolders.Item(\'Desktop\') \'SIGA.lnk\'),(Join-Path $w.SpecialFolders.Item(\'Programs\') \'SIGA.lnk\')); '
+            f'foreach($link in $links){{if(Test-Path -LiteralPath $link){{$s=$w.CreateShortcut($link); $s.TargetPath=\'{target}\'; $s.Arguments=\'\'; $s.WorkingDirectory=\'{target.parent}\'; $s.IconLocation=$icon; $s.Save()}}}}; '
+            f'Start-Process ie4uinit.exe -ArgumentList \'-show\' -WindowStyle Hidden -ErrorAction SilentlyContinue"\n'
         )
         if prepared["kind"] == "installer":
             action = f'start "" /wait "{source}" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CURRENTUSER /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS /LOG="{log}"\n'

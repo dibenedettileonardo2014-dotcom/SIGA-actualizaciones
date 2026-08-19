@@ -3,14 +3,14 @@
   "short_name": "Mi SIGA",
   "description": "Credencial digital y servicios para afiliados SIGA",
   "lang": "es-AR",
-  "id": "./afiliado.html",
-  "start_url": "./afiliado.html",
+  "id": "./afiliado.html?v=2026-v2",
+  "start_url": "./afiliado.html?v=2026-v2",
   "scope": "./",
   "display": "standalone",
   "background_color": "#071510",
   "theme_color": "#064e3b",
   "icons": [
-    {"src":"assets/mi-siga-icon-192-v1430.png","sizes":"192x192","type":"image/png","purpose":"any"},
-    {"src":"assets/mi-siga-icon-512-v1430.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+    {"src":"assets/mi-siga-icon-192-2026-v2.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/mi-siga-icon-512-2026-v2.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
   ]
 }
