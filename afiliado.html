@@ -420,6 +420,9 @@
           updateCheckPromise=registration.update().then(()=>activateWaitingWorker(registration)).catch(()=>{}).finally(()=>{updateCheckPromise=null});
           return updateCheckPromise;
         };
+        // Siempre se consulta al abrir: una PWA instalada puede conservar una
+        // página anterior aunque el navegador ya haya descargado el nuevo SW.
+        // La promesa compartida evita solicitudes duplicadas en paralelo.
         void checkForUpdate();
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void checkForUpdate()});
         window.addEventListener('pageshow',()=>void checkForUpdate());

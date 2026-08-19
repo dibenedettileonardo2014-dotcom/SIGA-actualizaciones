@@ -1,4 +1,4 @@
-const CACHE_NAME = 'misiga-v2026-v2-r20260819-03';
+const CACHE_NAME = 'misiga-v2026-v2-r20260819-03-hf1';
 const NAVIGATION_NETWORK_TIMEOUT_MS = 3500;
 const APP_SHELL = [
   './afiliado.html',
@@ -28,7 +28,9 @@ self.addEventListener('fetch', event => {
   if (sameOrigin && event.request.mode === 'navigate') {
     event.respondWith(
       caches.match(event.request).then(async exactCached => {
-        const cached = exactCached || await caches.match('./afiliado.html');
+        // No devolver una navegación cacheada antes de intentar la red: así
+        // una instalación anterior recibe la página nueva y su service worker.
+        const cached = await caches.match('./afiliado.html');
         const network = fetch(event.request).then(response => {
           if (response.ok) {
             const copy = response.clone();
