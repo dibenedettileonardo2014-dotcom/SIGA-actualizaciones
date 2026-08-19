@@ -156,7 +156,7 @@ class ApplicationSourceTests(unittest.TestCase):
         service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
         self.assertIn("NAVIGATION_NETWORK_TIMEOUT_MS", service_worker)
         self.assertIn("Promise.race([network, timeout])", service_worker)
-        self.assertIn("await caches.match('./index.html')", service_worker)
+        self.assertIn("await caches.match('./afiliado.html')", service_worker)
 
     def test_legacy_desktop_can_fetch_update_manifest_cross_origin(self):
         firebase_config = json.loads((ROOT / "firebase.json").read_text(encoding="utf-8"))
@@ -244,7 +244,7 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertLess(payment_save, affiliate_update)
         self.assertIn("await removePaymentFromDatabase(payment.id)", desktop)
 
-    def test_runtime_dependencies_are_local_and_mobile_offline_shell_includes_firebase(self):
+    def test_runtime_dependencies_are_local_and_mobile_shell_defers_large_resources(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
@@ -252,7 +252,10 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertIn("./assets/vendor/firebase.js", source)
             self.assertNotIn("gstatic.com/firebasejs", source)
             self.assertIn("Content-Security-Policy", source)
-        self.assertIn("'./assets/vendor/firebase.js'", service_worker)
+        self.assertNotIn("'./assets/vendor/firebase.js'", service_worker)
+        self.assertNotIn("'./index.html'", service_worker)
+        self.assertNotIn("'./assets/logo-spiqyp-rosario.png'", service_worker)
+        self.assertNotIn("'./assets/convenio-77-89.pdf'", service_worker)
         for filename in ("firebase.js", "tailwind.css", "chart.js", "xlsx.js", "jspdf.js", "jspdf-autotable.js"):
             self.assertTrue((ROOT / "assets" / "vendor" / filename).is_file(), filename)
 
@@ -272,7 +275,7 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertIn(marker, mobile)
         pages = sorted((ROOT / "assets" / "convenio-77-89-pages").glob("page-*.jpg"))
         self.assertEqual(len(pages), 29)
-        self.assertIn("'./assets/convenio-77-89-pages/page-01.jpg'", service_worker)
+        self.assertNotIn("'./assets/convenio-77-89-pages/page-01.jpg'", service_worker)
         self.assertNotIn("pdfjs/", service_worker)
 
     def test_affiliate_register_shows_calculated_age_and_mobile_has_direct_convention_access(self):
@@ -436,7 +439,7 @@ class ApplicationSourceTests(unittest.TestCase):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         mobile = (ROOT / "afiliado.html").read_text(encoding="utf-8")
         service_worker = (ROOT / "sw.js").read_text(encoding="utf-8")
-        for source in (desktop, mobile, service_worker):
+        for source in (desktop, mobile):
             self.assertIn("assets/logo-spiqyp-rosario.png", source)
         self.assertIn("context.drawImage(logo", desktop)
         self.assertIn("context.drawImage(logo", mobile)
@@ -483,7 +486,7 @@ class ApplicationSourceTests(unittest.TestCase):
             self.assertIn(marker, mobile)
         for marker in ("maintenanceEnabled", "isStaffOperational", "maintenance_audit", "allow create, update: if isAdmin()"):
             self.assertIn(marker, rules)
-        self.assertIn("assets/mantenimiento.png", service_worker)
+        self.assertNotIn("assets/mantenimiento.png", service_worker)
         self.assertTrue((ROOT / "assets" / "mantenimiento.png").exists())
 
     def test_mobile_maintenance_starts_before_authentication(self):
@@ -602,7 +605,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.32")
+        self.assertEqual(manifest["displayVersion"], "1.4.33")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

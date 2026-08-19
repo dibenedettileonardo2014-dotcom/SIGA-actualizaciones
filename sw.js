@@ -1,21 +1,9 @@
-const CACHE_NAME = 'misiga-v2026-v2-r20260819-01';
+const CACHE_NAME = 'misiga-v2026-v2-r20260819-02';
 const NAVIGATION_NETWORK_TIMEOUT_MS = 3500;
 const APP_SHELL = [
-  './',
-  './index.html',
-  './manifest.json',
   './afiliado.html',
   './afiliado-manifest.json',
-  './assets/siga-desktop-icon-128.png',
-  './assets/siga-desktop-icon.png',
-  './assets/mi-siga-icon-192-2026-v2.png',
-  './assets/mi-siga-icon-512-2026-v2.png',
-  './assets/mi-siga-icon-180-2026-v2.png',
-  './assets/logo-spiqyp-rosario.png',
-  './assets/mantenimiento.png',
-  './assets/vendor/firebase.js',
-  './assets/convenio-77-89-pages/page-01.jpg',
-  './assets/convenio-77-89.pdf'
+  './assets/mi-siga-icon-192-2026-v2.png'
 ];
 
 self.addEventListener('install', event => {
@@ -40,7 +28,7 @@ self.addEventListener('fetch', event => {
   if (sameOrigin && event.request.mode === 'navigate') {
     event.respondWith(
       caches.match(event.request).then(async exactCached => {
-        const cached = exactCached || await caches.match('./') || await caches.match('./index.html');
+        const cached = exactCached || await caches.match('./afiliado.html');
         const network = fetch(event.request).then(response => {
           if (response.ok) {
             const copy = response.clone();
