@@ -102,7 +102,7 @@
     const MOBILE_READ_ONLY=false,BIOMETRIC_RELOCK_MS=5*60*1000;
     const BIOMETRIC_KEY='siga_biometric_v1',UNLOCK_KEY='siga_biometric_unlocked',INVITE_KEY_PREFIX='siga_biometric_invite_';
     const DEFAULT_MAINTENANCE_TITLE='SIGA EN MANTENIMIENTO',DEFAULT_MAINTENANCE_MESSAGE='ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.',MAINTENANCE_CACHE_KEY=`siga_mobile_verified_maintenance_${networkId}`;
-    const APP_VERSION='1.4.33',APP_REVISION='20260819-02',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
+    const APP_VERSION='1.4.34',APP_REVISION='20260819-03',DIAGNOSTIC_QUEUE_KEY=`siga_mobile_diagnostics_${networkId}`,DIAGNOSTIC_QUEUE_LIMIT=50;
     const requestedDni=new URLSearchParams(location.search).get('dni')?.replace(/\D/g,'')||'';
     if(/^\d{7,9}$/.test(requestedDni))$('dni').value=requestedDni;
 
@@ -397,8 +397,6 @@
     void updateBiometricUi();
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){hiddenAt=Date.now();return}if(maintenanceBlocked||!hiddenAt||Date.now()-hiddenAt<BIOMETRIC_RELOCK_MS)return;hiddenAt=0;const user=auth.currentUser,record=getBiometricRecord();if(!user||record?.uid!==user.uid||biometricPromptActive)return;sessionStorage.removeItem(UNLOCK_KEY);automaticUnlockUid=null;stopNoticeWatches();appView.classList.add('hidden');loginView.classList.remove('hidden');$('login-message').textContent='Confirmá tu identidad para continuar…';automaticUnlockUid=user.uid;unlockWithBiometric(user).catch(error=>{$('login-message').textContent=error?.name==='NotAllowedError'?'Verificación cancelada. Podés ingresar con contraseña.':'La biometría ya no está disponible. Ingresá con contraseña.'})});
     if('serviceWorker'in navigator){
-      const SW_UPDATE_CHECK_INTERVAL_MS=15*60*1000;
-      const SW_UPDATE_CHECK_KEY='siga_mobile_sw_update_check';
       let reloading=false,updateCheckPromise=null;
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
         if(reloading)return;
@@ -417,11 +415,8 @@
             if(worker.state==='installed'&&navigator.serviceWorker.controller)worker.postMessage({type:'SKIP_WAITING'});
           });
         });
-        const checkForUpdate=({force=false}={})=>{
-          const lastCheck=Number(localStorage.getItem(SW_UPDATE_CHECK_KEY)||0);
-          if(!force&&Date.now()-lastCheck<SW_UPDATE_CHECK_INTERVAL_MS)return Promise.resolve();
+        const checkForUpdate=()=>{
           if(updateCheckPromise)return updateCheckPromise;
-          localStorage.setItem(SW_UPDATE_CHECK_KEY,String(Date.now()));
           updateCheckPromise=registration.update().then(()=>activateWaitingWorker(registration)).catch(()=>{}).finally(()=>{updateCheckPromise=null});
           return updateCheckPromise;
         };
