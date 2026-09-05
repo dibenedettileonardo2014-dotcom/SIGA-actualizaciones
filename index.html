@@ -37,6 +37,7 @@
         }
         body[data-role="operador"] #admin-nav-section,
         body[data-role="operador"] #btn-tab-usuarios,
+        body[data-role="operador"] #btn-tab-errores,
         body[data-role="operador"] #btn-tab-configuracion,
         body[data-role="operador"] #btn-tab-mantenimiento,
         body[data-role="operador"] #btn-tab-credenciales,
@@ -1300,6 +1301,8 @@
         let authenticationRequired = false;
         let unsubscribeMaintenance = null;
         let unsubscribeDiagnostics = null;
+        let unsubscribeSyncConflicts = null;
+        let remoteSyncConflicts = [];
         let maintenanceConfigVerified = false;
         const roleAuthEmails = {
             admin: 'administrador@siga.com',
@@ -1308,12 +1311,13 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.35';
-        const DIAGNOSTIC_REVISION = '20260819-03';
+        const DIAGNOSTIC_VERSION = '1.4.36';
+        const DIAGNOSTIC_REVISION = '20260905-02';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
         const maintenanceAuditCollection = () => collection(window.appState.db, 'artifacts', window.appState.appId, 'public', 'data', 'maintenance_audit');
+        const syncConflictsCollection = () => collection(window.appState.db, 'artifacts', window.appState.appId, 'sync_conflicts');
         const maintenanceCacheKey = () => `siga_verified_maintenance_${window.appState.appId}`;
 
         function diagnosticQueueKey() { return `siga_diagnostic_queue_${window.appState.appId}`; }
@@ -1402,6 +1406,11 @@
                 if (window.appState.currentTab === 'errores') renderDiagnostics();
             }, error => { originalConsoleError('No se pudieron consultar los diagnósticos:', error); });
         }
+        function setupSyncConflictWatch() { unsubscribeSyncConflicts?.(); const user=window.appState.auth?.currentUser;if(!user||!window.appState.db)return;const source=window.appState.currentUserRole==='admin'?syncConflictsCollection():query(syncConflictsCollection(),where('reporterUid','==',user.uid));unsubscribeSyncConflicts=onSnapshot(source,snapshot=>{const entries=snapshot.docs.map(item=>({id:item.id,...item.data()}));if(window.appState.currentUserRole==='admin'){remoteSyncConflicts=entries.filter(item=>item.status==='open');if(window.appState.currentTab==='errores')renderConflictsTab()}else entries.filter(item=>['retry','discard'].includes(item.command)).forEach(applyRemoteConflictCommand)})}
+        async function publishSyncConflict(change) { if(!window.appState.firebaseEnabled||!window.appState.auth?.currentUser)return '';const id=change.remoteConflictId||change.data?.clientMutationId||crypto.randomUUID();await setDoc(doc(syncConflictsCollection(),id),{id,reporterUid:window.appState.auth.currentUser.uid,deviceId:diagnosticDeviceId(),status:'open',command:'',code:change.conflictCode||'revision-conflict',reason:change.conflictReason||conflictDescription(change),conflictAt:change.conflictAt||new Date().toISOString(),change:{id:change.id,type:change.type,collection:change.collection,data:change.data},updatedAt:serverTimestamp(),createdAt:serverTimestamp()},{merge:true});return id }
+        async function publishPendingSyncConflicts(){for(const change of readPendingChanges().filter(item=>item.conflict&&!item.remoteConflictId)){try{const id=await publishSyncConflict(change);if(id){const all=readPendingChanges().map(item=>item.id===change.id?{...item,remoteConflictId:id}:item);localStorage.setItem(pendingChangesKey(),JSON.stringify(all))}}catch(error){console.error('No se pudo informar el conflicto al administrador:',error)}}}
+        window.resolveRemoteSyncConflict=async function(id,command){try{await updateDoc(doc(syncConflictsCollection(),id),{status:command,command,resolvedBy:window.appState.auth.currentUser.email,resolvedAt:serverTimestamp()})}catch(error){showToast('Conflictos','No se pudo enviar la resolución a la otra PC.','error')}};
+        async function applyRemoteConflictCommand(remote){const remoteChange=remote.change||{},pending=readPendingChanges(),index=pending.findIndex(item=>item.id===remoteChange.id&&item.data?.clientMutationId===remoteChange.data?.clientMutationId);if(index<0)return;if(remote.command==='retry')pending[index]={...pending[index],conflict:false,remoteConflictId:remote.id};else pending.splice(index,1);if(pending.length)localStorage.setItem(pendingChangesKey(),JSON.stringify(pending));else localStorage.removeItem(pendingChangesKey());await updateDoc(doc(syncConflictsCollection(),remote.id),{status:remote.command==='retry'?'applied':'discarded',command:'',appliedAt:serverTimestamp()});setupRealtimeSync();void flushPendingChanges()}
         window.renderDiagnostics = function() {
             const list = document.getElementById('diagnostics-list'), empty = document.getElementById('diagnostics-empty'), filter = document.getElementById('diagnostics-filter')?.value || 'open';
             if (!list || !empty) return;
@@ -1588,6 +1597,8 @@ window.__firebase_config = {
                     await setupMaintenanceWatch();
                     void flushDiagnosticQueue();
                     setupDiagnosticsWatch();
+                    setupSyncConflictWatch();
+                    void publishPendingSyncConflicts();
                     if (!(window.appState.maintenance.enabled && authenticatedRole !== 'admin')) {
                         setupRealtimeSync();
                         void flushPendingChanges();
@@ -1808,7 +1819,11 @@ window.__firebase_config = {
             const list = document.getElementById('conflicts-list');
             const empty = document.getElementById('conflicts-empty');
             if (!list || !empty) return;
-            const conflicts = readPendingChanges().filter(change => change.conflict);
+            const localConflicts = readPendingChanges().filter(change => change.conflict);
+            const remoteConflicts = window.appState.currentUserRole === 'admin'
+                ? remoteSyncConflicts.map(item => ({ ...item.change, remoteConflictId: item.id, conflict: true, conflictReason: item.reason, conflictCode: item.code, conflictAt: item.conflictAt, deviceId: item.deviceId }))
+                : [];
+            const conflicts = [...remoteConflicts, ...localConflicts.filter(change => !change.remoteConflictId)];
             empty.classList.toggle('hidden', conflicts.length > 0);
             list.replaceChildren();
             conflicts.forEach(change => {
@@ -1819,7 +1834,11 @@ window.__firebase_config = {
                 card.querySelector('strong').textContent = affiliate.name || `Registro ${change.id}`;
                 card.querySelector('.conflict-detail').textContent = conflictDescription(change);
                 card.querySelector('.conflict-meta').textContent = `Nº ${affiliate.number || '—'} · DNI ${affiliate.dni || '—'}${change.conflictAt ? ` · Detectado ${new Date(change.conflictAt).toLocaleString('es-AR')}` : ''}`;
-                card.querySelector('.review-conflict').onclick = () => {
+                if (change.remoteConflictId) {
+                    card.querySelector('.review-conflict').textContent = 'Reintentar en la PC';
+                    card.querySelector('.review-conflict').onclick = () => resolveRemoteSyncConflict(change.remoteConflictId, 'retry');
+                    const discard = document.createElement('button'); discard.type = 'button'; discard.className = 'px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl'; discard.textContent = 'Descartar cambio local'; discard.onclick = () => resolveRemoteSyncConflict(change.remoteConflictId, 'discard'); card.append(discard);
+                } else card.querySelector('.review-conflict').onclick = () => {
                     const local = window.appState.affiliates.find(item => item.id === change.id);
                     if (!local) return showToast('Conflicto', 'La ficha local ya no está disponible.', 'warning');
                     switchTab('afiliados');
@@ -2073,7 +2092,7 @@ window.__firebase_config = {
                         window.pywebview?.api?.report_sync_error?.(error?.code || 'unknown', error?.message || String(error)).catch(() => {});
                         if (error?.code === 'dni-conflict' || error?.code === 'number-conflict') {
                             showToast('Conflicto entre computadoras', error.message, 'error');
-                            remaining.push({ ...change, conflict: true, conflictCode: error.code, conflictReason: error.message, conflictAt: new Date().toISOString() });
+                            const conflicted = { ...change, conflict: true, conflictCode: error.code, conflictReason: error.message, conflictAt: new Date().toISOString() }; conflicted.remoteConflictId = await publishSyncConflict(conflicted).catch(() => ''); remaining.push(conflicted);
                             const localItem = window.appState.affiliates.find(item => item.id === change.id && item.clientMutationId === change.data?.clientMutationId);
                             if (localItem) {
                                 localItem.syncStatus = 'conflict';
@@ -2082,7 +2101,7 @@ window.__firebase_config = {
                             }
                         } else if (error?.code === 'revision-conflict') {
                             const rebasedChange = { ...change, conflict: true, conflictCode: error.code, conflictReason: error.message, conflictAt: new Date().toISOString(), data: { ...change.data, revision: error.currentRevision } };
-                            remaining.push(rebasedChange);
+                            rebasedChange.remoteConflictId = await publishSyncConflict(rebasedChange).catch(() => ''); remaining.push(rebasedChange);
                             const localItem = window.appState.affiliates.find(item => item.id === change.id && item.clientMutationId === change.data?.clientMutationId);
                             if (localItem) {
                                 localItem.revision = error.currentRevision;
@@ -2664,7 +2683,7 @@ window.__firebase_config = {
                 importContainer.classList.remove('hidden');
                 adminNavigation.classList.remove('hidden');
                 permissionsNavigation.classList.remove('hidden');
-                errorsNavigation.classList.remove('hidden');
+                errorsNavigation.classList.add('hidden');
                 configurationNavigation.classList.remove('hidden');
                 maintenanceNavigation.classList.remove('hidden');
                 firebaseAccountsLink.classList.remove('hidden');
@@ -4324,8 +4343,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.35";
-        const APP_REVISION = "20260905-01";
+        const APP_VERSION = "1.4.36";
+        const APP_REVISION = "20260905-02";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4648,7 +4667,7 @@ window.__firebase_config = {
         document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),thumb=image?await imageThumbnail(image):null,id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0},replacements={};if(image){replacements.image=image;replacements.thumbnail=thumb}if(pdf)replacements.pdf=pdf;await saveNoticeAtomically(id,data,replacements);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
-            if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones', 'usuarios', 'configuracion', 'mantenimiento'].includes(tabId)) {
+            if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones', 'errores', 'usuarios', 'configuracion', 'mantenimiento'].includes(tabId)) {
                 tabId = 'dashboard';
             }
             window.appState.currentTab = tabId;

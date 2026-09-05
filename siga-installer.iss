@@ -1,5 +1,5 @@
 #define MyAppName "SIGA"
-#define MyAppVersion "1.4.35"
+#define MyAppVersion "1.4.36"
 #define MyAppPublisher "LGDB"
 #define MyAppExeName "SIGA.exe"
 #ifndef MyAppArch
@@ -43,6 +43,7 @@ Source: "assets\siga-desktop-icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Name: "{app}\Documentos"
 
 [InstallDelete]
+Type: filesandordirs; Name: "{app}\_internal\cffi"
 Type: filesandordirs; Name: "{app}\_internal\clr_loader\ffi\dlls\x86"
 Type: files; Name: "{app}\_internal\afiliado.html"
 Type: files; Name: "{app}\_internal\afiliado-manifest.json"

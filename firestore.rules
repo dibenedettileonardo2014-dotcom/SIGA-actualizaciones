@@ -232,6 +232,21 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /artifacts/{appId}/sync_conflicts/{conflictId} {
+      allow read: if isAdmin() || (isStaff() && resource.data.reporterUid == request.auth.uid);
+      allow create: if isStaffOperational(appId)
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.id == conflictId
+        && request.resource.data.status == 'open'
+        && request.resource.data.command == ''
+        && request.resource.data.change is map;
+      allow update: if isAdmin() || (isStaffOperational(appId)
+        && resource.data.reporterUid == request.auth.uid
+        && resource.data.status in ['retry', 'discard']
+        && request.resource.data.status in ['applied', 'discarded']);
+      allow delete: if isAdmin();
+    }
+
     match /artifacts/{appId}/public/config/affiliate_sequence/state {
       allow read: if isStaffOperational(appId);
       allow create, update: if isStaffOperational(appId)
