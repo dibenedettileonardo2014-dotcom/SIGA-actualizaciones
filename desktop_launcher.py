@@ -28,8 +28,8 @@ from urllib.parse import parse_qs, urlencode, urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.36"
-APP_REVISION = "20260905-03"
+APP_VERSION = "1.4.37"
+APP_REVISION = "20260905-04"
 PASSWORD_RESET_OAUTH_CLIENT_ID = "1065738174061-m6ugunm3vghoqeilb4k8tq6qj6apiba7.apps.googleusercontent.com"
 PASSWORD_RESET_OAUTH_CLIENT_SECRET = os.environ.get("SIGA_PASSWORD_RESET_OAUTH_CLIENT_SECRET", "")
 PASSWORD_RESET_ADMIN_GOOGLE_EMAIL = "dibenedettileonardo2014@gmail.com"
@@ -364,6 +364,24 @@ def install_update(manifest: dict) -> bool:
         return False
 
 
+def prepared_update_status() -> dict:
+    """Return only a verified staged update; never infer readiness from UI text."""
+    state = update_state_path() / "prepared-update.json"
+    try:
+        prepared = json.loads(state.read_text(encoding="utf-8"))
+        source = Path(prepared["path"])
+        if (
+            prepared.get("architecture") != APP_ARCH
+            or prepared.get("kind") not in {"installer", "package", "executable"}
+            or not source.is_file()
+            or file_sha256(source) != str(prepared.get("sha256", "")).upper()
+        ):
+            raise ValueError("Actualizacion preparada invalida.")
+        return {"ready": True, "version": prepared.get("version", ""), "revision": prepared.get("revision", "")}
+    except (OSError, ValueError, KeyError, json.JSONDecodeError):
+        return {"ready": False}
+
+
 def apply_prepared_update() -> bool:
     """Apply a verified staged update and relaunch only the canonical installation."""
     state = update_state_path() / "prepared-update.json"
@@ -615,6 +633,7 @@ class DesktopApi:
         return {
             "ok": True,
             "available": update_required(manifest),
+            "prepared": prepared_update_status(),
             "manifest": {
                 "version": manifest.get("version", ""),
                 "displayVersion": manifest.get("displayVersion", manifest.get("version", "")),
@@ -623,17 +642,34 @@ class DesktopApi:
             },
         }
 
-    def install_available_update(self) -> dict:
+    def prepare_available_update(self) -> dict:
+        """Download once in the background and report ready only after verification."""
         if not getattr(sys, "frozen", False):
             return {"ok": False, "error": "La instalación solo está disponible en SIGA compilado."}
+        prepared = prepared_update_status()
+        if prepared["ready"]:
+            return {"ok": True, **prepared}
         manifest = fetch_update_manifest()
         if not manifest:
             return {"ok": False, "error": "No se pudo consultar el servidor de actualizaciones."}
         if not update_required(manifest):
-            return {"ok": False, "error": "SIGA ya tiene la última versión."}
+            return {"ok": True, "ready": False, "available": False}
         if not install_update(manifest):
             return {"ok": False, "error": "No se pudo preparar la actualización."}
-        return {"ok": True, "ready": True, "version": manifest["version"]}
+        prepared = prepared_update_status()
+        if not prepared["ready"]:
+            return {"ok": False, "error": "La actualización no pudo verificarse."}
+        return {"ok": True, "available": True, **prepared}
+
+    def install_available_update(self) -> dict:
+        if not getattr(sys, "frozen", False):
+            return {"ok": False, "error": "La instalación solo está disponible en SIGA compilado."}
+        result = self.prepare_available_update()
+        if not result.get("ok"):
+            return result
+        if not result.get("ready"):
+            return {"ok": False, "error": "SIGA ya tiene la última versión."}
+        return result
 
     def apply_prepared_update(self) -> dict:
         if not getattr(sys, "frozen", False):

@@ -840,7 +840,7 @@
                         </div>
                     <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
                         Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.35</span><span id="about-installed-architecture"></span>
-                        · Actualización preparada en segundo plano
+                        · Actualizaciones automáticas en segundo plano
                     </p>
                     </section>
                 </div>
@@ -4343,8 +4343,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.36";
-        const APP_REVISION = "20260905-03";
+        const APP_VERSION = "1.4.37";
+        const APP_REVISION = "20260905-04";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4490,35 +4490,17 @@ window.__firebase_config = {
             sessionStorage.setItem('siga_update_postponed', '1');
         });
 
-        // Verifica y prepara en segundo plano; nunca interrumpe el trabajo.
+        // Descarga y verifica en segundo plano. El aviso solo aparece cuando el
+        // paquete ya está realmente preparado y el operador puede decidir.
         const checkForUpdatesOnStartup = async () => {
             if (sessionStorage.getItem('siga_update_postponed') === '1') return;
             try {
-                const nativeStatus = await window.pywebview?.api?.check_update_status?.();
-                if (nativeStatus?.ok && nativeStatus.available) {
-                    window.appState.updateManifest = nativeStatus.manifest;
+                const prepared = await window.pywebview?.api?.prepare_available_update?.();
+                if (prepared?.ok && prepared.ready) {
                     document.getElementById('update-ready-banner').classList.remove('hidden');
                     return;
                 }
             } catch (_) {}
-            setTimeout(() => {
-                fetch(UPDATE_CHECK_URL + `?v=${Date.now()}`)
-                    .then(r => r.json())
-                    .then(manifest => {
-                        const remoteVersion = manifest.displayVersion || manifest.version;
-                        if (remoteVersion && (compareVersions(remoteVersion, APP_VERSION) > 0 || (compareVersions(remoteVersion, APP_VERSION) === 0 && manifest.revision && manifest.revision > APP_REVISION))) {
-                            // Hay actualización disponible
-                            window.appState.updateManifest = manifest;
-                            const badge = document.getElementById('update-badge');
-                            if (badge) {
-                                badge.textContent = 'NUEVA';
-                                badge.classList.remove('hidden');
-                            }
-                            void window.downloadAndInstallUpdate();
-                        }
-                    })
-                    .catch(() => {});
-            }, 2000);
         };
 
         window.importDataFromJSON = function(event) {

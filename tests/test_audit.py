@@ -394,8 +394,9 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("manifest.revision > APP_REVISION", desktop)
         self.assertNotIn("manifest.revision !== APP_REVISION", desktop)
         self.assertIn("verifica, descarga y aplica automáticamente", desktop)
-        self.assertIn("window.pywebview?.api?.check_update_status", desktop)
+        self.assertIn("window.pywebview?.api?.prepare_available_update", desktop)
         self.assertIn("def check_update_status(self)", (ROOT / "desktop_launcher.py").read_text(encoding="utf-8"))
+        self.assertIn("def prepare_available_update(self)", (ROOT / "desktop_launcher.py").read_text(encoding="utf-8"))
         self.assertNotIn("document.getElementById('error-message').textContent = error.message ||", desktop)
 
     def test_manifest_selection_compares_all_update_mirrors(self):
@@ -595,8 +596,10 @@ class ApplicationSourceTests(unittest.TestCase):
         launcher = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
         self.assertIn('id="update-ready-banner"', desktop)
         self.assertIn('id="restart-update-button"', desktop)
-        self.assertIn("void window.downloadAndInstallUpdate()", desktop)
+        self.assertIn("const prepared = await window.pywebview?.api?.prepare_available_update?.();", desktop)
+        self.assertIn("if (prepared?.ok && prepared.ready)", desktop)
         self.assertIn("def apply_prepared_update()", launcher)
+        self.assertIn("def prepared_update_status()", launcher)
         self.assertIn('state = update_state_path() / "prepared-update.json"', launcher)
         self.assertIn('return apply_prepared_update()', launcher)
         self.assertIn('webview_storage_path().parent / "SIGA.exe"', launcher)
@@ -611,7 +614,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.36")
+        self.assertEqual(manifest["displayVersion"], "1.4.37")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")
