@@ -525,7 +525,7 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("window.appState.currentUserRole === 'admin'", desktop)
         self.assertIn("'usuarios', 'configuracion', 'mantenimiento'", desktop)
 
-    def test_staff_can_review_local_sync_conflicts_without_diagnostics_access(self):
+    def test_operator_has_no_conflict_or_update_navigation(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         for marker in ('id="btn-tab-errores"', 'id="tab-errores"', "function renderConflictsTab()", "window.retryPendingConflicts"):
             self.assertIn(marker, desktop)
@@ -536,7 +536,10 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("function waitForPendingChange(change", desktop)
         self.assertIn('id="diagnostics-panel"', desktop)
         self.assertIn('body[data-role="operador"] #diagnostics-panel', desktop)
-        self.assertIn("errorsNavigation.classList.remove('hidden')", desktop)
+        self.assertIn("errorsNavigation.classList.add('hidden')", desktop)
+        self.assertIn('body[data-role="operador"] #btn-tab-errores', desktop)
+        self.assertIn('body[data-role="operador"] #btn-tab-actualizaciones', desktop)
+        self.assertIn("'actualizaciones', 'errores'", desktop)
         self.assertNotIn("siga_mobile_credential_repaired_35463065", desktop)
 
     def test_cross_device_diagnostics_are_private_sanitized_and_admin_only(self):
