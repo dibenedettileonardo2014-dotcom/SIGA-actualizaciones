@@ -523,9 +523,9 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("window.appState.auth?.currentUser?.email !== roleAuthEmails[role]", desktop)
         self.assertIn("localStorage.removeItem(VERIFIED_ROLE_KEY)", desktop)
         self.assertIn("window.appState.currentUserRole === 'admin'", desktop)
-        self.assertIn("'errores', 'usuarios', 'configuracion', 'mantenimiento'", desktop)
+        self.assertIn("'usuarios', 'configuracion', 'mantenimiento'", desktop)
 
-    def test_admin_can_review_local_sync_conflicts(self):
+    def test_staff_can_review_local_sync_conflicts_without_diagnostics_access(self):
         desktop = (ROOT / "index.html").read_text(encoding="utf-8")
         for marker in ('id="btn-tab-errores"', 'id="tab-errores"', "function renderConflictsTab()", "window.retryPendingConflicts"):
             self.assertIn(marker, desktop)
@@ -534,6 +534,9 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("clearAcknowledgedPendingChanges('afiliados'", desktop)
         self.assertIn("acknowledgedAffiliates.forEach(syncMobileCredential)", desktop)
         self.assertIn("function waitForPendingChange(change", desktop)
+        self.assertIn('id="diagnostics-panel"', desktop)
+        self.assertIn('body[data-role="operador"] #diagnostics-panel', desktop)
+        self.assertIn("errorsNavigation.classList.remove('hidden')", desktop)
         self.assertNotIn("siga_mobile_credential_repaired_35463065", desktop)
 
     def test_cross_device_diagnostics_are_private_sanitized_and_admin_only(self):
@@ -605,7 +608,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.34")
+        self.assertEqual(manifest["displayVersion"], "1.4.35")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

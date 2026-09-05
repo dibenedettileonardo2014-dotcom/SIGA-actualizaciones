@@ -37,12 +37,16 @@
         }
         body[data-role="operador"] #admin-nav-section,
         body[data-role="operador"] #btn-tab-usuarios,
-        body[data-role="operador"] #btn-tab-errores,
         body[data-role="operador"] #btn-tab-configuracion,
         body[data-role="operador"] #btn-tab-mantenimiento,
         body[data-role="operador"] #btn-tab-credenciales,
         body[data-role="operador"] #btn-tab-actualizaciones,
         body[data-role="operador"] #firebase-accounts-link {
+            display: none !important;
+        }
+        /* El operador solo ve los conflictos guardados en esta PC. Los
+           diagnósticos de otras instalaciones siguen siendo exclusivos del administrador. */
+        body[data-role="operador"] #diagnostics-panel {
             display: none !important;
         }
         #update-ready-banner { position:fixed; right:20px; bottom:20px; z-index:10000; max-width:390px; }
@@ -751,7 +755,7 @@
                             <!-- Versión actual (mostrado siempre) -->
                             <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
                                 <p class="text-xs font-semibold text-blue-900 mb-2">Versión Instalada</p>
-                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.34</p>
+                            <p id="current-version-display" class="text-lg font-bold text-blue-700">v1.4.35</p>
                             </div>
 
                             <!-- Sin actualizaciones disponibles -->
@@ -772,7 +776,7 @@
                                         <p id="update-available-title" class="font-semibold text-amber-900 mb-2">Actualización disponible</p>
                                         <div class="flex items-baseline gap-2 mb-2">
                                             <span class="text-sm text-amber-700">Versión Actual:</span>
-                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.34</span>
+                                <span id="current-version-text" class="font-bold text-amber-800">v1.4.35</span>
                                         </div>
                                         <div class="flex items-baseline gap-2 mb-3">
                                             <span id="new-version-label" class="text-sm text-amber-700">Versión disponible:</span>
@@ -834,14 +838,14 @@
                             <p>Queda prohibida su reproducción, copia, modificación, distribución, comercialización o utilización no autorizada, total o parcial.</p>
                         </div>
                     <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.34</span><span id="about-installed-architecture"></span>
+                        Versión instalada: <span id="about-installed-version" class="font-semibold text-slate-500">1.4.35</span><span id="about-installed-architecture"></span>
                         · Actualización preparada en segundo plano
                     </p>
                     </section>
                 </div>
 
                 <div id="tab-errores" class="tab-content hidden space-y-6">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-5xl mx-auto">
+                    <div id="diagnostics-panel" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-5xl mx-auto">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
                             <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-tower-broadcast text-amber-500 mr-2"></i>Incidentes de PC y móviles</h4><p class="text-xs text-slate-500 mt-1">Diagnósticos sanitizados de todas las instalaciones. Nunca se guardan contraseñas, tokens ni DNI.</p></div>
                             <div class="flex gap-2"><select id="diagnostics-filter" onchange="renderDiagnostics()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"><option value="open">Pendientes</option><option value="all">Todos</option><option value="resolved">Resueltos</option></select><button type="button" onclick="clearResolvedDiagnostics()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl">Eliminar resueltos</button></div>
@@ -1304,7 +1308,7 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.34';
+        const DIAGNOSTIC_VERSION = '1.4.35';
         const DIAGNOSTIC_REVISION = '20260819-03';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
@@ -2675,7 +2679,7 @@ window.__firebase_config = {
                 importContainer.classList.add('hidden');
                 adminNavigation.classList.add('hidden');
                 permissionsNavigation.classList.add('hidden');
-                errorsNavigation.classList.add('hidden');
+                errorsNavigation.classList.remove('hidden');
                 configurationNavigation.classList.add('hidden');
                 maintenanceNavigation.classList.add('hidden');
                 firebaseAccountsLink.classList.add('hidden');
@@ -4320,8 +4324,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.34";
-        const APP_REVISION = "20260819-03";
+        const APP_VERSION = "1.4.35";
+        const APP_REVISION = "20260905-01";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4644,7 +4648,7 @@ window.__firebase_config = {
         document.getElementById('notice-form').addEventListener('submit',async event=>{event.preventDefault();if(!['admin','operador'].includes(window.appState.currentUserRole))return showToast('Denegado','Tu rol no puede publicar comunicados.','warning');const button=document.getElementById('notice-submit'),message=document.getElementById('notice-message'),editingId=document.getElementById('notice-edit-id').value,existing=window.appState.notices.find(item=>item.id===editingId),imageSource=document.getElementById('notice-image').files[0],pdf=document.getElementById('notice-pdf').files[0];try{validateNoticeFile(imageSource,'image');validateNoticeFile(pdf,'pdf');if(!document.getElementById('notice-text').value.trim()&&!imageSource&&!pdf&&!existing?.hasImage&&!existing?.hasPdf)throw new Error('Agregá texto, una imagen o un PDF.');button.disabled=true;message.className='text-xs min-h-4 text-slate-500';message.textContent='Optimizando y publicando…';const image=await optimizeNoticeImage(imageSource),thumb=image?await imageThumbnail(image):null,id=editingId||`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;const now=new Date().toISOString(),data={id,title:document.getElementById('notice-title').value.trim(),text:document.getElementById('notice-text').value.trim().toLocaleUpperCase('es-AR'),publishedAt:existing?.publishedAt||now,updatedAt:now,important:document.getElementById('notice-important').checked,published:true,hasImage:image?true:Boolean(existing?.hasImage),imageType:image?.type||existing?.imageType||'',imageName:image?safeNoticeName(imageSource.name):existing?.imageName||'',imageSize:image?.size||existing?.imageSize||0,hasPdf:pdf?true:Boolean(existing?.hasPdf),pdfName:pdf?safeNoticeName(pdf.name):existing?.pdfName||'',pdfSize:pdf?.size||existing?.pdfSize||0},replacements={};if(image){replacements.image=image;replacements.thumbnail=thumb}if(pdf)replacements.pdf=pdf;await saveNoticeAtomically(id,data,replacements);showToast('Comunicados',editingId?'Comunicado actualizado.':'Comunicado publicado.','success');resetNoticeForm()}catch(error){console.error(error);message.className='text-xs min-h-4 text-rose-600';message.textContent=error.message||'No se pudo publicar el comunicado.'}finally{button.disabled=false}});renderNoticePreview();
 
         window.switchTab = function(tabId) {
-            if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones', 'errores', 'usuarios', 'configuracion', 'mantenimiento'].includes(tabId)) {
+            if (window.appState.currentUserRole === 'operador' && ['credenciales', 'actualizaciones', 'usuarios', 'configuracion', 'mantenimiento'].includes(tabId)) {
                 tabId = 'dashboard';
             }
             window.appState.currentTab = tabId;
