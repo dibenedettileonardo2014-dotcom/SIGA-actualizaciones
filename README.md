@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.25` — aclara el alcance de la sincronización de credenciales y guía al administrador a la recuperación segura de contraseñas en Firebase.
+`1.4.38` ? unifica la versi?n instalada en Actualizaciones y Acerca de SIGA.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
-- 1.4.25 (x86 y x64)
-- 1.4.24 (x86 y x64)
+- 1.4.38 (x86 y x64)
+- 1.4.37 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 
