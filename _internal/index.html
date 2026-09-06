@@ -1311,8 +1311,8 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.39';
-        const DIAGNOSTIC_REVISION = '20260905-06';
+        const DIAGNOSTIC_VERSION = '1.4.40';
+        const DIAGNOSTIC_REVISION = '20260905-07';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -2360,6 +2360,8 @@ window.__firebase_config = {
             }
         });
 
+        const affiliateSortCollator = new Intl.Collator('es', { sensitivity: 'base' });
+
         function processStateChange() {
             stateRevision += 1;
             derivedState = null;
@@ -2373,7 +2375,7 @@ window.__firebase_config = {
 
             const companyOptions = document.getElementById('company-filter-options');
             companyOptions.replaceChildren();
-            Array.from(window.appState.companies).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })).forEach(company => {
+            Array.from(window.appState.companies).sort((a, b) => affiliateSortCollator.compare(a, b)).forEach(company => {
                 const opt = document.createElement('option');
                 opt.value = company;
                 companyOptions.appendChild(opt);
@@ -2416,7 +2418,7 @@ window.__firebase_config = {
                 const matchStatus = !statusVal || a.status === statusVal;
 
                 return matchQuery && matchCompany && matchPayment && matchStatus;
-            }).sort((a, b) => String(a.company || '').localeCompare(String(b.company || ''), 'es', { sensitivity: 'base' }) || String(a.name || '').localeCompare(String(b.name || ''), 'es', { sensitivity: 'base' }));
+            }).sort((a, b) => affiliateSortCollator.compare(String(a.company || ''), String(b.company || '')) || affiliateSortCollator.compare(String(a.name || ''), String(b.name || '')));
 
             window.appState.currentPage = 1;
             const count = window.appState.filteredAffiliates.length;
@@ -4343,8 +4345,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.39";
-        const APP_REVISION = "20260905-06";
+        const APP_VERSION = "1.4.40";
+        const APP_REVISION = "20260905-07";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
