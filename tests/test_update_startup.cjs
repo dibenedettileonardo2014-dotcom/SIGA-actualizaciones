@@ -1,0 +1,20 @@
+﻿const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const html=fs.readFileSync('index.html','utf8');
+const source=html.slice(html.indexOf("document.getElementById('postpone-update-button').addEventListener"),html.indexOf('window.importDataFromJSON'));
+let hidden=true,timerId=0,calls=0,resolveDownload;
+const events={},saved=new Map(),timers=new Map(),button={addEventListener:(_event,callback)=>{events.postpone=callback}};
+const banner={classList:{add:()=>{hidden=true},toggle:(_name,value)=>{hidden=value}}};
+const ctx={Date:{now:()=>0},window:{addEventListener:(name,fn)=>events[name]=fn},sessionStorage:{getItem:key=>saved.get(key)||null,setItem:(key,value)=>saved.set(key,value)},document:{getElementById:id=>id==='postpone-update-button'?button:banner},setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId},clearTimeout:id=>timers.delete(id),console};
+vm.createContext(ctx);vm.runInContext(source,ctx);
+const check=force=>vm.runInContext(`checkForUpdatesOnStartup(${force})`,ctx);
+(async()=>{
+ await check(true);assert.equal(hidden,true);assert.equal([...timers.values()][0].ms,5000);
+ ctx.window.pywebview={api:{prepare_available_update:()=>{calls++;return new Promise(resolve=>resolveDownload=resolve)}}};
+ const pending=check(true);await check(true);assert.equal(calls,1);resolveDownload({ok:true,ready:true,version:'1.4.43',revision:'r1'});await pending;assert.equal(hidden,false);
+ events.postpone();assert.equal(hidden,true);assert.equal(saved.get('siga_update_postponed'),'1.4.43:r1');
+ ctx.window.pywebview.api.prepare_available_update=async()=>({ok:true,ready:true,version:'1.4.43',revision:'r1'});await check(true);assert.equal(hidden,true);
+ ctx.window.pywebview.api.prepare_available_update=async()=>({ok:true,ready:true,version:'1.4.44',revision:'r2'});await check(true);assert.equal(hidden,false);
+ hidden=true;ctx.window.pywebview.api.prepare_available_update=async()=>({ok:false});await check(true);assert.equal(hidden,true);assert.equal([...timers.values()][0].ms,60000);
+ assert.equal(typeof events.pywebviewready,'function');assert.equal(typeof events.online,'function');
+ console.log('PASS late native bridge, verified ready only, no duplicate downloads, per-version postpone and retry after failure');
+})().catch(error=>{console.error(error);process.exitCode=1});

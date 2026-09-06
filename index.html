@@ -1311,8 +1311,8 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.42';
-        const DIAGNOSTIC_REVISION = '20260905-09';
+        const DIAGNOSTIC_VERSION = '1.4.43';
+        const DIAGNOSTIC_REVISION = '20260905-10';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -3413,7 +3413,7 @@ window.__firebase_config = {
             } catch (error) {
                 return showToast('Excel no disponible', error.message, 'error');
             }
-            const rows = currentSchoolResults.map(({ child, affiliate, level, companyLabel }) => ({
+            const rows = sortByAffiliateNumber(currentSchoolResults, item => item.affiliate).map(({ child, affiliate, level, companyLabel }) => ({
                 Hijo: `${child.lastName || ''}, ${child.firstName || ''}`, 'Fecha de nacimiento': formatFamilyBirthdate(child.birthdate), Edad: child.age, Nivel: level,
                 'Afiliado titular': affiliate.name || '', DNI: affiliate.dni || '', 'Número de afiliado': affiliate.number || '', 'Compañía / Consultora': companyLabel, Parentesco: 'Hijo/a'
             }));
@@ -3454,7 +3454,7 @@ window.__firebase_config = {
             pdf.text('Listado de entrega', 8, 10);
             pdf.setFontSize(8);
             pdf.text(`Nivel: ${level}    Compañía / Consultora: ${company}    Cantidad total: ${currentSchoolResults.length}    Fecha: ${new Date().toLocaleDateString('es-AR')}`, 8, 16);
-            const body = currentSchoolResults.map(({ child, affiliate, level: schoolLevel, companyLabel }, index) => [
+            const body = sortByAffiliateNumber(currentSchoolResults, item => item.affiliate).map(({ child, affiliate, level: schoolLevel, companyLabel }, index) => [
                 index + 1, `${child.lastName || ''}, ${child.firstName || ''}`, child.age, formatFamilyBirthdate(child.birthdate), schoolLevel,
                 affiliate.name || '-', affiliate.dni || '-', companyLabel, '', '', '', ''
             ]);
@@ -3487,7 +3487,7 @@ window.__firebase_config = {
             if (!currentSchoolResults.length) return showToast('Sin datos', 'No hay hijos para imprimir con los filtros activos.', 'warning');
             const level = document.getElementById('family-age-range').selectedOptions[0].textContent;
             const company = document.getElementById('family-company-filter').selectedOptions[0].textContent;
-            const rows = currentSchoolResults.map(({ child, affiliate, level: schoolLevel, companyLabel }, index) => `<tr><td>${index + 1}</td><td>${escapePrintHtml(`${child.lastName || ''}, ${child.firstName || ''}`)}</td><td>${child.age}</td><td>${formatFamilyBirthdate(child.birthdate)}</td><td>${schoolLevel}</td><td>${escapePrintHtml(affiliate.name || '-')}</td><td>${escapePrintHtml(affiliate.dni || '-')}</td><td>${escapePrintHtml(companyLabel)}</td><td class="manual"></td><td class="manual"></td><td class="signature"></td><td class="manual"></td></tr>`).join('');
+            const rows = sortByAffiliateNumber(currentSchoolResults, item => item.affiliate).map(({ child, affiliate, level: schoolLevel, companyLabel }, index) => `<tr><td>${index + 1}</td><td>${escapePrintHtml(`${child.lastName || ''}, ${child.firstName || ''}`)}</td><td>${child.age}</td><td>${formatFamilyBirthdate(child.birthdate)}</td><td>${schoolLevel}</td><td>${escapePrintHtml(affiliate.name || '-')}</td><td>${escapePrintHtml(affiliate.dni || '-')}</td><td>${escapePrintHtml(companyLabel)}</td><td class="manual"></td><td class="manual"></td><td class="signature"></td><td class="manual"></td></tr>`).join('');
             printHtmlDocument(`<!doctype html><html><head><title>${schoolExportName('pdf')}</title><style>@page{size:A4 landscape;margin:9mm 7mm 12mm}body{font-family:Arial,sans-serif;color:#1e293b;margin:0}h1{font-size:20px;margin:0 0 6px}.meta{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;font-size:11px;margin-bottom:10px}.meta span{border-bottom:1px solid #64748b;padding:4px}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:7.5px}thead{display:table-header-group}th,td{border:1px solid #94a3b8;padding:4px 3px;vertical-align:middle;overflow-wrap:anywhere}th{background:#e2e8f0}.manual{height:25px}.signature{width:9%;height:25px}tr{break-inside:avoid}footer{position:fixed;bottom:-8mm;right:0;font-size:8px;color:#64748b}.page:after{content:counter(page)}</style></head><body><h1>Listado de entrega</h1><div class="meta"><span><b>Nivel:</b> ${escapePrintHtml(level)}</span><span><b>Compañía / Consultora:</b> ${escapePrintHtml(company)}</span><span><b>Cantidad total:</b> ${currentSchoolResults.length}</span><span><b>Fecha:</b> ${new Date().toLocaleDateString('es-AR')}</span></div><table><thead><tr><th>N.º</th><th>Apellido y nombre del hijo</th><th>Edad</th><th>Fecha de nacimiento</th><th>Nivel escolar</th><th>Afiliado titular</th><th>DNI del afiliado</th><th>Compañía / Consultora</th><th>Retiró</th><th>DNI de quien retira</th><th>Firma</th><th>Fecha de entrega</th></tr></thead><tbody>${rows}</tbody></table><footer>Página <span class="page"></span></footer></body></html>`);
         };
 
@@ -4144,8 +4144,21 @@ window.__firebase_config = {
             document.body.appendChild(frame);
         }
 
+        function sortByAffiliateNumber(items, getAffiliate = item => item) {
+            const numericKey = item => {
+                const value = String(getAffiliate(item)?.number ?? '').trim();
+                return /^\d+$/.test(value) ? value.replace(/^0+(?=\d)/, '') : null;
+            };
+            return [...items].sort((a, b) => {
+                const left = numericKey(a), right = numericKey(b);
+                if (left === null) return right === null ? 0 : 1;
+                if (right === null) return -1;
+                return left.length - right.length || (left < right ? -1 : left > right ? 1 : 0);
+            });
+        }
+
         function affiliateRegisterHtml() {
-            const affiliates = window.appState.filteredAffiliates;
+            const affiliates = sortByAffiliateNumber(window.appState.filteredAffiliates);
             const selectedCompany = document.getElementById('filter-company').value.trim();
             const generatedAt = new Date().toLocaleString('es-AR');
             const rows = affiliates.map(a => `<tr><td>${escapePrintHtml(a.number || '—')}</td><td>${escapePrintHtml(a.name || '—')}</td><td>${escapePrintHtml(a.dni || '—')}</td><td>${escapePrintHtml(a.company || 'Sin empresa')}</td><td>${escapePrintHtml(a.sector || '—')}</td></tr>`).join('');
@@ -4483,8 +4496,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.42";
-        const APP_REVISION = "20260905-09";
+        const APP_VERSION = "1.4.43";
+        const APP_REVISION = "20260905-10";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
@@ -4630,21 +4643,45 @@ window.__firebase_config = {
 
         document.getElementById('postpone-update-button').addEventListener('click', () => {
             document.getElementById('update-ready-banner').classList.add('hidden');
-            sessionStorage.setItem('siga_update_postponed', '1');
+            if (preparedUpdateKey) sessionStorage.setItem('siga_update_postponed', preparedUpdateKey);
         });
 
         // Descarga y verifica en segundo plano. El aviso solo aparece cuando el
         // paquete ya está realmente preparado y el operador puede decidir.
-        const checkForUpdatesOnStartup = async () => {
-            if (sessionStorage.getItem('siga_update_postponed') === '1') return;
+        let updateCheckInFlight = false;
+        let updateCheckTimer = null;
+        let nextUpdateCheckAt = 0;
+        let preparedUpdateKey = '';
+        const checkForUpdatesOnStartup = async (force = false) => {
+            if (updateCheckInFlight || (!force && Date.now() < nextUpdateCheckAt)) return;
+            clearTimeout(updateCheckTimer);
+            updateCheckInFlight = true;
+            let retryDelay = 60000;
             try {
-                const prepared = await window.pywebview?.api?.prepare_available_update?.();
-                if (prepared?.ok && prepared.ready) {
-                    document.getElementById('update-ready-banner').classList.remove('hidden');
+                if (!window.pywebview?.api?.prepare_available_update) {
+                    retryDelay = 5000;
                     return;
                 }
-            } catch (_) {}
+                const prepared = await window.pywebview.api.prepare_available_update();
+                if (prepared?.ok && prepared.ready) {
+                    preparedUpdateKey = `${prepared.version || ''}:${prepared.revision || ''}`;
+                    const postponed = sessionStorage.getItem('siga_update_postponed') === preparedUpdateKey;
+                    document.getElementById('update-ready-banner').classList.toggle('hidden', postponed);
+                    retryDelay = 15 * 60 * 1000;
+                } else if (prepared?.ok && !prepared.available) {
+                    retryDelay = 15 * 60 * 1000;
+                }
+            } catch (error) {
+                console.info('La preparación de la actualización se reintentará:', error?.message || 'sin conexión');
+            } finally {
+                updateCheckInFlight = false;
+                nextUpdateCheckAt = Date.now() + retryDelay;
+                updateCheckTimer = setTimeout(() => { void checkForUpdatesOnStartup(); }, retryDelay);
+            }
         };
+        window.addEventListener('pywebviewready', () => { void checkForUpdatesOnStartup(true); });
+        window.addEventListener('focus', () => { void checkForUpdatesOnStartup(); });
+        window.addEventListener('online', () => { void checkForUpdatesOnStartup(true); });
 
         window.importDataFromJSON = function(event) {
             const file = event.target.files[0];
@@ -4902,8 +4939,7 @@ window.__firebase_config = {
             if (recoveredConnectivityUpdateCheck || !window.pywebview?.api?.install_available_update) return;
             recoveredConnectivityUpdateCheck = true;
             try {
-                const result = await window.pywebview.api.install_available_update();
-                if (result?.ok) showToast('Actualización lista', 'SIGA se reiniciará para aplicar los cambios verificados.', 'info');
+                await checkForUpdatesOnStartup(true);
             } catch (error) {
                 console.info('La actualización se reintentará más adelante:', error);
             } finally {

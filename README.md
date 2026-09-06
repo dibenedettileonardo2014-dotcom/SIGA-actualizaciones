@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.42` — conserva la revisión en informes y valida la sesión antes de iniciar Firestore, con reintentos limitados por fallos de red.
+`1.4.43` — ordena las planillas PDF por número de afiliado y reintenta la preparación de actualizaciones cuando el puente nativo está listo.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
+- 1.4.43 (x86 y x64)
 - 1.4.42 (x86 y x64)
-- 1.4.41 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 
