@@ -1,31 +1,31 @@
 {
-  "version": "1.4.40",
-  "displayVersion": "1.4.40",
-  "revision": "20260905-07",
+  "version": "1.4.41",
+  "displayVersion": "1.4.41",
+  "revision": "20260905-08",
   "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
   "urls": [
     "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"
   ],
-  "sha256": "EF5A7C661DB824D979191D2228EC67704CB6BCBD2DBE971437CDDD5B60C3E75B",
+  "sha256": "B1E164C117A4B3BD95BE1DBA53110944E591117C0A0124F37A7F594CBFCB5170",
   "size": 4861730,
-  "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.40.zip",
+  "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.41.zip",
   "packageUrls": [
-    "https://siga-85bdd.web.app/SIGA-update-1.4.40.zip",
-    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.40.zip"
+    "https://siga-85bdd.web.app/SIGA-update-1.4.41.zip",
+    "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.41.zip"
   ],
-  "packageSha256": "5374A79E5ACE38250244749B19474A6C22714144001FC93A3A3AF5ABB9488522",
-  "packageSize": 19939345,
-  "notes": "Optimiza la velocidad de ordenamiento del padron conservando los mismos resultados y filtros.",
+  "packageSha256": "BDF8138A677144AD269530B6DD71C43C0D1720EC6CDB2EEEEBB5699CFD506503",
+  "packageSize": 19941172,
+  "notes": "Diagnosticos con detalle tecnico, informe exportable y comprobacion y reintento local sin sobrescribir conflictos.",
   "installers": {
     "x64": {
-      "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-Setup-1.4.40-x64.exe",
-      "sha256": "F9A96CA35CE1EE892CFC8DD01308E85646359E7B96E3D3DE1E5BE5E338BEFBDF",
-      "size": 18402581
+      "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-Setup-1.4.41-x64.exe",
+      "sha256": "569AA4537E1926F4A055781DD2B84BA64ED57BD86850E187217ED4E3F64AEDBE",
+      "size": 18404098
     },
     "x86": {
-      "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-Setup-1.4.40-x86.exe",
-      "sha256": "BBB7249A054E9AFEDCA2528A3787107F32A4A39B0C232B1626D539C755659173",
-      "size": 17346944
+      "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-Setup-1.4.41-x86.exe",
+      "sha256": "BB6171EF392BA74734B36688B2BE36C1357F3C0206A0997C85DB46B1EB2D6D49",
+      "size": 17348218
     }
   },
   "architectures": {
@@ -35,15 +35,15 @@
       "urls": [
         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x64.exe"
       ],
-      "sha256": "EF5A7C661DB824D979191D2228EC67704CB6BCBD2DBE971437CDDD5B60C3E75B",
+      "sha256": "B1E164C117A4B3BD95BE1DBA53110944E591117C0A0124F37A7F594CBFCB5170",
       "size": 4861730,
-      "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.40-x64.zip",
+      "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.41-x64.zip",
       "packageUrls": [
-        "https://siga-85bdd.web.app/SIGA-update-1.4.40-x64.zip",
-        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.40-x64.zip"
+        "https://siga-85bdd.web.app/SIGA-update-1.4.41-x64.zip",
+        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.41-x64.zip"
       ],
-      "packageSha256": "5374A79E5ACE38250244749B19474A6C22714144001FC93A3A3AF5ABB9488522",
-      "packageSize": 19939345
+      "packageSha256": "BDF8138A677144AD269530B6DD71C43C0D1720EC6CDB2EEEEBB5699CFD506503",
+      "packageSize": 19941172
     },
     "x86": {
       "architecture": "x86",
@@ -51,15 +51,15 @@
       "urls": [
         "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe"
       ],
-      "sha256": "A1EEAC34570E460E22ECE40663188F82770C1E95E21D559276D2535F2F9BF1DB",
+      "sha256": "A019057F009A77C7DAA1EA46E631E759DCF3F4FAD696F44CE4C6BC9D75D00B40",
       "size": 4743829,
-      "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.40-x86.zip",
+      "packageUrl": "https://siga-85bdd.web.app/SIGA-update-1.4.41-x86.zip",
       "packageUrls": [
-        "https://siga-85bdd.web.app/SIGA-update-1.4.40-x86.zip",
-        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.40-x86.zip"
+        "https://siga-85bdd.web.app/SIGA-update-1.4.41-x86.zip",
+        "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-update-1.4.41-x86.zip"
       ],
-      "packageSha256": "B827AAFF03EE433BE94159A5A9D2D65FD2C5442948DB6159F4D1DD91E5CAB2E2",
-      "packageSize": 18524729
+      "packageSha256": "EA73D51AABC48145DB686195CA73C19A3D57775F8CD07BAB9E24F7763479E8DF",
+      "packageSize": 18527413
     }
   }
 }

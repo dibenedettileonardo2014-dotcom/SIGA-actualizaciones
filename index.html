@@ -848,7 +848,7 @@
                 <div id="tab-errores" class="tab-content hidden space-y-6">
                     <div id="diagnostics-panel" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm max-w-5xl mx-auto">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
-                            <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-tower-broadcast text-amber-500 mr-2"></i>Incidentes de PC y móviles</h4><p class="text-xs text-slate-500 mt-1">Diagnósticos sanitizados de todas las instalaciones. Nunca se guardan contraseñas, tokens ni DNI.</p></div>
+                            <div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-tower-broadcast text-amber-500 mr-2"></i>Incidentes de PC y móviles</h4><p class="text-xs text-slate-500 mt-1">Revisá el detalle y el equipo de origen antes de actuar. Marcar atendido cierra el registro; no repara la causa.</p></div>
                             <div class="flex gap-2"><select id="diagnostics-filter" onchange="renderDiagnostics()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"><option value="open">Pendientes</option><option value="all">Todos</option><option value="resolved">Resueltos</option></select><button type="button" onclick="clearResolvedDiagnostics()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl">Eliminar resueltos</button></div>
                         </div>
                         <div id="diagnostics-empty" class="text-center py-10 text-sm text-slate-500">No hay incidentes registrados.</div>
@@ -1311,8 +1311,8 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.40';
-        const DIAGNOSTIC_REVISION = '20260905-07';
+        const DIAGNOSTIC_VERSION = '1.4.41';
+        const DIAGNOSTIC_REVISION = '20260905-08';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -1335,6 +1335,8 @@
                 .replace(/\b\d{7,9}\b/g, '[dni]')
                 .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[token]')
                 .replace(/AIza[\w-]{20,}/g, '[clave]')
+                .replace(/((?:password|passwd|contrase[ñn]a|secret|token|authorization|api[_-]?key)\s*[:=]\s*)[^\s,;]+/gi, '$1[clave]')
+                .replace(/https?:\/\/[^\s?#]+[?#][^\s]*/gi, '[url sin parámetros]')
                 .slice(0, 500);
         }
         function readDiagnosticQueue() {
@@ -1345,7 +1347,7 @@
             const safeCode = sanitizeDiagnostic(code).replace(/[^A-Za-z0-9._/-]/g, '_').slice(0, 100) || 'unknown';
             const queue = readDiagnosticQueue();
             const now = Date.now();
-            const duplicate = queue.findLast?.(item => item.code === safeCode && now - new Date(item.occurredAt).getTime() < 300000);
+            const duplicate = queue.findLast?.(item => item.code === safeCode && item.message === sanitizeDiagnostic(message) && item.context === sanitizeDiagnostic(context) && now - new Date(item.occurredAt).getTime() < 300000);
             if (duplicate) { duplicate.repeatCount = Math.min(999, Number(duplicate.repeatCount || 1) + 1); duplicate.occurredAt = new Date().toISOString(); }
             else queue.push({ id: crypto.randomUUID(), source: 'pc', code: safeCode, message: sanitizeDiagnostic(message), context: sanitizeDiagnostic(context), severity: ['warning', 'error', 'critical'].includes(severity) ? severity : 'error', appVersion: DIAGNOSTIC_VERSION, revision: DIAGNOSTIC_REVISION, deviceId: diagnosticDeviceId(), occurredAt: new Date().toISOString(), repeatCount: 1, status: 'open' });
             try { localStorage.setItem(diagnosticQueueKey(), JSON.stringify(queue.slice(-DIAGNOSTIC_QUEUE_LIMIT))); } catch {}
@@ -1364,7 +1366,8 @@
         }
         function reportDiagnostic(code, error, severity = 'error', context = '') {
             const message = error?.message || error || 'Sin detalle';
-            queueDiagnostic(error?.code || code, message, severity, context || code);
+            const location = error?.stack ? String(error.stack).split('\n').slice(1, 4).join(' | ') : '';
+            queueDiagnostic(error?.code || code, message, severity, [context || code, location].filter(Boolean).join(' | '));
             void flushDiagnosticQueue();
         }
         console.error = (...args) => { originalConsoleError(...args); const error = args.find(value => value instanceof Error || value?.code); reportDiagnostic('pc/console-error', error || args.map(value => typeof value === 'string' ? value : '').join(' '), 'error', args[0]); };
@@ -1382,7 +1385,7 @@
             if (code.includes('duplicate') || code.includes('already-exists')) return 'El dato ya existe y no se guardó una copia duplicada.';
             if (code.includes('storage') || code.includes('quota')) return 'El almacenamiento local no tiene espacio suficiente para completar la operación.';
             if (code.includes('cancel') || code.includes('notallowed')) return 'La acción fue cancelada o no recibió autorización del usuario.';
-            return 'Se produjo un inconveniente técnico. Revisá el código de diagnóstico para obtener más información.';
+            return 'Se produjo un inconveniente técnico. Abrí el detalle técnico para investigar la causa.';
         }
 
         function updateDiagnosticsBadge() {
@@ -1414,6 +1417,7 @@
         window.renderDiagnostics = function() {
             const list = document.getElementById('diagnostics-list'), empty = document.getElementById('diagnostics-empty'), filter = document.getElementById('diagnostics-filter')?.value || 'open';
             if (!list || !empty) return;
+            if (window.appState.currentUserRole !== 'admin') { list.replaceChildren(); return; }
             const items = window.appState.diagnostics.filter(item => filter === 'all' || (filter === 'resolved' ? item.status === 'resolved' : item.status !== 'resolved'));
             empty.classList.toggle('hidden', items.length > 0); list.replaceChildren();
             items.forEach(item => {
@@ -1423,11 +1427,101 @@
                 const source = card.querySelector('.source'); source.textContent = mobile ? 'MÓVIL' : 'PC'; source.classList.add(...(mobile ? ['bg-violet-100','text-violet-700'] : ['bg-blue-100','text-blue-700']));
                 card.querySelector('.severity').textContent = String(item.severity || 'error').toUpperCase(); card.querySelector('.code').textContent = item.code || 'unknown'; card.querySelector('.message').textContent = diagnosticDescription(item);
                 card.querySelector('.meta').textContent = `${item.appVersion || '—'} · ${new Date(item.occurredAt).toLocaleString('es-AR')} · repeticiones: ${item.repeatCount || 1}`;
-                const resolve = card.querySelector('.resolve'); resolve.textContent = resolved ? 'Reabrir' : 'Resolver'; resolve.onclick = () => setDiagnosticStatus(item.id, resolved ? 'open' : 'resolved');
-                card.querySelector('.remove').onclick = () => removeDiagnostic(item.id); list.append(card);
+                const resolve = card.querySelector('.resolve'); resolve.textContent = resolved ? 'Reabrir' : 'Marcar atendido'; resolve.onclick = () => setDiagnosticStatus(item.id, resolved ? 'open' : 'resolved');
+                card.querySelector('.remove').onclick = () => removeDiagnostic(item.id);
+                appendDiagnosticTools(card, item);
+                list.append(card);
             });
         };
-        window.setDiagnosticStatus = async function(id, status) { try { await updateDoc(doc(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics', id), { status, resolvedAt: serverTimestamp(), resolvedBy: window.appState.auth.currentUser.email }); } catch (error) { reportDiagnostic('pc/diagnostic-status', error); showToast('Diagnósticos', 'No se pudo actualizar el incidente.', 'error'); } };
+        function diagnosticAdvice(item) {
+            const code = String(item.code || '').toLowerCase();
+            const local = item.source === 'pc' && item.deviceId === diagnosticDeviceId();
+            let action = 'Revisá el mensaje y el contexto. Si vuelve a ocurrir, descargá el informe para corregir el código que falla. No hay una reparación automática identificada.';
+            if (/network|unavailable|timeout/.test(code)) action = 'Comprobá la conexión en el equipo de origen. Si hay cambios pendientes sin conflicto, reintentá su sincronización. Esto no repite otras operaciones fallidas.';
+            else if (/permission-denied|unauthenticated|^auth\//.test(code)) action = 'Revisá la sesión y los permisos del equipo de origen. No compartas contraseñas ni cambies permisos para ocultar el error.';
+            else if (/conflict|duplicate|already-exists/.test(code)) action = 'Revisá el cambio en la sección de conflictos. Compará los datos antes de reintentar; este diagnóstico no reemplaza esa revisión.';
+            else if (/quota|storage/.test(code)) action = 'Revisá el espacio disponible y las cuotas en el equipo de origen. No borres los datos locales: pueden contener cambios pendientes.';
+            return { local, action };
+        }
+
+        async function runDiagnosticCheck(item, retry = false) {
+            if (window.appState.currentUserRole !== 'admin') throw new Error('Acceso reservado al administrador.');
+            if (!diagnosticAdvice(item).local) return 'El incidente proviene de otro equipo. Esta PC no puede comprobar ni reparar su estado.';
+            const before = readPendingChanges().length;
+            if (retry) {
+                if (!navigator.onLine || !window.appState.firebaseEnabled || !window.appState.auth?.currentUser) return 'No se reintentó: esta PC necesita conexión y una sesión válida. Los cambios siguen guardados.';
+                if (window.appState.maintenance?.enabled) return 'No se reintentó: el sistema está en mantenimiento.';
+                await flushPendingChanges();
+            }
+            const pending = readPendingChanges();
+            const conflicts = pending.filter(change => change.conflict).length;
+            const lines = [
+                `Red del equipo: ${navigator.onLine ? 'disponible según Windows; no confirma acceso al servidor' : 'sin conexión'}.`,
+                `Sesión: ${window.appState.auth?.currentUser ? 'iniciada' : 'sin iniciar'}.`,
+                `Cambios pendientes: ${pending.length}; con conflicto: ${conflicts}.`
+            ];
+            if (retry) lines.push(`Antes del reintento: ${before}. Los conflictos no se sobrescriben. Que la cola se vacíe no prueba que este incidente está reparado.`);
+            try {
+                const status = await window.pywebview?.api?.check_update_status?.();
+                if (status?.ok) lines.push(status.available ? 'Hay una actualización disponible. Revisá Actualizaciones.' : 'El servidor de actualizaciones no indica una versión más reciente.');
+                else lines.push('No se pudo comprobar la versión remota.');
+            } catch { lines.push('No se pudo comprobar la versión remota.'); }
+            lines.push('El incidente permanece pendiente hasta que compruebes la operación que falló.');
+            return lines.join('\n');
+        }
+
+        function appendDiagnosticTools(card, item) {
+            const advice = diagnosticAdvice(item);
+            const section = document.createElement('div'); section.className = 'mt-3 text-xs text-slate-700';
+            const origin = document.createElement('p');
+            origin.textContent = advice.local ? 'Origen: esta PC.' : `Origen: otro equipo (${item.source === 'mobile' ? 'móvil' : 'PC'}). Las acciones locales no lo reparan a distancia.`;
+            const guidance = document.createElement('p'); guidance.className = 'mt-2'; guidance.textContent = advice.action;
+            const details = document.createElement('details'); details.className = 'mt-3';
+            const summary = document.createElement('summary'); summary.textContent = 'Ver detalle técnico';
+            const report = {
+                code: sanitizeDiagnostic(item.code), message: sanitizeDiagnostic(item.message), context: sanitizeDiagnostic(item.context),
+                source: item.source === 'mobile' ? 'mobile' : 'pc', appVersion: sanitizeDiagnostic(item.appVersion),
+                revision: sanitizeDiagnostic(item.revision), deviceId: sanitizeDiagnostic(item.deviceId),
+                occurredAt: sanitizeDiagnostic(item.occurredAt), repeatCount: Number(item.repeatCount) || 1
+            };
+            const text = document.createElement('pre'); text.className = 'whitespace-pre-wrap break-all mt-2'; text.textContent = JSON.stringify(report, null, 2);
+            details.append(summary, text);
+            const actions = document.createElement('div'); actions.className = 'flex flex-wrap gap-2 mt-3';
+            const result = document.createElement('p'); result.className = 'whitespace-pre-wrap mt-2'; result.setAttribute('role', 'status');
+            if (advice.local) {
+                for (const [label, retry] of [['Comprobar esta PC', false], ['Reintentar sincronización local', true]]) {
+                    const button = document.createElement('button'); button.className = 'px-3 py-2 rounded-lg bg-slate-200'; button.textContent = label;
+                    button.onclick = async () => {
+                        const buttons = actions.querySelectorAll('button'); buttons.forEach(b => b.disabled = true); result.textContent = 'Comprobando…';
+                        try { result.textContent = await runDiagnosticCheck(item, retry); }
+                        catch (error) { result.textContent = `No se completó la comprobación: ${sanitizeDiagnostic(error?.message)}. El incidente continúa pendiente.`; }
+                        finally { buttons.forEach(b => b.disabled = false); }
+                    };
+                    actions.append(button);
+                }
+            }
+            const download = document.createElement('button'); download.className = 'px-3 py-2 rounded-lg bg-slate-200'; download.textContent = 'Descargar informe';
+            download.onclick = async () => {
+                if (window.appState.currentUserRole !== 'admin') return;
+                const contents = JSON.stringify(report, null, 2);
+                const filename = `SIGA-diagnostico-${Date.now()}.json`;
+                try {
+                    if (window.pywebview?.api?.save_and_open_file) {
+                        const bytes = new TextEncoder().encode(contents); const encoded = btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''));
+                        const saved = await window.pywebview.api.save_and_open_file(filename, encoded);
+                        if (!saved?.ok) throw new Error(saved?.error || 'No se pudo guardar el informe.');
+                        result.textContent = 'Informe guardado en Documentos/SIGA. Revisalo antes de compartirlo.';
+                    } else {
+                        const url = URL.createObjectURL(new Blob([contents], { type: 'application/json' }));
+                        const link = document.createElement('a'); link.href = url; link.download = filename; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        result.textContent = 'Informe preparado para descargar. Revisalo antes de compartirlo.';
+                    }
+                } catch (error) { result.textContent = sanitizeDiagnostic(error.message); }
+            };
+            actions.append(download); section.append(origin, guidance, details, actions, result); card.append(section);
+        }
+
+        window.setDiagnosticStatus = async function(id, status) { if (window.appState.currentUserRole !== 'admin') return; if (status === 'resolved' && !await customConfirm('¿Marcar incidente atendido?', 'Esto solo cierra el registro. Confirmá que revisaste la causa y comprobaste la operación; no ejecuta una reparación.', 'Marcar atendido')) return; try { await updateDoc(doc(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics', id), { status, resolvedAt: serverTimestamp(), resolvedBy: window.appState.auth.currentUser.email }); } catch (error) { reportDiagnostic('pc/diagnostic-status', error); showToast('Diagnósticos', 'No se pudo actualizar el incidente.', 'error'); } };
         window.removeDiagnostic = async function(id) { try { await deleteDoc(doc(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics', id)); } catch (error) { reportDiagnostic('pc/diagnostic-delete', error); showToast('Diagnósticos', 'No se pudo eliminar el incidente.', 'error'); } };
         window.clearResolvedDiagnostics = async function() { const resolved = window.appState.diagnostics.filter(item => item.status === 'resolved'); if (!resolved.length) return; const approved = await customConfirm('¿Eliminar incidentes resueltos?', `Se eliminarán ${resolved.length} diagnósticos ya resueltos.`); if (!approved) return; await Promise.all(resolved.map(item => deleteDoc(doc(window.appState.db, 'artifacts', window.appState.appId, 'diagnostics', item.id)))).catch(error => reportDiagnostic('pc/diagnostic-clear', error)); };
 
@@ -4345,8 +4439,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.40";
-        const APP_REVISION = "20260905-07";
+        const APP_VERSION = "1.4.41";
+        const APP_REVISION = "20260905-08";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
