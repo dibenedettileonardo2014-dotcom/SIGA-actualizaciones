@@ -1,12 +1,19 @@
 from pathlib import Path
-import hashlib,json,os,subprocess,sys,time,zipfile
+import hashlib,json,os,subprocess,sys,time,zipfile,tempfile
 ROOT=Path(__file__).resolve().parents[1]
 arch=sys.argv[1]; mode=sys.argv[2] if len(sys.argv)>2 else 'worker'
-base=ROOT/'.tools'/('update-e2e-'+mode+'-'+arch)
+(ROOT/'.tools').mkdir(exist_ok=True)
+base=Path(tempfile.mkdtemp(prefix='update-e2e-'+mode+'-'+arch+'-',dir=ROOT/'.tools'))
+print('Evidence folder:',base,flush=True)
 install=base/'SIGA';install.mkdir(parents=True,exist_ok=True)
 with zipfile.ZipFile(ROOT/f'SIGA-update-1.4.43-{arch}.zip') as z:z.extractall(install)
 work=install/'Updater';work.mkdir(exist_ok=True)
 env={**os.environ,'LOCALAPPDATA':str(base),'WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS':'--remote-debugging-port=9229'}
+# Legacy 1.4.43 invokes ie4uinit.exe (absent in SysWOW64 on 64-bit Windows).
+# On this x64 test host, use native PowerShell for that old helper only.
+# The new worker has no dependency on icon refresh utilities.
+if arch=='x86' and mode=='published' and 'PROGRAMFILES(X86)' in os.environ:
+ env['PATH']=str(Path(os.environ['WINDIR'])/'Sysnative/WindowsPowerShell/v1.0')+';'+env['PATH']
 exe=install/'SIGA.exe'
 for name in ['Documentos/control.txt','database.json','configuration.json','oauth-password-reset.dat']:
  p=install/name;p.parent.mkdir(exist_ok=True);p.write_text('SIGA preservation test '+name,encoding='utf-8')
@@ -31,6 +38,11 @@ def until(expression,seconds=100):
 def close():
  subprocess.run(['powershell','-NoProfile','-Command',"Get-Process SIGA -ErrorAction SilentlyContinue | Where-Object {$_.Path -eq '"+str(exe).replace("'","''")+"'} | ForEach-Object {Stop-Process -Id $_.Id -Force}"],capture_output=True)
 
+shortcuts=[]
+shortcut_paths=subprocess.check_output(['powershell','-NoProfile','-Command',"$w=New-Object -ComObject WScript.Shell; @((Join-Path $w.SpecialFolders.Item('Desktop') 'SIGA.lnk'),(Join-Path $w.SpecialFolders.Item('Programs') 'SIGA.lnk')) | ConvertTo-Json -Compress"],text=True)
+for name in json.loads(shortcut_paths):
+ path=Path(name)
+ if path.exists():shortcuts.append((path,path.read_bytes()))
 try:
  old=subprocess.Popen([str(exe)],env=env,creationflags=subprocess.CREATE_NO_WINDOW)
  version=until("window.pywebview?.api?.get_installed_version ? window.pywebview.api.get_installed_version() : null")
@@ -38,7 +50,7 @@ try:
  assert evaluate("localStorage.setItem('siga_update_test_preserve','persistent');localStorage.getItem('siga_update_test_preserve')")=='persistent'
  print(arch,mode,'previous version and persistent profile verified',flush=True)
  if mode=='published':
-  ready=until("window.pywebview.api.prepare_available_update()",240)
+  ready=until("window.pywebview.api.check_update_status().then(r=>r.prepared?.ready?r.prepared:null)",240)
   assert ready.get('ready') and ready['version']=='1.4.44',ready
   print(arch,'official release detected and downloaded',flush=True)
   assert evaluate("window.pywebview.api.apply_prepared_update()")['ok']
@@ -70,4 +82,6 @@ try:
  assert not (work/'prepared-update.json').exists()
  print(arch,mode,'PASS updated executable, real WebView restart, architecture, localStorage, documents, database, settings and credential file preserved',flush=True)
  (base/'result.json').write_text(json.dumps({'architecture':arch,'mode':mode,'from':'1.4.43','to':updated,'dataPreserved':list(data),'profilePreserved':True}))
-finally:close()
+finally:
+ close()
+ for path,content in shortcuts:path.write_bytes(content)

@@ -87,3 +87,5 @@ La prueba abre 1.4.43, invoca su API nativa existente, descarga la versión publ
 actualiza, reinicia WebView2 y verifica archivos y un valor persistido en el perfil.
 Los modos `worker` y `rollback` prueban el reemplazo nuevo y una confirmación de
 arranque fallida. No usan ni alteran los datos de la instalación real.
+
+Informe de pruebas y primera transición: [ACTUALIZACION-1.4.44.md](ACTUALIZACION-1.4.44.md).
