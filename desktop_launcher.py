@@ -17,6 +17,7 @@ import os
 import platform
 import re
 import secrets
+import shutil
 import subprocess
 import sys
 import threading
@@ -28,8 +29,8 @@ from urllib.parse import parse_qs, urlencode, urlparse
 import webview
 
 LOCAL_PORT = 18765
-APP_VERSION = "1.4.43"
-APP_REVISION = "20260905-10"
+APP_VERSION = "1.4.44"
+APP_REVISION = "20260909-01"
 PASSWORD_RESET_OAUTH_CLIENT_ID = "1065738174061-m6ugunm3vghoqeilb4k8tq6qj6apiba7.apps.googleusercontent.com"
 PASSWORD_RESET_OAUTH_CLIENT_SECRET = os.environ.get("SIGA_PASSWORD_RESET_OAUTH_CLIENT_SECRET", "")
 PASSWORD_RESET_ADMIN_GOOGLE_EMAIL = "dibenedettileonardo2014@gmail.com"
@@ -216,11 +217,13 @@ def trusted_update_url(value: object) -> bool:
     if not isinstance(value, str):
         return False
     parsed = urlparse(value)
-    return parsed.scheme == "https" and parsed.hostname in {
-        "raw.githubusercontent.com",
-        "github.com",
-        "siga-85bdd.web.app",
-    }
+    if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in (None, 443):
+        return False
+    repository = "/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/"
+    return (parsed.hostname == "siga-85bdd.web.app" or
+            parsed.hostname in {"raw.githubusercontent.com", "github.com"} and
+            parsed.path.startswith(repository) and "/../" not in parsed.path)
+
 
 
 def file_sha256(path: Path) -> str | None:
@@ -288,8 +291,17 @@ def fetch_update_manifest() -> dict | None:
 
 
 def install_update(manifest: dict) -> bool:
+    with UpdateMutex() as acquired:
+        if not acquired:
+            return False
+        return download_update(manifest)
+
+
+def download_update(manifest: dict) -> bool:
     """Download a verified package and schedule its installation after exit."""
     if manifest.get("architecture", APP_ARCH) != APP_ARCH:
+        return False
+    if not valid_update_manifest({"version": manifest.get("version"), "architectures": {APP_ARCH: {**manifest, "architecture": APP_ARCH}}}):
         return False
     executable = Path(sys.executable)
     temp_folder = update_state_path()
@@ -302,7 +314,7 @@ def install_update(manifest: dict) -> bool:
         installer_hash = manifest.get("installerSha256")
         package_url = manifest.get("packageUrl")
         package_hash = manifest.get("packageSha256")
-        is_installer_update = isinstance(installer_url, str) and isinstance(installer_hash, str)
+        is_installer_update = not package_url and isinstance(installer_url, str) and isinstance(installer_hash, str)
         is_package_update = not is_installer_update and isinstance(package_url, str) and isinstance(package_hash, str)
         configured_urls = manifest.get("installerUrls") if is_installer_update else manifest.get("packageUrls") if is_package_update else manifest.get("urls")
         download_urls = [url for url in (configured_urls or []) if isinstance(url, str)]
@@ -322,6 +334,8 @@ def install_update(manifest: dict) -> bool:
                     cache_safe_url = f"{download_url}{separator}version={manifest.get('version', '')}&sha256={expected_hash[:16]}&attempt={attempt}"
                     request = Request(cache_safe_url + f"&nonce={time.time_ns()}", headers={"User-Agent": f"SIGA/{APP_VERSION} ({APP_ARCH})", "Cache-Control": "no-cache, no-store", "Pragma": "no-cache"})
                     with urlopen(request, timeout=120) as response, partial.open("wb") as output:
+                        if not trusted_update_url(response.geturl()):
+                            raise ValueError("Redireccion fuera del repositorio oficial.")
                         if getattr(response, "status", 200) != 200:
                             raise OSError(f"HTTP {response.status}")
                         while chunk := response.read(1024 * 1024):
@@ -383,31 +397,24 @@ def prepared_update_status() -> dict:
 
 
 def apply_prepared_update() -> bool:
-    """Apply a verified staged update and relaunch only the canonical installation."""
+    """Apply through the existing package channel with backup and startup health check."""
     state = update_state_path() / "prepared-update.json"
     try:
         prepared = json.loads(state.read_text(encoding="utf-8"))
         source = Path(prepared["path"])
-        if prepared.get("architecture") != APP_ARCH or file_sha256(source) != str(prepared.get("sha256", "")).upper():
-            raise ValueError("Actualizacion preparada invalida.")
-        target = webview_storage_path().parent / "SIGA.exe"
-        script = update_state_path() / "SIGA.apply-update.cmd"
-        log = update_state_path() / "SIGA.update-installer.log"
-        repair_shortcut = (
-            f'powershell -NoProfile -ExecutionPolicy Bypass -Command '
-            f'"$w=New-Object -ComObject WScript.Shell; $icon=\'{target.parent / "siga-desktop-icon.ico"}\'; '
-            f'$links=@((Join-Path $w.SpecialFolders.Item(\'Desktop\') \'SIGA.lnk\'),(Join-Path $w.SpecialFolders.Item(\'Programs\') \'SIGA.lnk\')); '
-            f'foreach($link in $links){{if(Test-Path -LiteralPath $link){{$s=$w.CreateShortcut($link); $s.TargetPath=\'{target}\'; $s.Arguments=\'\'; $s.WorkingDirectory=\'{target.parent}\'; $s.IconLocation=$icon; $s.Save()}}}}; '
-            f'Start-Process ie4uinit.exe -ArgumentList \'-show\' -WindowStyle Hidden -ErrorAction SilentlyContinue"\n'
-        )
-        if prepared["kind"] == "installer":
-            action = f'start "" /wait "{source}" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /CURRENTUSER /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS /LOG="{log}"\n'
-        elif prepared["kind"] == "package":
-            action = f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath \'{source}\' -DestinationPath \'{target.parent}\' -Force; if (-not $?) {{ exit 1 }}"\n'
-        else:
-            action = f'copy /Y "{source}" "{target}" >nul\n'
-        script.write_text("@echo off\nsetlocal\n" + f'powershell -NoProfile -ExecutionPolicy Bypass -Command "Wait-Process -Id {os.getpid()} -Timeout 120 -ErrorAction SilentlyContinue"\n' + action + "if errorlevel 1 exit /b 1\n" + repair_shortcut + "if errorlevel 1 exit /b 1\n" + f'start "" "{target}"\ndel /q "{source}"\ndel /q "{state}"\ndel "%~f0"\n', encoding="utf-8")
-        subprocess.Popen(["cmd.exe", "/d", "/c", str(script)], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        if not prepared_update_status()["ready"] or prepared["kind"] != "package":
+            raise ValueError("Se requiere un paquete completo verificado.")
+        validate_update_package(source, APP_ARCH)
+        target = Path(sys.executable).resolve().parent
+        worker = update_state_path() / "SIGA.update-worker.ps1"
+        shutil.copyfile(bundled_path() / "update_worker.ps1", worker)
+        job = {**prepared, "source": str(source), "target": str(target),
+               "work": str(update_state_path()), "parent": os.getpid()}
+        job_path = update_state_path() / "apply-job.json"
+        job_path.write_text(json.dumps(job), encoding="utf-8")
+        subprocess.Popen(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                          "-File", str(worker), "-Job", str(job_path)],
+                         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         update_log("update-apply-start", revision=prepared.get("revision", ""))
         return True
     except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
@@ -422,7 +429,11 @@ def validate_update_package(path: Path, architecture: str) -> None:
         names = package.namelist()
         if "SIGA.exe" not in names or "_internal/index.html" not in names:
             raise ValueError("El paquete no contiene los archivos criticos.")
-        if any(Path(name).is_absolute() or ".." in Path(name).parts for name in names):
+        if len({name.lower() for name in names}) != len(names):
+            raise ValueError("El paquete contiene rutas duplicadas.")
+        if any(Path(name).is_absolute() or ".." in Path(name).parts or ":" in name
+               or (not name.endswith("/") and name not in {"SIGA.exe", "siga-desktop-icon.ico"}
+                   and not name.replace("\\", "/").startswith("_internal/")) for name in names):
             raise ValueError("El paquete contiene rutas inseguras.")
         executable = package.read("SIGA.exe")
         if len(executable) < 64:
@@ -435,6 +446,31 @@ def validate_update_package(path: Path, architecture: str) -> None:
 def automatic_update_on_startup() -> bool:
     """Apply an already verified update before opening the old application again."""
     state = update_state_path() / "prepared-update.json"
+    journal = update_state_path() / "transaction.json"
+    if not os.environ.get("SIGA_UPDATE_HEALTH") and journal.exists():
+        try:
+            if json.loads(journal.read_text(encoding="utf-8-sig")).get("status") == "applying":
+                job_path = update_state_path() / "apply-job.json"
+                job = json.loads(job_path.read_text(encoding="utf-8"))
+                job["parent"] = os.getpid()
+                job_path.write_text(json.dumps(job), encoding="utf-8")
+                subprocess.Popen(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                                  "-File", str(update_state_path() / "SIGA.update-worker.ps1"),
+                                  "-Job", str(job_path)], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+                return True
+        except (OSError, ValueError):
+            update_log("recovery-start-failed")
+    if os.environ.get("SIGA_UPDATE_HEALTH"):
+        return False
+    # The old updater could launch before clearing its pending request.
+    if state.exists():
+        try:
+            prepared = json.loads(state.read_text(encoding="utf-8"))
+            if prepared.get("version") == APP_VERSION and prepared.get("revision") == APP_REVISION:
+                state.unlink(missing_ok=True)
+                return False
+        except (OSError, ValueError):
+            return False
     if not state.exists():
         return False
     update_log("prepared-update-found-on-startup", revision=APP_REVISION)
@@ -652,6 +688,13 @@ class DesktopApi:
         manifest = fetch_update_manifest()
         if not manifest:
             return {"ok": False, "error": "No se pudo consultar el servidor de actualizaciones."}
+        journal = update_state_path() / "transaction.json"
+        try:
+            failed = json.loads(journal.read_text(encoding="utf-8-sig"))
+            if failed.get("status") == "rolled-back" and failed.get("version") == manifest.get("version") and failed.get("revision") == manifest.get("revision"):
+                return {"ok": False, "error": "La actualizacion fallo y se restauro la version anterior. Se esperara una revision corregida."}
+        except (OSError, ValueError):
+            pass
         if not update_required(manifest):
             return {"ok": True, "ready": False, "available": False}
         if not install_update(manifest):
@@ -746,6 +789,15 @@ def main() -> None:
         min_size=(1024, 700),
         maximized=True,
     )
+    def confirm_update_startup():
+        health = os.environ.get("SIGA_UPDATE_HEALTH")
+        if health and Path(health).resolve() == (update_state_path() / "healthy.json").resolve():
+            try:
+                if window.evaluate_js("document.readyState === 'complete' && !!window.appState"):
+                    Path(health).write_text(json.dumps({"version": APP_VERSION, "revision": APP_REVISION}), encoding="utf-8")
+            except Exception as error:
+                update_log("startup-health-failed", error=type(error).__name__)
+    window.events.loaded += confirm_update_startup
     try:
         webview.start(
             gui="edgechromium",

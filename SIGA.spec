@@ -7,6 +7,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('index.html', '.'),
+        ('update_worker.ps1', '.'),
         ('assets/logo-sindicato.png', 'assets'),
         ('assets/logo-spiqyp-rosario.png', 'assets'),
         ('assets/siga-desktop-icon.png', 'assets'),

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'misiga-v2026-v2-r20260905-10';
+const CACHE_NAME = 'misiga-v2026-v2-r20260909-01';
 const NAVIGATION_NETWORK_TIMEOUT_MS = 3500;
 const APP_SHELL = [
   './afiliado.html',

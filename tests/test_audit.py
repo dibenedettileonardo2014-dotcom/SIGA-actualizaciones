@@ -36,7 +36,7 @@ class LauncherTests(unittest.TestCase):
     def test_update_manifest_requires_https_and_sha256(self):
         valid = {
             "version": "1.2.49",
-            "url": "https://raw.githubusercontent.com/test/SIGA.exe",
+            "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe",
             "sha256": "A" * 64,
             "packageUrl": "https://siga-85bdd.web.app/SIGA.zip",
             "packageSha256": "b" * 64,
@@ -46,13 +46,13 @@ class LauncherTests(unittest.TestCase):
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "url": "http://example.test/SIGA.exe"}, "x64"))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "sha256": "bad"}, "x64"))
         self.assertFalse(desktop_launcher.valid_update_manifest({**valid, "urls": ["http://example.test/SIGA.exe"]}, "x64"))
-        installer = {**valid, "installerUrl": "https://github.com/test/SIGA-Setup.exe", "installerSha256": "C" * 64}
+        installer = {**valid, "installerUrl": "https://github.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-Setup.exe", "installerSha256": "C" * 64}
         self.assertTrue(desktop_launcher.valid_update_manifest(installer, "x64"))
         self.assertFalse(desktop_launcher.valid_update_manifest({**installer, "installerSha256": "bad"}, "x64"))
 
     def test_update_manifest_selects_only_matching_architecture(self):
         artifact = {
-            "architecture": "x86", "url": "https://raw.githubusercontent.com/test/SIGA-x86.exe",
+            "architecture": "x86", "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA-x86.exe",
             "sha256": "A" * 64, "packageUrl": "https://siga-85bdd.web.app/SIGA-x86.zip",
             "packageSha256": "B" * 64,
         }
@@ -73,9 +73,10 @@ class LauncherTests(unittest.TestCase):
     def test_updater_waits_for_exit_and_uses_verified_installer(self):
         source = (ROOT / "desktop_launcher.py").read_text(encoding="utf-8")
         self.assertIn('installerSha256', source)
-        self.assertIn('start "" /wait "{source}"', source)
-        self.assertIn('/CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS', source)
-        self.assertIn('if errorlevel 1 exit /b 1', source)
+        worker = (ROOT / "update_worker.ps1").read_text(encoding="utf-8")
+        self.assertIn('WaitForExit(120000)', worker)
+        self.assertIn('RestoreFiles', worker)
+        self.assertIn("SaveJournal 'committed'", worker)
         self.assertNotIn('timeout /t 2 /nobreak', source)
         self.assertIn('cache_safe_url', source)
         self.assertIn('"Cache-Control": "no-cache, no-store"', source)
@@ -92,9 +93,8 @@ class LauncherTests(unittest.TestCase):
         self.assertNotIn('Name: "{commondesktop}\\SIGA.lnk"', installer)
         self.assertNotIn('Filename: "{sys}\\explorer.exe"', installer)
         self.assertIn('Filename: "{app}\\{#MyAppExeName}"', installer)
-        self.assertIn("CreateShortcut", launcher)
-        self.assertIn("SpecialFolders.Item(\\'Desktop\\')", launcher)
-        self.assertIn("$s.Arguments=\\'\\'", launcher)
+        self.assertIn('Path(sys.executable).resolve().parent', launcher)
+
 
     def test_same_visible_version_is_repaired_by_hash(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -111,10 +111,11 @@ class LauncherTests(unittest.TestCase):
         payload = b"corrected executable"
         response = io.BytesIO(payload)
         response.status = 200
+        response.geturl = lambda: "https://siga-85bdd.web.app/SIGA.exe"
         manifest = {
             "version": "1.4.13", "displayVersion": "1.4.13", "revision": desktop_launcher.APP_REVISION,
             "architecture": desktop_launcher.APP_ARCH,
-            "url": "https://raw.githubusercontent.com/test/SIGA.exe", "urls": ["https://raw.githubusercontent.com/test/SIGA.exe"],
+            "url": "https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe", "urls": ["https://raw.githubusercontent.com/dibenedettileonardo2014-dotcom/SIGA-actualizaciones/main/SIGA.exe"],
             "sha256": hashlib.sha256(payload).hexdigest(), "size": len(payload),
         }
         with tempfile.TemporaryDirectory() as folder, \
@@ -602,7 +603,7 @@ class ApplicationSourceTests(unittest.TestCase):
         self.assertIn("def prepared_update_status()", launcher)
         self.assertIn('state = update_state_path() / "prepared-update.json"', launcher)
         self.assertIn('return apply_prepared_update()', launcher)
-        self.assertIn('webview_storage_path().parent / "SIGA.exe"', launcher)
+        self.assertIn('Path(sys.executable).resolve().parent', launcher)
         self.assertNotIn('f"set \\"TARGET={executable}\\"', launcher)
 
     def test_mobile_uses_device_screen_lock(self):
@@ -614,7 +615,7 @@ class ApplicationSourceTests(unittest.TestCase):
     def test_manifest_is_well_formed_and_hashes_are_sha256(self):
         manifest = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+(?:\.\d+)?$")
-        self.assertEqual(manifest["displayVersion"], "1.4.43")
+        self.assertEqual(manifest["displayVersion"], "1.4.44")
         self.assertRegex(manifest["revision"], r"^\d{8}-\d{2}$")
         self.assertRegex(manifest["sha256"], r"^[A-F0-9]{64}$")
         self.assertRegex(manifest["packageSha256"], r"^[A-F0-9]{64}$")

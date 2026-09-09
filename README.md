@@ -18,7 +18,7 @@ Sistema Integral de Gestión de Afiliados y aplicación móvil **Mi SIGA**.
 
 ## Versión vigente
 
-`1.4.43` — ordena las planillas PDF por número de afiliado y reintenta la preparación de actualizaciones cuando el puente nativo está listo.
+`1.4.44` — actualización con respaldo, confirmación de arranque y rollback.
 
 Aplicación móvil: https://siga-85bdd.web.app/
 
@@ -28,8 +28,8 @@ Cloud Functions, Firebase Storage, APIs pagas ni servicios que requieran Blaze.
 
 ## Versiones conservadas
 
+- 1.4.44 (x86 y x64)
 - 1.4.43 (x86 y x64)
-- 1.4.42 (x86 y x64)
 
 Los instaladores se encuentran en `installer/`.
 
@@ -47,9 +47,43 @@ La aplicación de escritorio consulta `version.json` al iniciar. La PWA fuerza
 la comprobación de su service worker al abrir y recarga cuando hay una edición
 nueva.
 
-### Actualización fluida desde 1.4.12
+### Actualizaciones desde el programa
 
-SIGA consulta el manifiesto sin caché, descarga en segundo plano el instalador
-de su arquitectura y muestra **Reiniciar y actualizar** solamente después de
-validar tamaño y SHA-256. Si la preparación falla, la versión instalada sigue
-operativa. El relanzamiento usa siempre `%LOCALAPPDATA%\SIGA\SIGA.exe`.
+El escritorio consulta los manifiestos oficiales de GitHub y Firebase al abrir,
+al recuperar conexión y periódicamente. Compara versión y revisión; descarga el
+ZIP de su arquitectura y verifica SHA-256, tamaño, rutas y cabecera PE.
+**Actualizar y reiniciar** aparece al estar listo; también se aplica al volver a
+abrir SIGA. Una falta de conexión no impide usar la versión instalada.
+
+Desde 1.4.44, el actualizador espera el cierre, respalda únicamente archivos del
+programa, actualiza la carpeta del ejecutable en uso y elimina el pedido pendiente
+antes del relanzamiento. La ventana nueva confirma versión y revisión. Si no
+confirma dentro de 90 segundos, restaura y abre la versión anterior. El registro
+`Updater/transaction.json` permite recuperar una transacción interrumpida al
+arrancar; `Updater/backup` conserva el respaldo. Una revisión que hizo rollback
+no se descarga repetidamente: se espera una revisión corregida.
+
+No se reemplazan `WebViewProfile`, `Documentos`, configuración, bases locales ni
+`oauth-password-reset.dat`. El origen local y el perfil siguen siendo los mismos.
+No se modifican Firestore, Authentication, reglas ni el plan Spark.
+
+Los equipos que tienen 1.4.43 reciben 1.4.44 por el canal ZIP existente. La primera
+transición ejecuta el actualizador antiguo; las siguientes usan el mecanismo con
+rollback de 1.4.44. No es posible modificar a distancia un equipo que nunca tuvo
+un canal de actualización operativo o que no puede conectarse al repositorio.
+
+Para futuras publicaciones, incrementar versión/revisión y sincronizar las
+fuentes; compilar `SIGA.spec` con `.venv` (x64) y `.venv-x86`; compilar
+`siga-installer.iss` con `/DMyAppArch=x64` y `/DMyAppArch=x86`; ejecutar
+`python tools/package_release.py` para generar paquetes, alias y hashes.
+Ejecutar las pruebas Python con ambos intérpretes y `tests/test_*.cjs` con Node.
+Conservar las dos últimas versiones y publicar todos los artefactos junto con
+`version.json` en la rama `main` del repositorio oficial; luego publicar Hosting
+en `siga-85bdd`. No publicar solo el ejecutable ni cambiar el canal por un instalador.
+
+Prueba real reproducible en una instalación aislada (requiere escritorio Windows):
+`python tests/update_e2e.py x64 published` y lo mismo con `x86`.
+La prueba abre 1.4.43, invoca su API nativa existente, descarga la versión publicada,
+actualiza, reinicia WebView2 y verifica archivos y un valor persistido en el perfil.
+Los modos `worker` y `rollback` prueban el reemplazo nuevo y una confirmación de
+arranque fallida. No usan ni alteran los datos de la instalación real.

@@ -1311,8 +1311,8 @@
         const VERIFIED_ROLE_KEY = 'siga_last_verified_role';
         const DEFAULT_MAINTENANCE_TITLE = 'SIGA EN MANTENIMIENTO';
         const DEFAULT_MAINTENANCE_MESSAGE = 'ESTAMOS REALIZANDO MEJORAS EN EL SISTEMA. VOLVEREMOS A ESTAR DISPONIBLES EN BREVE.';
-        const DIAGNOSTIC_VERSION = '1.4.43';
-        const DIAGNOSTIC_REVISION = '20260905-10';
+        const DIAGNOSTIC_VERSION = '1.4.44';
+        const DIAGNOSTIC_REVISION = '20260909-01';
         const DIAGNOSTIC_QUEUE_LIMIT = 50;
         const originalConsoleError = console.error.bind(console);
         const maintenanceRef = () => doc(window.appState.db, 'artifacts', window.appState.appId, 'public', 'config', 'maintenance', 'state');
@@ -4496,8 +4496,8 @@ window.__firebase_config = {
 
         // --- SISTEMA DE ACTUALIZACIONES ---
         const UPDATE_CHECK_URL = "https://siga-85bdd.web.app/version.json";
-        const APP_VERSION = "1.4.43";
-        const APP_REVISION = "20260905-10";
+        const APP_VERSION = "1.4.44";
+        const APP_REVISION = "20260909-01";
 
         async function showInstalledVersion() {
             let installed = { version: APP_VERSION, revision: APP_REVISION, architecture: '' };
